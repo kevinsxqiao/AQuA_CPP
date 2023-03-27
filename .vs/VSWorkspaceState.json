@@ -1,0 +1,13 @@
+{
+  "OutputFoldersPerTargetSystem": {
+    "Local Machine": [
+      "out\\build\\x64-Debug",
+      "out\\install\\x64-Debug"
+    ]
+  },
+  "ExpandedNodes": [
+    ""
+  ],
+  "SelectedNode": "\\fftw3.3.5-32",
+  "PreviewInSolutionExplorer": false
+}
