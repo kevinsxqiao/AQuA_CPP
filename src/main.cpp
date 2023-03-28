@@ -8,11 +8,14 @@
 #include "phaseRun.h"
 #include "evtRun.h"
 #include "feaRun.h"
+#include "flow/flowMethods.h"
 
 
 
 int main() {
     // load raw data
+
+
     int ixTab = menu(); // select action
     switch (ixTab) {
         case 1:

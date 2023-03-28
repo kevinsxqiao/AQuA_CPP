@@ -278,7 +278,7 @@ namespace AQuA{
 
 
 
-    void regCrossCorrelation(float (&data1)[N0][N1][N2][FRAME],
+    float **** regCrossCorrelation(float (&data1)[N0][N1][N2][FRAME],
                              float (&data2)[N0][N1][N2][FRAME]){
         float sum, median;
         int wShift, hShift, lShift;
@@ -423,6 +423,37 @@ namespace AQuA{
         int z_max = std::max_element(z_translation, z_translation+FRAME) - z_translation;
         int z_min = std::min_element(z_translation, z_translation+FRAME) - z_translation;
 
+        double ****dat1;
+        int x = x_max - x_min + 1, y = y_max - y_min + 1, z = z_max - z_min+ 1; // x,y,z indicates the size of the new matrix after registration
+        int index = 0;
+
+        dat1 = new double ***[x];
+        for (int i = 0; i < x; ++i) {
+            dat1[i] = new double**[y];
+
+        }
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                dat1[i][j] = new double*[z];
+            }
+        }
+        for (int i = 0; i < x; ++i) {
+            for (int j = 0; j < y; ++j) {
+                for (int k = 0; k < z; ++k) {
+                    dat1[i][j][k] = new double[FRAME];
+                }
+            }
+        }
+//        data1 = data1(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),max(z_translation)+1:end+min(z_translation),:);
+        for (int i = x_min, x_target=0; i < x_max+1; ++i, ++x_target) {
+            for (int j =y_min, y_target=0; j < y_max+1; ++j, ++y_target) {
+                for (int k = z_min, z_target=0; k < z_max+1; ++k, ++z_target) {
+                    for (int t = 0; t < FRAME; ++t) {
+                        dat1[x_target][y_target][z_target][t] = data1[i][j][k][t];
+                    }
+                }
+            }
+        }
 //        if(~isempty(data2))
 //            data2 = data2(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),max(z_translation)+1:end+min(z_translation),:);
 //        end
