@@ -6,6 +6,8 @@
 #define AQUA_PREPROCESSRUN_CPP
 
 #include "../data/data.h"
+#include "regCrossCorrelation.h"
+#include <cstdlib>
 
 namespace AQuA{
 

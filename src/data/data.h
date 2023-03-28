@@ -5,26 +5,29 @@
 #ifndef AQUA_CPP_RAWDATA_H
 #define AQUA_CPP_RAWDATA_H
 
+#define DATA_TYPE double
+
+#define N0 AQuA::rawDataSize::size1
+#define N1 AQuA::rawDataSize::size2
+#define N2 AQuA::rawDataSize::size3
+#define N0_ext (2*N0-1)
+#define N1_ext (2*N1-1)
+#define N2_ext (2*N2-1)
+#define FRAME AQuA::rawDataSize::frame
+
 #include <string>
+#include <iostream>
+
+
 namespace AQuA{
 
 
     struct rawDataSize{ // clarification structure of raw data size
-        static const short size1;
-        static const short size2;
-        static const short size3;
-        static const short frame;
+        static const short size1 = 2;
+        static const short size2 = 2;
+        static const short size3 = 2;
+        static const short frame = 2;
     };// struct
-
-     const short rawDataSize::size1 = 2;// static member definition
-     const short rawDataSize::size2 = 2;
-     const short rawDataSize::size3 = 2;
-     const short rawDataSize::frame = 2;
-
-    float datOrg1[rawDataSize::size1][rawDataSize::size2][rawDataSize::size3][rawDataSize::frame] = {1,2,3,4,5,
-                                                                                                     6,7,8,9,10,
-                                                                                                     11,12,13,14,15,16};
-    float datOrg2[rawDataSize::size1][rawDataSize::size2][rawDataSize::size3][rawDataSize::frame] = {0};
 
 
 
@@ -36,27 +39,20 @@ namespace AQuA{
     };//struct
 
 
-    // preSetting static member definition
-    short preSetting::registrateCorrect = preSetting::registrateCorrect_default;
-    short preSetting::bleachCorrect = preSetting::bleachCorrect_default;
-
-
-
-
 
     struct opts{
         static short registrateCorrect;
         static short bleachCorrect;
-        static float smoXY;
-        static float noiseEstimation;
+        static DATA_TYPE smoXY;
+        static DATA_TYPE noiseEstimation;
         static short thrARScl;
         static short minDur;
         static int minSize;
         static int maxSize;
-        static float circularityThr;
+        static DATA_TYPE circularityThr;
         static short needTemp;
-        static float sigThr;
-        static float maxDelay;
+        static DATA_TYPE sigThr;
+        static DATA_TYPE maxDelay;
         static short needRefine;
         static short needGrow;
         static short needSpa;
@@ -64,24 +60,24 @@ namespace AQuA{
         static short cDelay;
         static short gtwSmo;
         static short ignoreTau;
-        static float ratio;
+        static DATA_TYPE ratio;
         static short regMaskGap;
         static short usePG;
         static short cut;
         static short movAvgWin;
-        static float minShow1;
-        static float minShowEvtGUI;
+        static DATA_TYPE minShow1;
+        static DATA_TYPE minShowEvtGUI;
         static short correctTrend;
-        static float propthrmin;
-        static float propthrstep;
-        static float propthrmax;
-        static float compress;
+        static DATA_TYPE propthrmin;
+        static DATA_TYPE propthrstep;
+        static DATA_TYPE propthrmax;
+        static DATA_TYPE compress;
         static short gapExt;
-        static float frameRate;
-        static float spatialRes;
-        static float varEst;
-        static float fgFluo;
-        static float bgFluo;
+        static DATA_TYPE frameRate;
+        static DATA_TYPE spatialRes;
+        static DATA_TYPE varEst;
+        static DATA_TYPE fgFluo;
+        static DATA_TYPE bgFluo;
         static short northx;
         static short northy;
         static short preset;
@@ -99,22 +95,16 @@ namespace AQuA{
         static short maxdF2;
         static short singleChannel;
         static short alreadyBleachCorrect;
-        static short alreadyProprecess;
+        static short alreadyPreprocess;
         static short enableTap;
     };// struct opts
 
 
-    // opts static member definition
-    short opts::alreadyProprecess = 0;
-
-
-
-
-
-
 
     bool isDefault();
-    void getData();
+    DATA_TYPE**** loadData();
+    DATA_TYPE**** createSpace();
+    void dataInit();
 
 }// namespace
 #endif //AQUA_CPP_RAWDATA_H

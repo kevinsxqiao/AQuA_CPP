@@ -2,26 +2,13 @@
 // Created by Kevin Qiao on 2/17/2023.
 //
 
-#include "../data/data.h"
-#include <algorithm>
-#include <fftw3.h>
-#include <iostream>
-#include <time.h>
-
-#define N0 AQuA::rawDataSize::size1
-#define N1 AQuA::rawDataSize::size2
-#define N2 AQuA::rawDataSize::size3
-#define N0_ext (2*N0-1)
-#define N1_ext (2*N1-1)
-#define N2_ext (2*N2-1)
-#define FRAME AQuA::rawDataSize::frame
-
+#include "regCrossCorrelation.h"
 
 namespace AQuA{
 
 
-    float medianFunc(float array[], int size){
-        float median = 0;
+    DATA_TYPE medianFunc(DATA_TYPE array[], int size){
+        DATA_TYPE median = 0;
         std::sort(array, array+size);
         if(size % 2 == 0){
             median = ( array[size/2] + array[size/2 - 1] ) / 2;
@@ -35,8 +22,8 @@ namespace AQuA{
 
 
     // 90-degree anticlockwise rotation of matrix
-    void rotate_2d(float ref[N0][N1][N2],
-                   float (&mat)[N0][N1][N2]){
+    void rotate2d(DATA_TYPE ref[N0][N1][N2],
+                   DATA_TYPE (&mat)[N0][N1][N2]){
         for (int i = 0; i < N0; ++i) {
             for (int j = 0; j < N1; ++j) {
                 mat[N0 - j][i][0] = ref[i][j][0];
@@ -45,8 +32,8 @@ namespace AQuA{
     }// rotate2dMatrix()
 
     // // flip(flip(flip(b,1),2),3);
-    void flip_3d(float ref[N0][N1][N2],
-                 float (&mat)[N0][N1][N2]){
+    void flip3d(DATA_TYPE ref[N0][N1][N2],
+                 DATA_TYPE (&mat)[N0][N1][N2]){
         for (int i = 0; i < N0; ++i) {
             for (int j = 0; j < N1; ++j) {
                 for (int k = 0; k < N2; ++k) {
@@ -57,7 +44,6 @@ namespace AQuA{
     }// flip_3d()
 
 
-    // c = ifftn(fftn(a_add).*fftn(b_add));  //for float type
     void dft(float a_add[N0_ext][N1_ext][N2_ext],
              float b_add[N0_ext][N1_ext][N2_ext],
              float(&c)[N0_ext][N1_ext][N2_ext]){
@@ -254,14 +240,14 @@ namespace AQuA{
 //        std::cout<< "time:"<< double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
     }
 
-    void calCC(float a[N0][N1][N2],     // input: a = moving[]; b = ref[]
-               float b[N0][N1][N2],     // output: c[]
-               float (&c)[N0_ext][N1_ext][N2_ext]){
+    void calCC(DATA_TYPE a[N0][N1][N2],     // input: a = moving[]; b = ref[]
+               DATA_TYPE b[N0][N1][N2],     // output: c[]
+               DATA_TYPE (&c)[N0_ext][N1_ext][N2_ext]){
 
-        float b_flipped[N0][N1][N2];
-        float a_add[N0_ext][N1_ext][N2_ext] = {0};
-        float b_add[N0_ext][N1_ext][N2_ext] = {0};
-        flip_3d(b,b_flipped); // flip(flip(flip(b,1),2),3);
+        DATA_TYPE b_flipped[N0][N1][N2];
+        DATA_TYPE a_add[N0_ext][N1_ext][N2_ext] = {0};
+        DATA_TYPE b_add[N0_ext][N1_ext][N2_ext] = {0};
+        flip3d(b,b_flipped); // flip(flip(flip(b,1),2),3);
         for(int i=0;i<N0;++i){
             for(int j=0;j<N1;++j){
                 for (int k = 0; k < N2; ++k) {
@@ -275,17 +261,17 @@ namespace AQuA{
 
 
 
-    float **** regCrossCorrelation(float (&data1)[N0][N1][N2][FRAME],
-                                   float (&data2)[N0][N1][N2][FRAME]){
-        float sum, median;
+    DATA_TYPE**** regCrossCorrelation(DATA_TYPE**** data1,
+                                      DATA_TYPE**** data2){
+        DATA_TYPE sum, median;
         int wShift, hShift, lShift;
         int x_translation[FRAME] = {0}, y_translation[FRAME]= {0}, z_translation[FRAME]= {0};
         int xs0, xe0, xs1, xe1, ys0, ye0, ys1, ye1, zs0, ze0, zs1, ze1;
-        float ref[N0][N1][N2] = {0};
-        float temp_col[N0 * N1 * N2];// convert moving and ref to one-dimension for sorting
-        float moving[N0][N1][N2];
-        float matrix[N0_ext][N1_ext][N2_ext] = {0};// store the output of calCC()
-        float matrix_col[N0_ext * N1_ext * N2_ext] ={0};
+        DATA_TYPE ref[N0][N1][N2] = {0};
+        DATA_TYPE temp_col[N0 * N1 * N2];// convert moving and ref to one-dimension for sorting
+        DATA_TYPE moving[N0][N1][N2];
+        DATA_TYPE matrix[N0_ext][N1_ext][N2_ext] = {0};// store the output of calCC()
+        DATA_TYPE matrix_col[N0_ext * N1_ext * N2_ext] ={0};
 
 
 
@@ -299,7 +285,7 @@ namespace AQuA{
                     for (int t=frame_start;t<frame_end;++t) {
                         sum += data1[i][j][k][t];
                     }// for(t)
-                    ref[i][j][k] = sum / float(frame_end - frame_start);
+                    ref[i][j][k] = sum / DATA_TYPE(frame_end - frame_start);
                     temp_col[m] = ref[i][j][k]; //convert ref to one dimension
                     ++m;
                 }// for(k)
@@ -420,24 +406,24 @@ namespace AQuA{
         int z_max = std::max_element(z_translation, z_translation+FRAME) - z_translation;
         int z_min = std::min_element(z_translation, z_translation+FRAME) - z_translation;
 
-        float ****dat1;
+        DATA_TYPE ****dat1;
         int x = x_max - x_min + 1, y = y_max - y_min + 1, z = z_max - z_min+ 1; // x,y,z indicates the size of the new matrix after registration
         int index = 0;
 
-        dat1 = new float ***[x];
+        dat1 = new DATA_TYPE ***[x];
         for (int i = 0; i < x; ++i) {
-            dat1[i] = new float**[y];
+            dat1[i] = new DATA_TYPE**[y];
 
         }
         for (int i = 0; i < x; ++i) {
             for (int j = 0; j < y; ++j) {
-                dat1[i][j] = new float*[z];
+                dat1[i][j] = new DATA_TYPE*[z];
             }
         }
         for (int i = 0; i < x; ++i) {
             for (int j = 0; j < y; ++j) {
                 for (int k = 0; k < z; ++k) {
-                    dat1[i][j][k] = new float[FRAME];
+                    dat1[i][j][k] = new DATA_TYPE[FRAME];
                 }
             }
         }

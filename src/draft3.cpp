@@ -4,19 +4,15 @@
 #include<time.h>
 #include <algorithm>
 #include "preProcess/regCrossCorrelation.h"
-double *fun(double* pt) {
-    for (int i = 0; i < 3; ++i) {
-        pt[i]++;
-    }
-    return pt;
-}
+
 
 
 int main() {
-
+    double a[2][2][2]={0};
+    double b[2][2][2] ={1,2,3,4,5,6,7,8};
     double ****pt;
-    int x = 2, y = 3, z = 2;
-    int index = 0;
+    int x = 2, y = 2, z = 2;
+    int index = 1;
 
     pt = new double ***[x];
     for (int i = 0; i < x; ++i) {
@@ -31,26 +27,28 @@ int main() {
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
             for (int k = 0; k < z; ++k) {
-                pt[i][j][k] = new double[5];
+                pt[i][j][k] = new double[2];
             }
         }
     }
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
             for (int k = 0; k < z; ++k) {
-                for (int t = 0; t < 5; ++t) {
+                for (int t = 0; t < 2; ++t) {
                     pt[i][j][k][t] = index++;
                 }
             }
         }
     }
+
+
 //    for (int i = 0; i < 3; ++i) {
 //        pt[i] = i;
 //    }
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
             for (int k = 0; k < z; ++k) {
-                for (int t = 0; t < 5; ++t) {
+                for (int t = 0; t < 2; ++t) {
                     std::cout<<i<<","<<j<<","<<k<<":";
                     std::cout << pt[i][j][k][t] << " ";
                 }
@@ -59,6 +57,40 @@ int main() {
         }
         std::cout << std::endl;
     }
+    int sum = 0;
+    double temp_col[2*2*2*2];
+    for (int i=0, m=0; i<x;++i) {
+        for (int j=0; j<y;++j) {
+            for(int k=0; k<z;++k){
+                sum = 0;
+                for (int t=0;t<2;++t) {
+                    temp_col[m] = pt[i][j][k][t];
+                    ++m;
+                }// for(t)
+            }// for(k)
+        }// for(j)
+    }// for(i)
+    std::cout<<AQuA::medianFunc(temp_col,2*2*2*2)<<std::endl;
+    AQuA::flip_3d(b, a);
+    for (int i = 0; i < x; ++i) {
+        for (int j = 0; j < y; ++j) {
+            for (int k = 0; k < z; ++k) {
+                std::cout<< b[i][j][k]<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<std::endl;
+    }
+    for (int i = 0; i < x; ++i) {
+        for (int j = 0; j < y; ++j) {
+            for (int k = 0; k < z; ++k) {
+                std::cout<< a[i][j][k]<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<std::endl;
+    }
+
     return 0;
 }
 //    fun(pt);

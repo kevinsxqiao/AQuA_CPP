@@ -5,6 +5,8 @@
 #ifndef AQUA_CPP_FLOW_H
 #define AQUA_CPP_FLOW_H
 
+# include <iostream>
+
 namespace AQuA{
 
     int menu();

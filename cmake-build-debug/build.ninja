@@ -56,8 +56,8 @@ build CMakeFiles/AQuA_CPP.dir/src/draft3.cpp.obj: CXX_COMPILER__AQuA_CPP_Debug C
   OBJECT_DIR = CMakeFiles\AQuA_CPP.dir
   OBJECT_FILE_DIR = CMakeFiles\AQuA_CPP.dir\src
 
-build CMakeFiles/AQuA_CPP.dir/src/preProcess/preProcessRun.cpp.obj: CXX_COMPILER__AQuA_CPP_Debug C$:/Users/Kevin$ Qiao/Desktop/AQuA_CPP/src/preProcess/preProcessRun.cpp || cmake_object_order_depends_target_AQuA_CPP
-  DEP_FILE = CMakeFiles\AQuA_CPP.dir\src\preProcess\preProcessRun.cpp.obj.d
+build CMakeFiles/AQuA_CPP.dir/src/preProcess/regCrossCorrelation.cpp.obj: CXX_COMPILER__AQuA_CPP_Debug C$:/Users/Kevin$ Qiao/Desktop/AQuA_CPP/src/preProcess/regCrossCorrelation.cpp || cmake_object_order_depends_target_AQuA_CPP
+  DEP_FILE = CMakeFiles\AQuA_CPP.dir\src\preProcess\regCrossCorrelation.cpp.obj.d
   FLAGS = -g -fdiagnostics-color=always -std=gnu++11
   INCLUDES = -I"C:/Users/Kevin Qiao/Desktop/AQuA_CPP/fftw3.3.5-64"
   OBJECT_DIR = CMakeFiles\AQuA_CPP.dir
@@ -71,7 +71,7 @@ build CMakeFiles/AQuA_CPP.dir/src/preProcess/preProcessRun.cpp.obj: CXX_COMPILER
 #############################################
 # Link the executable AQuA_CPP.exe
 
-build AQuA_CPP.exe: CXX_EXECUTABLE_LINKER__AQuA_CPP_Debug CMakeFiles/AQuA_CPP.dir/src/draft3.cpp.obj CMakeFiles/AQuA_CPP.dir/src/preProcess/preProcessRun.cpp.obj
+build AQuA_CPP.exe: CXX_EXECUTABLE_LINKER__AQuA_CPP_Debug CMakeFiles/AQuA_CPP.dir/src/draft3.cpp.obj CMakeFiles/AQuA_CPP.dir/src/preProcess/regCrossCorrelation.cpp.obj
   FLAGS = -g
   LINK_LIBRARIES = -llibfftw3-3  -llibfftw3f-3  -llibfftw3l-3  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32
   LINK_PATH = -LC:/Users/KEVINQ~1/Desktop/AQuA_CPP/FFTW33~1.5-6
