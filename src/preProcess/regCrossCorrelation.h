@@ -27,8 +27,8 @@ namespace AQuA{
     void calCC(DATA_TYPE a[N0][N1][N2],     // input: a = moving[]; b = ref[]
                DATA_TYPE b[N0][N1][N2],     // output: c[]
                DATA_TYPE (&c)[N0_ext][N1_ext][N2_ext]);
-    DATA_TYPE **** regCrossCorrelation(DATA_TYPE (&data1)[N0][N1][N2][FRAME],
-                                   DATA_TYPE (&data2)[N0][N1][N2][FRAME]);
+    DATA_TYPE **** regCrossCorrelation(DATA_TYPE (****data1),
+                                   DATA_TYPE (****data2));
 
 
     

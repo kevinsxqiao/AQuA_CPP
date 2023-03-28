@@ -23,10 +23,10 @@ namespace AQuA{
 
 
     struct rawDataSize{ // clarification structure of raw data size
-        static const short size1 = 2;
-        static const short size2 = 2;
-        static const short size3 = 2;
-        static const short frame = 2;
+        static short size1;
+        static short size2;
+        static short size3;
+        static short frame;
     };// struct
 
 
@@ -37,7 +37,6 @@ namespace AQuA{
         static short registrateCorrect;
         static short bleachCorrect;
     };//struct
-
 
 
     struct opts{
@@ -98,6 +97,24 @@ namespace AQuA{
         static short alreadyPreprocess;
         static short enableTap;
     };// struct opts
+
+    struct scl{
+        static short min;
+        static short max;
+        static short bri1;
+        static short bri2;
+        static short briL;
+        static short briR;
+        static float briOv;
+        static float minOv;
+        static float maxOv;
+        static short hrg[2];
+        static short wrg[2];
+        static short lrg[2];
+        static short H;
+        static short W;
+        static short L;
+    };// struct scl
 
 
 

@@ -71,7 +71,7 @@ int main() {
         }// for(j)
     }// for(i)
     std::cout<<AQuA::medianFunc(temp_col,2*2*2*2)<<std::endl;
-    AQuA::flip_3d(b, a);
+    AQuA::flip3d(b, a);
     for (int i = 0; i < x; ++i) {
         for (int j = 0; j < y; ++j) {
             for (int k = 0; k < z; ++k) {

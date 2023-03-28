@@ -57,7 +57,11 @@ namespace AQuA{
         /*
          * load tiff file
          */
-        return create4dMatrix(2,2,2,2);
+        N0 = 2;
+        N1 = 2;
+        N2 = 2;
+        FRAME  = 2;
+        return create4dMatrix(N0,N1,N2,FRAME);
     }// loadData()
 
 

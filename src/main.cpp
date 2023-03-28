@@ -17,13 +17,15 @@ namespace AQuA{
     int main() {
 
         // load the data
-        loadData();
+        DATA_TYPE**** datOrg1 = loadData();
+        DATA_TYPE**** datOrg2 = loadData();
         dataInit();
+
 
         int ixTab = menu(); // select action
         switch (ixTab) {
             case 1:
-                AQuA::preProcessRun();
+                preProcessRun(datOrg1,datOrg2);
                 break;
 //        case 2:
 //            AQuA::actRun();

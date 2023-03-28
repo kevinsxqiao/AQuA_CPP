@@ -11,7 +11,7 @@
 
 namespace AQuA{
 
-    void preProcessRun();
+    void preProcessRun(DATA_TYPE**** data1, DATA_TYPE**** data2);
 
 }// namespace
 

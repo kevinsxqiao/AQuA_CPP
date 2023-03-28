@@ -440,7 +440,8 @@ namespace AQuA{
 //        if(~isempty(data2))
 //            data2 = data2(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),max(z_translation)+1:end+min(z_translation),:);
 //        end
-        return dat1;
+
+    return dat1;
     }// regCrossCorrelation()
 
 
