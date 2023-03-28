@@ -6,10 +6,6 @@
 #define AQUA_CPP_REGCROSSCORRELATION_H
 
 #include "../data/data.h"
-#include <algorithm>
-#include <fftw3.h>
-#include <iostream>
-#include <time.h>
 
 #define N0 AQuA::rawDataSize::size1
 #define N1 AQuA::rawDataSize::size2
@@ -19,279 +15,28 @@
 #define N2_ext (2*N2-1)
 #define FRAME AQuA::rawDataSize::frame
 
-
 namespace AQuA{
 
-
-    float medianFunc(float array[], int size){
-        float median = 0;
-        std::sort(array, array+size);
-        if(size % 2 == 0){
-            median = ( array[size/2] + array[size/2 - 1] ) / 2;
-        }
-        else{
-            median = array[size/ 2];
-        }
-//        std::cout<< median;
-        return median;
-    }// medianFunc()
-
-
-    // 90-degree anticlockwise rotation of matrix
+    float medianFunc(float array[], int size);
     void rotate_2d(float ref[N0][N1][N2],
-                 float (&mat)[N0][N1][N2]){
-        for (int i = 0; i < N0; ++i) {
-            for (int j = 0; j < N1; ++j) {
-                mat[N0 - j][i][0] = ref[i][j][0];
-            }// for(j)
-        }// for(i)
-    }// rotate2dMatrix()
-
-    // // flip(flip(flip(b,1),2),3);
+                   float (&mat)[N0][N1][N2]);
     void flip_3d(float ref[N0][N1][N2],
-                 float (&mat)[N0][N1][N2]){
-        for (int i = 0; i < N0; ++i) {
-            for (int j = 0; j < N1; ++j) {
-                for (int k = 0; k < N2; ++k) {
-                    mat[N0 - 1 - i][N1 - 1 -j ][N2 - 1 - k] = ref[i][j][k];
-                }// for(k)
-            }// for(j)
-        }// for(i)
-    }// flip_3d()
-
-
-    // c = ifftn(fftn(a_add).*fftn(b_add));  //for float type
+                 float (&mat)[N0][N1][N2]);
     void dft(float a_add[N0_ext][N1_ext][N2_ext],
              float b_add[N0_ext][N1_ext][N2_ext],
-             float(&c)[N0_ext][N1_ext][N2_ext]){
-//        clock_t start,end;
-//        start = clock();
-
-        // allocate memory  --use recommend fftwf_malloc which allocating memory on the heap,
-        // fixed-size array is allocated on the stack, using large fixed-size arrays may cause stack overflow issues or exceed the available stack size.
-        float* input_a = static_cast<float *>(fftwf_malloc(N0_ext * N1_ext * N2_ext * sizeof(float)));
-        float* input_b = static_cast<float *>(fftwf_malloc(N0_ext * N1_ext * N2_ext * sizeof(float)));
-        fftwf_complex* output_a = static_cast<fftwf_complex *>(fftwf_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftwf_complex)));
-        fftwf_complex* output_b = static_cast<fftwf_complex *>(fftwf_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftwf_complex)));
-        fftwf_complex* output_dotProduct = static_cast<fftwf_complex *>(fftwf_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftwf_complex)));
-        float* restored = static_cast<float *>(fftwf_malloc(N0_ext * N1_ext * N2_ext * sizeof(float)));
-
-
-        // initialize the input matrix (with sub2ind)
-        for (int i = 0; i < N0_ext; ++i) {
-            for (int j = 0; j < N1_ext; ++j) {
-                for (int k = 0; k < N2_ext; ++k) {
-                    input_a[i * N1_ext * N2_ext + j * N2_ext + k] = a_add[i][j][k];
-                    input_b[i * N1_ext * N2_ext + j * N2_ext + k] = b_add[i][j][j];
-//                    std::cout<<input_a[i * N1_ext * N2_ext + j * N2_ext + k]<<" ";
-                }
-            }
-        }
-        std::cout<<std::endl;
-
-//    for (int k = 0; k < N2_ext; ++k) {
-//        for (int i = 0; i < N0_ext; ++i) {
-//            for (int j = 0; j < N1_ext; ++j) {
-//                std::cout<<input_a[i * N1_ext * N2_ext + j * N2_ext + k]<<" ";
-//            }
-//            std::cout<<std::endl;
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<<std::endl;
-
-        // create fftw plan
-        fftwf_plan fft_plan_a = fftwf_plan_dft_r2c_3d(N0_ext, N1_ext, N2_ext, input_a, output_a, FFTW_ESTIMATE);
-        fftwf_plan fft_plan_b = fftwf_plan_dft_r2c_3d(N0_ext, N1_ext, N2_ext, input_b, output_b, FFTW_ESTIMATE);
-        fftwf_plan ifft_plan = fftwf_plan_dft_c2r_3d(N0_ext, N1_ext, N2_ext, output_dotProduct, restored,  FFTW_ESTIMATE);
-
-
-        fftwf_execute(fft_plan_a);
-        fftwf_execute(fft_plan_b);
-
-
-//print the matrix after fft_plan_a
-//    for (int k = 0; k < N2_ext ; ++k) {
-//        for (int j = 0; j < N1_ext; ++j) {
-//            for (int i = 0; i < N0_ext; ++i) {
-//                int index = i * N1_ext * (N2_ext/2 + 1) + j * (N2_ext/2 + 1) + k;
-//                std::cout<< output_a[index][0]<< "+" << output_a[index][1]<< "i"<< "      ";
-//            }
-//            std::cout<< std::endl;
-//        }
-//        std::cout<< std::endl;
-//    }
-
-
-        // dot product
-        for (int index = 0; index<N0_ext * N1_ext * (N2_ext/2 + 1); ++index) {
-            output_dotProduct[index][0] = output_a[index][0] * output_b[index][0] - output_a[index][1] * output_b[index][1];
-            output_dotProduct[index][1] = output_a[index][0] * output_b[index][1] + output_a[index][1] * output_b[index][0];
-        }
-
-
-        fftwf_execute(ifft_plan);
-
-
-        // normalize the IFFT output, since ifftn() will automatically normalize in matlab
-        for (int i = 0; i < N0_ext; ++i) {
-            for (int j = 0; j < N1_ext; ++j) {
-                for (int k = 0; k < N2_ext; ++k) {
-                    restored[i * N1_ext * N2_ext + j * N2_ext + k] /= N0_ext*N1_ext*N2_ext;
-                    c[i][j][k] = restored[i * N1_ext * N2_ext + j * N2_ext + k];
-                }
-            }
-        }
-
-        // free
-        fftwf_destroy_plan(fft_plan_a);
-        fftwf_destroy_plan(fft_plan_b);
-        fftwf_destroy_plan(ifft_plan);
-        fftwf_free(input_a);
-        fftwf_free(input_b);
-        fftwf_free(output_a);
-        fftwf_free(output_b);
-        fftwf_free(restored);
-        fftwf_free(output_dotProduct);
-
-//        end=clock();
-//        std::cout<< "time:"<< double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
-    }
-
-
-// c = ifftn(fftn(a_add).*fftn(b_add));  //for double type
+             float(&c)[N0_ext][N1_ext][N2_ext]);
     void dft(double a_add[N0_ext][N1_ext][N2_ext],
              double b_add[N0_ext][N1_ext][N2_ext],
-             double(&c)[N0_ext][N1_ext][N2_ext]){
-//        clock_t start,end;
-//        start = clock();
-
-        // allocate memory  --use recommend fftw_malloc which allocating memory on the heap,
-        // fixed-size array is allocated on the stack, using large fixed-size arrays may cause stack overflow issues or exceed the available stack size.
-        double* input_a = static_cast<double *>(fftw_malloc(N0_ext * N1_ext * N2_ext * sizeof(double)));
-        double* input_b = static_cast<double *>(fftw_malloc(N0_ext * N1_ext * N2_ext * sizeof(double)));
-        fftw_complex* output_a = static_cast<fftw_complex *>(fftw_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftw_complex)));
-        fftw_complex* output_b = static_cast<fftw_complex *>(fftw_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftw_complex)));
-        fftw_complex* output_dotProduct = static_cast<fftw_complex *>(fftw_malloc(N0_ext * N1_ext * (N2_ext/2 + 1) * sizeof(fftw_complex)));
-        double* restored = static_cast<double *>(fftw_malloc(N0_ext * N1_ext * N2_ext * sizeof(double)));
-
-
-        // initialize the input matrix (with sub2ind)
-        for (int i = 0; i < N0_ext; ++i) {
-            for (int j = 0; j < N1_ext; ++j) {
-                for (int k = 0; k < N2_ext; ++k) {
-                    input_a[i * N1_ext * N2_ext + j * N2_ext + k] = a_add[i][j][k];
-                    input_b[i * N1_ext * N2_ext + j * N2_ext + k] = b_add[i][j][j];
-                    std::cout<<input_a[i * N1_ext * N2_ext + j * N2_ext + k]<<" ";
-                }
-            }
-        }
-        std::cout<<std::endl;
-
-//    for (int k = 0; k < N2_ext; ++k) {
-//        for (int i = 0; i < N0_ext; ++i) {
-//            for (int j = 0; j < N1_ext; ++j) {
-//                std::cout<<input_a[i * N1_ext * N2_ext + j * N2_ext + k]<<" ";
-//            }
-//            std::cout<<std::endl;
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<<std::endl;
-
-        // create fftw plan
-        fftw_plan fft_plan_a = fftw_plan_dft_r2c_3d(N0_ext, N1_ext, N2_ext, input_a, output_a, FFTW_ESTIMATE);
-        fftw_plan fft_plan_b = fftw_plan_dft_r2c_3d(N0_ext, N1_ext, N2_ext, input_b, output_b, FFTW_ESTIMATE);
-        fftw_plan ifft_plan = fftw_plan_dft_c2r_3d(N0_ext, N1_ext, N2_ext, output_dotProduct, restored,  FFTW_ESTIMATE);
-
-
-        fftw_execute(fft_plan_a);
-        fftw_execute(fft_plan_b);
-
-
-//print the matrix after fft_plan_a
-//    for (int k = 0; k < N2_ext ; ++k) {
-//        for (int j = 0; j < N1_ext; ++j) {
-//            for (int i = 0; i < N0_ext; ++i) {
-//                int index = i * N1_ext * (N2_ext/2 + 1) + j * (N2_ext/2 + 1) + k;
-//                std::cout<< output_a[index][0]<< "+" << output_a[index][1]<< "i"<< "      ";
-//            }
-//            std::cout<< std::endl;
-//        }
-//        std::cout<< std::endl;
-//    }
-
-
-        // dot product
-        for (int index = 0; index<N0_ext * N1_ext * (N2_ext/2 + 1); ++index) {
-            output_dotProduct[index][0] = output_a[index][0] * output_b[index][0] - output_a[index][1] * output_b[index][1];
-            output_dotProduct[index][1] = output_a[index][0] * output_b[index][1] + output_a[index][1] * output_b[index][0];
-        }
-
-
-        fftw_execute(ifft_plan);
-
-
-        // normalize the IFFT output, since ifftn() will automatically normalize in matlab
-        for (int i = 0; i < N0_ext; ++i) {
-            for (int j = 0; j < N1_ext; ++j) {
-                for (int k = 0; k < N2_ext; ++k) {
-                    restored[i * N1_ext * N2_ext + j * N2_ext + k] /= N0_ext*N1_ext*N2_ext;
-                    c[i][j][k] = restored[i * N1_ext * N2_ext + j * N2_ext + k];
-                }
-            }
-        }
-
-        // free
-        fftw_destroy_plan(fft_plan_a);
-        fftw_destroy_plan(fft_plan_b);
-        fftw_destroy_plan(ifft_plan);
-        fftw_free(input_a);
-        fftw_free(input_b);
-        fftw_free(output_a);
-        fftw_free(output_b);
-        fftw_free(restored);
-        fftw_free(output_dotProduct);
-
-//        end=clock();
-//        std::cout<< "time:"<< double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
-    }
-
+             double(&c)[N0_ext][N1_ext][N2_ext]);
     void calCC(float a[N0][N1][N2],     // input: a = moving[]; b = ref[]
                float b[N0][N1][N2],     // output: c[]
-               float (&c)[N0_ext][N1_ext][N2_ext]){
-
-        float b_flipped[N0][N1][N2];
-        float a_add[N0_ext][N1_ext][N2_ext] = {0};
-        float b_add[N0_ext][N1_ext][N2_ext] = {0};
-        flip_3d(b,b_flipped); // flip(flip(flip(b,1),2),3);
-        for(int i=0;i<N0;++i){
-            for(int j=0;j<N1;++j){
-                for (int k = 0; k < N2; ++k) {
-                    a_add[i][j][k] = a[i][j][k];
-                    b_add[i][j][k] = b_flipped[i][j][k];
-                } //for(k)
-            } //for(j)
-        }// for(i)
-        dft(a_add,b_add,c);
-    }// calCC
-
-
-
+               float (&c)[N0_ext][N1_ext][N2_ext]);
     float **** regCrossCorrelation(float (&data1)[N0][N1][N2][FRAME],
-                             float (&data2)[N0][N1][N2][FRAME]){
-        float sum, median;
-        int wShift, hShift, lShift;
-        int x_translation[FRAME] = {0}, y_translation[FRAME]= {0}, z_translation[FRAME]= {0};
-        int xs0, xe0, xs1, xe1, ys0, ye0, ys1, ye1, zs0, ze0, zs1, ze1;
-        float ref[N0][N1][N2] = {0};
-        float temp_col[N0 * N1 * N2];// convert moving and ref to one-dimension for sorting
-        float moving[N0][N1][N2];
-        float matrix[N0_ext][N1_ext][N2_ext] = {0};// store the output of calCC()
-        float matrix_col[N0_ext * N1_ext * N2_ext] ={0};
+                                   float (&data2)[N0][N1][N2][FRAME]);
 
 
 
+<<<<<<< HEAD
         // compute the mean value from frame_start to frame_end
         int frame_start = 0;
         int frame_end = 2;
@@ -462,6 +207,8 @@ namespace AQuA{
 
     //1111
 
+=======
+>>>>>>> main
 
 }// namespace
 

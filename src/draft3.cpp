@@ -3,7 +3,7 @@
 #include <fftw3.h>
 #include<time.h>
 #include <algorithm>
-
+#include "preProcess/regCrossCorrelation.h"
 double *fun(double* pt) {
     for (int i = 0; i < 3; ++i) {
         pt[i]++;
@@ -13,6 +13,7 @@ double *fun(double* pt) {
 
 
 int main() {
+
     double ****pt;
     int x = 2, y = 3, z = 2;
     int index = 0;

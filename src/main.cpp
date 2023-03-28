@@ -3,12 +3,12 @@
 //
 
 #include <iostream>
-#include "preProcessRun.h"
+#include "preProcess/preProcessRun.h"
 #include "actRun.h"
 #include "phaseRun.h"
 #include "evtRun.h"
 #include "feaRun.h"
-#include "flow/flowMethods.h"
+#include "flow/flow.h"
 
 
 

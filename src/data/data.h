@@ -5,6 +5,7 @@
 #ifndef AQUA_CPP_RAWDATA_H
 #define AQUA_CPP_RAWDATA_H
 
+#include <string>
 namespace AQuA{
 
 
@@ -26,7 +27,8 @@ namespace AQuA{
     float datOrg2[rawDataSize::size1][rawDataSize::size2][rawDataSize::size3][rawDataSize::frame] = {0};
 
 
-    struct preSetting_structure{// static member clarification
+
+    struct preSetting{// static member clarification
         static const short registrateCorrect_default = 0;
         static const short bleachCorrect_default = 0;
         static short registrateCorrect;
@@ -34,17 +36,15 @@ namespace AQuA{
     };//struct
 
 
-
-
-    // preSetting_structure static member definition
-    short preSetting_structure::registrateCorrect = preSetting_structure::registrateCorrect_default;
-    short preSetting_structure::bleachCorrect = preSetting_structure::bleachCorrect_default;
+    // preSetting static member definition
+    short preSetting::registrateCorrect = preSetting::registrateCorrect_default;
+    short preSetting::bleachCorrect = preSetting::bleachCorrect_default;
 
 
 
 
 
-    struct opts_struct{
+    struct opts{
         static short registrateCorrect;
         static short bleachCorrect;
         static float smoXY;
@@ -104,15 +104,17 @@ namespace AQuA{
     };// struct opts
 
 
-    // opts_struct static member definition
-    short opts_struct::alreadyProprecess = 0;
+    // opts static member definition
+    short opts::alreadyProprecess = 0;
 
 
-    bool isDefault() { //judge if the value is changed or not; ---- true = no change; false = changed
-        return (preSetting_structure::registrateCorrect == preSetting_structure::registrateCorrect_default
-                && preSetting_structure::bleachCorrect == preSetting_structure::bleachCorrect_default);
-    }
 
+
+
+
+
+    bool isDefault();
+    void getData();
 
 }// namespace
 #endif //AQUA_CPP_RAWDATA_H
