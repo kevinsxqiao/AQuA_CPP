@@ -446,7 +446,7 @@ namespace AQuA{
         }
 //        data1 = data1(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),max(z_translation)+1:end+min(z_translation),:);
         for (int i = x_min, x_target=0; i < x_max+1; ++i, ++x_target) {
-            for (int j =y_min, y_target=0; j < y_max+1; ++j, ++y_target) {
+            for (int j = y_min, y_target=0; j < y_max+1; ++j, ++y_target) {
                 for (int k = z_min, z_target=0; k < z_max+1; ++k, ++z_target) {
                     for (int t = 0; t < FRAME; ++t) {
                         dat1[x_target][y_target][z_target][t] = data1[i][j][k][t];
@@ -460,6 +460,7 @@ namespace AQuA{
 
     }// regCrossCorrelation()
 
+    //1111
 
 
 }// namespace
