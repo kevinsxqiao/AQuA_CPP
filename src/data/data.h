@@ -7,13 +7,14 @@
 
 #define DATA_TYPE double
 
-#define N0 AQuA::rawDataSize::size1
-#define N1 AQuA::rawDataSize::size2
-#define N2 AQuA::rawDataSize::size3
-#define N0_ext (2*N0-1)
-#define N1_ext (2*N1-1)
-#define N2_ext (2*N2-1)
-#define FRAME AQuA::rawDataSize::frame
+#define H AQuA::rawDataSize::size1
+#define W AQuA::rawDataSize::size2
+#define L AQuA::rawDataSize::size3
+#define T AQuA::rawDataSize::frame
+#define H_ext (2*H-1)
+#define W_ext (2*W-1)
+#define L_ext (2*L-1)
+
 
 #include <string>
 #include <iostream>
@@ -111,17 +112,19 @@ namespace AQuA{
         static short hrg[2];
         static short wrg[2];
         static short lrg[2];
-        static short H;
-        static short W;
-        static short L;
+        static short h;
+        static short w;
+        static short l;
     };// struct scl
 
 
 
     bool isDefault();
+    void dataInit();
+    void releaseData(DATA_TYPE**** data);
     DATA_TYPE**** loadData();
     DATA_TYPE**** createSpace();
-    void dataInit();
+
 
 }// namespace
 #endif //AQUA_CPP_RAWDATA_H

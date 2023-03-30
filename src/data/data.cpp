@@ -7,12 +7,8 @@
 
 namespace AQuA{
 
-    /*
-     * create a 4-d matrix, data1 is the pointer points to the address
-     * input = the size of dimension is respectively, N0 (H),N1 (W),N2 (L),FRAME (T)
-     * output = pointer of DATA_TYPE****
-     */
-    DATA_TYPE**** create4dMatrix(int H, int W, int L, int T){
+
+    DATA_TYPE**** create4dMatrix(){
 
         DATA_TYPE ****data;
         data = new DATA_TYPE ***[H];
@@ -57,12 +53,17 @@ namespace AQuA{
         /*
          * load tiff file
          */
-        N0 = 2;
-        N1 = 2;
-        N2 = 2;
-        FRAME  = 2;
-        return create4dMatrix(N0,N1,N2,FRAME);
+        H = 2;
+        W = 2;
+        L = 2;
+        T  = 2;
+        return create4dMatrix();
     }// loadData()
+
+
+    void releaseData(DATA_TYPE**** data){
+        delete data;
+    }// releaseData()
 
 
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed

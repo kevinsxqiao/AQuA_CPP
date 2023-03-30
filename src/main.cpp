@@ -40,6 +40,10 @@ namespace AQuA{
 //            AQuA::feaRun();
 //            break;
         }
+
+        releaseData(datOrg1);
+        releaseData(datOrg2);
+
         return 0;
     }
 
