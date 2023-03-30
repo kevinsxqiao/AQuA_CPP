@@ -22,6 +22,21 @@
 
 namespace AQuA{
 
+    bool isDefault();
+    void dataInit();
+    void releaseData(DATA_TYPE**** data);
+    void releaseData(DATA_TYPE*** data);
+    void releaseData(float*** data);
+    void releaseData(DATA_TYPE* data);
+    void releaseData(int* data);
+    DATA_TYPE**** loadData();
+    DATA_TYPE**** createSpace();
+    DATA_TYPE*** create3dMatrix();
+    DATA_TYPE*** create3dMatrix_ext();
+    float*** create3dMatrix_ext_float();
+    DATA_TYPE**** create4dMatrix();
+
+
 
     struct rawDataSize{ // clarification structure of raw data size
         static short size1;
@@ -117,13 +132,6 @@ namespace AQuA{
         static short l;
     };// struct scl
 
-
-
-    bool isDefault();
-    void dataInit();
-    void releaseData(DATA_TYPE**** data);
-    DATA_TYPE**** loadData();
-    DATA_TYPE**** createSpace();
 
 
 }// namespace

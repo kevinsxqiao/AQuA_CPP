@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD 11)
 link_directories(${CMAKE_SOURCE_DIR}/fftw3.3.5-64)
 include_directories(${CMAKE_SOURCE_DIR}/fftw3.3.5-64)
 
-add_executable(${PROJECT_NAME}  src/draft3.cpp
-        src/preProcess/preProcessRun.h src/phaseRun.h src/getappdata.h src/feaRun.h src/evtRun.h src/actRun.h
-        src/flow/flow.h src/data/data.h src/preProcess/regCrossCorrelation.cpp)
+add_executable(${PROJECT_NAME}  src/draft3.cpp src/preProcess/regCrossCorrelation.cpp
+         src/phaseRun.h src/getappdata.h src/feaRun.h src/evtRun.h src/actRun.h
+        src/flow/flow.h src/data/data.h  src/preProcess/preProcessRun.h)
 
 target_link_libraries(${PROJECT_NAME} libfftw3-3 libfftw3f-3 libfftw3l-3)

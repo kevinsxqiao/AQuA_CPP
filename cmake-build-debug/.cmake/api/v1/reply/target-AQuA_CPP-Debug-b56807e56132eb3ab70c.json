@@ -84,7 +84,7 @@
 			"sourceIndexes" : 
 			[
 				0,
-				9
+				1
 			]
 		}
 	],
@@ -142,21 +142,21 @@
 			"sourceIndexes" : 
 			[
 				0,
-				9
+				1
 			]
 		},
 		{
 			"name" : "Header Files",
 			"sourceIndexes" : 
 			[
-				1,
 				2,
 				3,
 				4,
 				5,
 				6,
 				7,
-				8
+				8,
+				9
 			]
 		}
 	],
@@ -170,8 +170,9 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "src/preProcess/preProcessRun.h",
-			"sourceGroupIndex" : 1
+			"compileGroupIndex" : 0,
+			"path" : "src/preProcess/regCrossCorrelation.cpp",
+			"sourceGroupIndex" : 0
 		},
 		{
 			"backtrace" : 1,
@@ -210,9 +211,8 @@
 		},
 		{
 			"backtrace" : 1,
-			"compileGroupIndex" : 0,
-			"path" : "src/preProcess/regCrossCorrelation.cpp",
-			"sourceGroupIndex" : 0
+			"path" : "src/preProcess/preProcessRun.h",
+			"sourceGroupIndex" : 1
 		}
 	],
 	"type" : "EXECUTABLE"

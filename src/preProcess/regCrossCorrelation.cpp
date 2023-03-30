@@ -7,7 +7,7 @@
 namespace AQuA{
 
 
-    DATA_TYPE medianFunc(DATA_TYPE array[], int size){
+    DATA_TYPE medianFunc(DATA_TYPE* array, int size){
         DATA_TYPE median = 0;
         std::sort(array, array+size);
         if(size % 2 == 0){
@@ -21,37 +21,13 @@ namespace AQuA{
     }// medianFunc()
 
 
-    // 90-degree anticlockwise rotation of matrix
-    void rotate2d(DATA_TYPE ref[H][W][L],
-                   DATA_TYPE (&mat)[H][W][L]){
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                mat[H - j][i][0] = ref[i][j][0];
-            }// for(j)
-        }// for(i)
-    }// rotate2dMatrix()
-
-    // // flip(flip(flip(b,1),2),3);
-    void flip3d(DATA_TYPE ref[H][W][L],
-                 DATA_TYPE (&mat)[H][W][L]){
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                for (int k = 0; k < L; ++k) {
-                    mat[H - 1 - i][W - 1 -j ][L - 1 - k] = ref[i][j][k];
-                }// for(k)
-            }// for(j)
-        }// for(i)
-    }// flip_3d()
-
-
-    void dft(float a_add[H_ext][W_ext][L_ext],
-             float b_add[H_ext][W_ext][L_ext],
-             float(&c)[H_ext][W_ext][L_ext]){
+    float*** dft(float*** a_add, float*** b_add){// **need delete outside**  return to calCC(), release matrix in regCrossCorrelation()
+//             float(&c)[H_ext][W_ext][L_ext]){
 //        clock_t start,end;
 //        start = clock();
 
-        // allocate memory  --use recommend fftwf_malloc which allocating memory on the heap,
-        // fixed-size array is allocated on the stack, using large fixed-size arrays may cause stack overflow issues or exceed the available stack size.
+// allocate memory  --use recommend fftwf_malloc which allocating memory on the heap,
+// fixed-size array is allocated on the stack, using large fixed-size arrays may cause stack overflow issues or exceed the available stack size.
         float* input_a = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
         float* input_b = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
         fftwf_complex* output_a = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2 + 1) * sizeof(fftwf_complex)));
@@ -115,7 +91,7 @@ namespace AQuA{
 
         fftwf_execute(ifft_plan);
 
-
+        float*** c = create3dMatrix_ext_float();
         // normalize the IFFT output, since ifftn() will automatically normalize in matlab
         for (int i = 0; i < H_ext; ++i) {
             for (int j = 0; j < W_ext; ++j) {
@@ -139,13 +115,12 @@ namespace AQuA{
 
 //        end=clock();
 //        std::cout<< "time:"<< double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
+        return c;
     }
 
 
 // c = ifftn(fftn(a_add).*fftn(b_add));  //for double type
-    void dft(double a_add[H_ext][W_ext][L_ext],
-             double b_add[H_ext][W_ext][L_ext],
-             double(&c)[H_ext][W_ext][L_ext]){
+    double*** dft(double*** a_add, double*** b_add){// **need delete outside**  return to calCC(), release matrix in regCrossCorrelation()
 //        clock_t start,end;
 //        start = clock();
 
@@ -214,7 +189,7 @@ namespace AQuA{
 
         fftw_execute(ifft_plan);
 
-
+        double*** c = create3dMatrix_ext();
         // normalize the IFFT output, since ifftn() will automatically normalize in matlab
         for (int i = 0; i < H_ext; ++i) {
             for (int j = 0; j < W_ext; ++j) {
@@ -238,46 +213,95 @@ namespace AQuA{
 
 //        end=clock();
 //        std::cout<< "time:"<< double(end-start)/CLOCKS_PER_SEC<<"s"<<std::endl;
+        return c;
     }
 
-    void calCC(DATA_TYPE a[H][W][L],     // input: a = moving[]; b = ref[]
-               DATA_TYPE b[H][W][L],     // output: c[]
-               DATA_TYPE (&c)[H_ext][W_ext][L_ext]){
 
-        DATA_TYPE b_flipped[H][W][L];
-        DATA_TYPE a_add[H_ext][W_ext][L_ext] = {0};
-        DATA_TYPE b_add[H_ext][W_ext][L_ext] = {0};
-        flip3d(b,b_flipped); // flip(flip(flip(b,1),2),3);
+    // 90-degree anticlockwise rotation of matrix
+    DATA_TYPE*** rotate2d(DATA_TYPE*** ref){  // not release yet
+        DATA_TYPE*** mat = create3dMatrix();
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                mat[H - j][i][0] = ref[i][j][0];
+            }// for(j)
+        }// for(i)
+        return mat;
+    }// rotate2dMatrix()
+
+
+
+// flip(flip(flip(b,1),2),3);       **need delete outside**
+//    void flip3d(DATA_TYPE (&ref)[H][W][L],
+//                 DATA_TYPE (&mat)[H][W][L]){
+    DATA_TYPE*** flip3d(DATA_TYPE*** ref, DATA_TYPE*** b_flip){
+
+
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    b_flip[H - 1 - i][W - 1 -j ][L - 1 - k] = ref[i][j][k];
+                }// for(k)
+            }// for(j)
+        }// for(i)
+
+        return b_flip;
+    }// flip_3d()
+
+// input: a = moving; b = ref output: c[]
+    DATA_TYPE*** calCC(DATA_TYPE*** a, DATA_TYPE*** b, DATA_TYPE*** a_add, DATA_TYPE*** b_add, DATA_TYPE*** b_flip){
+
+//        DATA_TYPE b_flipped[H][W][L];
+//        DATA_TYPE a_add[H_ext][W_ext][L_ext];
+//        DATA_TYPE b_add[H_ext][W_ext][L_ext];
+        b_flip = flip3d(b,b_flip); // flip(flip(flip(b,1),2),3); **need delete outside**
         for(int i=0;i<H;++i){
             for(int j=0;j<W;++j){
                 for (int k = 0; k < L; ++k) {
                     a_add[i][j][k] = a[i][j][k];
-                    b_add[i][j][k] = b_flipped[i][j][k];
+                    b_add[i][j][k] = b_flip[i][j][k];
                 } //for(k)
             } //for(j)
         }// for(i)
-        dft(a_add,b_add,c);
+
+        return dft(a_add,b_add);
     }// calCC
 
 
 
-    DATA_TYPE**** regCrossCorrelation(DATA_TYPE**** data1,
-                                      DATA_TYPE**** data2){
+    DATA_TYPE**** regCrossCorrelation(DATA_TYPE**** data1, DATA_TYPE**** data2){
+        /*
+         * create variables and allocate memory
+         */
+
+//        int x_translation[T], y_translation[T], z_translation[T];
+//        DATA_TYPE ref[H][W][L];
+//        DATA_TYPE temp_col[H * W * L];// convert moving and ref to one-dimension for sorting
+//        DATA_TYPE moving[H][W][L];
+//        DATA_TYPE matrix[H_ext][W_ext][L_ext];// store the output of calCC()
+//        DATA_TYPE matrix_col[H_ext * W_ext * L_ext];
         DATA_TYPE sum, median;
+        int frame_start = 0;
+        int frame_end = 2;
         int wShift, hShift, lShift;
-        int x_translation[T] = {0}, y_translation[T]= {0}, z_translation[T]= {0};
+        int id,r1;
         int xs0, xe0, xs1, xe1, ys0, ye0, ys1, ye1, zs0, ze0, zs1, ze1;
-        DATA_TYPE ref[H][W][L] = {0};
-        DATA_TYPE temp_col[H * W * L];// convert moving and ref to one-dimension for sorting
-        DATA_TYPE moving[H][W][L];
-        DATA_TYPE matrix[H_ext][W_ext][L_ext] = {0};// store the output of calCC()
-        DATA_TYPE matrix_col[H_ext * W_ext * L_ext] ={0};
+        int* x_translation = new int [T];
+        int* y_translation = new int [T];
+        int* z_translation = new int [T];
+        DATA_TYPE*** ref = create3dMatrix();
+        DATA_TYPE* temp_col = new DATA_TYPE [H*W*L];
+        DATA_TYPE*** moving = create3dMatrix();
+        DATA_TYPE*** a_add = create3dMatrix_ext();
+        DATA_TYPE*** b_add = create3dMatrix_ext();
+        DATA_TYPE*** b_flip = create3dMatrix();
+        DATA_TYPE*** matrix = create3dMatrix();
+        DATA_TYPE* matrix_col = new DATA_TYPE [H_ext*W_ext*L_ext];
+        DATA_TYPE ****dat1;// released in main.cpp: releaseData(datOrg1);
 
 
 
         // compute the mean value from frame_start to frame_end
-        int frame_start = 0;
-        int frame_end = 2;
+
         for (int i=0, m=0; i<H;++i) {
             for (int j=0; j<W;++j) {
                 for(int k=0; k<L;++k){
@@ -286,8 +310,7 @@ namespace AQuA{
                         sum += data1[i][j][k][t];
                     }// for(t)
                     ref[i][j][k] = sum / DATA_TYPE(frame_end - frame_start);
-                    temp_col[m] = ref[i][j][k]; //convert ref to one dimension
-                    ++m;
+                    temp_col[m++] = ref[i][j][k]; //convert ref to one dimension
                 }// for(k)
             }// for(j)
         }// for(i)
@@ -312,8 +335,7 @@ namespace AQuA{
                 for(int j=0; j<W; ++j){
                     for(int k=0; k<L; ++k){
                         moving[i][j][k] = data1[i][j][k][t]; //initialize moving
-                        temp_col[m] = moving[i][j][k]; //convert moving to one dimension
-                        ++m;
+                        temp_col[m++] = moving[i][j][k]; //convert moving to one dimension
                     }// for(k)
                 } // for(j)
             }// for(i)
@@ -322,7 +344,7 @@ namespace AQuA{
                 for(int j=0;j<W;++j){
                     for(int k=0;k<L;++k){
                         moving[i][j][k] -= median;  // moving = moving - median(moving(:));
-                        calCC(moving, ref, matrix); // matrix = calCC(moving,ref);
+                        matrix = calCC(moving, ref, a_add, b_add, b_flip); // matrix = calCC(moving,ref);
                     }// for(k)
                 } //for(j)
             }// for(i)
@@ -335,10 +357,10 @@ namespace AQuA{
                 } //for(j)
             }// for(i)
 
-            int id = std::max_element(matrix_col, matrix_col+(H_ext*W_ext*L_ext)) - matrix_col;  //[~,id] = max(matrix(:));
+            id = std::max_element(matrix_col, matrix_col+(H_ext*W_ext*L_ext)) - matrix_col;  //[~,id] = max(matrix(:));
             // [hShift,wShift,lShift] = ind2sub(size(matrix),id);
             hShift = id/(W_ext*L_ext); // x as page, in which page
-            int r1 = id%(W_ext*L_ext); // in the page hShift(2d matrix), linear position
+            r1 = id%(W_ext*L_ext); // in the page hShift(2d matrix), linear position
             wShift = r1 / L_ext; // in the page hShift(2d matrix), which row;
             lShift = r1 % L_ext; // in the page hShift(2d matrix), which column;
             x_translation[t] = H - hShift;
@@ -406,10 +428,8 @@ namespace AQuA{
         int z_max = std::max_element(z_translation, z_translation+T) - z_translation;
         int z_min = std::min_element(z_translation, z_translation+T) - z_translation;
 
-        DATA_TYPE ****dat1;
-        int x = x_max - x_min + 1, y = y_max - y_min + 1, z = z_max - z_min+ 1; // x,y,z indicates the size of the new matrix after registration
-        int index = 0;
 
+        int x = x_max - x_min + 1, y = y_max - y_min + 1, z = z_max - z_min+ 1; // x,y,z indicates the size of the new matrix after registration
         dat1 = new DATA_TYPE ***[x];
         for (int i = 0; i < x; ++i) {
             dat1[i] = new DATA_TYPE**[y];
@@ -441,7 +461,19 @@ namespace AQuA{
 //            data2 = data2(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),max(z_translation)+1:end+min(z_translation),:);
 //        end
 
-    return dat1;
+        releaseData(x_translation);
+        releaseData(y_translation);
+        releaseData(z_translation);
+        releaseData(ref);
+        releaseData(temp_col);
+        releaseData(moving);
+        releaseData(a_add);
+        releaseData(b_add);
+        releaseData(b_flip);
+        releaseData(matrix);
+        releaseData(matrix_col);
+
+        return dat1;
     }// regCrossCorrelation()
 
 
