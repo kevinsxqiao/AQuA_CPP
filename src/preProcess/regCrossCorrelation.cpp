@@ -464,13 +464,13 @@ namespace AQuA{
         releaseData(x_translation);
         releaseData(y_translation);
         releaseData(z_translation);
-        releaseData(ref);
+        releaseData(ref,H,W);
         releaseData(temp_col);
-        releaseData(moving);
-        releaseData(a_add);
-        releaseData(b_add);
-        releaseData(b_flip);
-        releaseData(matrix);
+        releaseData(moving,H,W);
+        releaseData(a_add,H_ext,W_ext);
+        releaseData(b_add,H_ext,W_ext);
+        releaseData(b_flip,H,W);
+        releaseData(matrix,H,W);
         releaseData(matrix_col);
 
         return dat1;

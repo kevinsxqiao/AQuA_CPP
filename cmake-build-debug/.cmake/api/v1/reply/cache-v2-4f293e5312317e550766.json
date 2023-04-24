@@ -1290,28 +1290,16 @@
 			"value" : "FALSE"
 		},
 		{
-			"name" : "FFTW3_DIR",
+			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenCV",
 			"properties" : 
 			[
 				{
 					"name" : "HELPSTRING",
-					"value" : "The directory containing a CMake configuration file for FFTW3."
+					"value" : "Details about finding OpenCV"
 				}
 			],
-			"type" : "PATH",
-			"value" : "FFTW3_DIR-NOTFOUND"
-		},
-		{
-			"name" : "FFTW3_LIBRARIES",
-			"properties" : 
-			[
-				{
-					"name" : "HELPSTRING",
-					"value" : "No help, variable specified on the command line."
-				}
-			],
-			"type" : "UNINITIALIZED",
-			"value" : "C:/Users/Kevin Qiao/Desktop/AQuA_CPP/fftw3-3/libfftw3-3.dll"
+			"type" : "INTERNAL",
+			"value" : "[C:/Program Files (x86)/opencv/mingw_build/install][v4.7.0()]"
 		},
 		{
 			"name" : "_CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED",

@@ -7,7 +7,9 @@
 
 #include "../data/data.h"
 #include "regCrossCorrelation.h"
+#include "baselineRemoveAndNoiseEstimation.h"
 #include <cstdlib>
+#include <iostream>
 
 namespace AQuA{
 

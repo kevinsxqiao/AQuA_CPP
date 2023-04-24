@@ -1,19 +1,54 @@
-#include <iostream>
-#include <cmath>
-#include <fftw3.h>
-#include<time.h>
-#include <algorithm>
-#include "preProcess/regCrossCorrelation.h"
+#include <opencv2/opencv.hpp>
+#include "data/data.h"
 
+DATA_TYPE **** loadData() {
 
+    std::vector<cv::Mat> images;
+    std::string pre_name = "C:/Users/Kevin Qiao/Desktop/3D_data/3D_dataFrame ";
+    std::string name_exd = ".tif";
 
-int main() {
-    int a[3] = {1,2,3};
-    int* b = new int[3];
-    for (int i = 0,m=0; i < 3; ++i) {
-        b[i]=i;
-    }
-    std::cout<<std::max_element(b,b+3)-b;
+//    AQuA::rawDataSizeInit();
+    T = 100;
+//    DATA_TYPE **** data = AQuA::create4dMatrix();
+
+    for (int t = 1; t < T; ++t) {
+        cv::imreadmulti(pre_name + std::to_string(t) + name_exd, images,  cv::IMREAD_GRAYSCALE);
+        if (t == 1) {
+            H = images[0].rows;
+            W = images[0].cols;
+            L = images.size();
+            std::cout<<"height of image:"<< H << std::endl;
+            std::cout<<"width of image:"<< W << std::endl;
+            std::cout<<"length of image:"<< L<< std::endl;
+        }
+
+        for (int k = 0; k < L; ++k) {
+
+            std::cout<< images[k].type()<< "  ";
+            std::cout<<images[k].depth()<< "  ";
+            std::cout<<images[k].channels()<< "  "<<std::endl;
+//            images[k].convertTo(images[k],CV_32F, 1.0/255.0);
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+//                    data[i][j][k][t] = images[k].at<float>(i,j); //uchar:: unsigned 8-bit integer
+//                    std::cout<<data[i][j][k][t]<<std::endl;
+                    std::cout<<static_cast<int>(images[k].at<uchar>(i,j))<<std::endl;
+                }//for(j)
+            }//for(i)
+
+            cv::imshow("length", images[k]);
+
+            std::cout<< images[k].type()<< "  ";
+            std::cout<<images[k].depth()<< "  ";
+            std::cout<<images[k].channels()<< "  ";
+            std::cout << "length " << k + 1 << " of " << L << " frame " << t << " of " << T << std::endl;
+            cv::waitKey();
+        }//for(k)
+    }//for(t)
+}
+
+int main(){
+    loadData();
     return 0;
 }
 

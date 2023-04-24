@@ -19,7 +19,8 @@ namespace AQuA{
         // load the data
         DATA_TYPE**** datOrg1 = loadData();
         DATA_TYPE**** datOrg2 = loadData();
-        dataInit();
+        preSettingInit();
+        optsInit();
 
 
         int ixTab = menu(); // select action
