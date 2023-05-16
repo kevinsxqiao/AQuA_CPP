@@ -6,7 +6,7 @@
 #define AQUA_CPP_RAWDATA_H
 
 
-typedef double DATA_TYPE;
+typedef float DATA_TYPE;
 
 #define H AQuA::rawDataSize.size1
 #define W AQuA::rawDataSize.size2
@@ -26,16 +26,17 @@ namespace AQuA{
     bool isDefault();
     void preSettingInit();
     void optsInit();
+    void Init();
     void rawDataSizeInit();
     void releaseData(DATA_TYPE**** data, int I, int J, int k);
-    void releaseData(DATA_TYPE*** data, int I, int J);
+    void releaseData(double*** data, int I, int J);
     void releaseData(float*** data, int I, int J);
     void releaseData(DATA_TYPE* data);
     void releaseData(int* data);
     DATA_TYPE**** loadData();
     DATA_TYPE**** createSpace();
     DATA_TYPE*** create3dMatrix();
-    DATA_TYPE*** create3dMatrix_ext();
+    double*** create3dMatrix_ext_double();
     float*** create3dMatrix_ext_float();
     DATA_TYPE**** create4dMatrix();
 
@@ -60,6 +61,7 @@ namespace AQuA{
     };//struct
 
     extern preSetting_struct preSetting;
+
 
     struct opts_struct{
          int registrateCorrect;
@@ -108,9 +110,9 @@ namespace AQuA{
          std::string filePath2;
          std::string fileName2;
          std::string fileType2;
-         int maxValueDat1;
-         int minValueDat1;
-         int sz[3];
+         double maxValueDat1;
+         double minValueDat1;
+         int sz[4];
          int BitDepth;
          int maxdF1;
          int maxdF2;
@@ -121,6 +123,7 @@ namespace AQuA{
     };// struct opts
 
     extern opts_struct opts;
+
 
     struct scl_struct{
          int min;

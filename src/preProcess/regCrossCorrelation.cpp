@@ -189,7 +189,7 @@ namespace AQuA{
 
         fftw_execute(ifft_plan);
 
-        double*** c = create3dMatrix_ext();
+        double*** c = create3dMatrix_ext_double();
         // normalize the IFFT output, since ifftn() will automatically normalize in matlab
         for (int i = 0; i < H_ext; ++i) {
             for (int j = 0; j < W_ext; ++j) {

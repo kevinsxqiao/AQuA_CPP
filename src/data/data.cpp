@@ -84,7 +84,7 @@ namespace AQuA{
      * create a 3d matrix which size is H_ext,W_ext,L_ext
      * initialize the values with 0
      */
-    double *** create3dMatrix_ext(){
+    double *** create3dMatrix_ext_double(){
         double*** data;
         data = new double ** [H_ext];
         for (int i = 0; i < H_ext; ++i) {
@@ -198,7 +198,7 @@ namespace AQuA{
     void preSettingInit(){
         preSetting.registrateCorrect = preSetting.registrateCorrect_default;
         preSetting.bleachCorrect = preSetting.bleachCorrect_default;
-        std::cout<< " preSetting initialized! "<<std::endl;
+        std::cout<< "    preSetting initialized! "<<std::endl;
     }// preSettingInit()
 
 
@@ -208,11 +208,26 @@ namespace AQuA{
         opts.movAvgWin = 25;
         opts.cut = 200;
         opts.smoXY = 0.5;
-        std::cout<< " opts initialized! "<<std::endl;
+        opts.BitDepth;
+        opts.regMaskGap = 5;
+        opts.singleChannel = true;
+        opts.registrateCorrect = 1;
+        opts.bleachCorrect = 1;
+        opts.smoXY = 0.5;
+
+        std::cout<< "    opts initialized! "<<std::endl;
     }// optsInit()
 
     void rawDataSizeInit(){
         rawDataSize={0};
+        std::cout<< "    rawDataSize initialized! "<<std::endl;
+    }
+
+    void Init(){
+        preSettingInit();
+        optsInit();
+        rawDataSizeInit();
+        std::cout<<std::endl;
     }
 
 
