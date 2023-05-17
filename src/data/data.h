@@ -5,8 +5,10 @@
 #ifndef AQUA_CPP_RAWDATA_H
 #define AQUA_CPP_RAWDATA_H
 
+#include <opencv2/opencv.hpp>
+#include <string>
+#include <iostream>
 
-typedef float DATA_TYPE;
 
 #define H AQuA::rawDataSize.size1
 #define W AQuA::rawDataSize.size2
@@ -17,28 +19,25 @@ typedef float DATA_TYPE;
 #define L_ext (2*L-1)
 
 
-#include <string>
-#include <iostream>
-
-
 namespace AQuA{
 
     bool isDefault();
     void preSettingInit();
     void optsInit();
-    void Init();
     void rawDataSizeInit();
-    void releaseData(DATA_TYPE**** data, int I, int J, int k);
+    void Init();
+    void crop(cv::Mat& image, int bdCrop);
+    std::vector<std::vector<cv::Mat>> loadData();
+    void releaseData(float**** data, int I, int J, int k);
     void releaseData(double*** data, int I, int J);
     void releaseData(float*** data, int I, int J);
-    void releaseData(DATA_TYPE* data);
+    void releaseData(float* data);
     void releaseData(int* data);
-    DATA_TYPE**** loadData();
-    DATA_TYPE**** createSpace();
-    DATA_TYPE*** create3dMatrix();
-    double*** create3dMatrix_ext_double();
-    float*** create3dMatrix_ext_float();
-    DATA_TYPE**** create4dMatrix();
+//    float**** createSpace();
+//    float*** create3dMatrix();
+//    double*** create3dMatrix_ext_double();
+//    float*** create3dMatrix_ext_float();
+//    float**** create4dMatrix();
 
 
 
@@ -66,16 +65,16 @@ namespace AQuA{
     struct opts_struct{
          int registrateCorrect;
          int bleachCorrect;
-         DATA_TYPE smoXY;
-         DATA_TYPE noiseEstimation;
+         float smoXY;
+         float noiseEstimation;
          int thrARScl;
          int minDur;
          int minSize;
          int maxSize;
-         DATA_TYPE circularityThr;
+         float circularityThr;
          int needTemp;
-         DATA_TYPE sigThr;
-         DATA_TYPE maxDelay;
+         float sigThr;
+         float maxDelay;
          int needRefine;
          int needGrow;
          int needSpa;
@@ -83,24 +82,24 @@ namespace AQuA{
          int cDelay;
          int gtwSmo;
          int ignoreTau;
-         DATA_TYPE ratio;
+         float ratio;
          int regMaskGap;
          int usePG;
          int cut;
          int movAvgWin;
-         DATA_TYPE minShow1;
-         DATA_TYPE minShowEvtGUI;
+         float minShow1;
+         float minShowEvtGUI;
          int correctTrend;
-         DATA_TYPE propthrmin;
-         DATA_TYPE propthrstep;
-         DATA_TYPE propthrmax;
-         DATA_TYPE compress;
+         float propthrmin;
+         float propthrstep;
+         float propthrmax;
+         float compress;
          int gapExt;
-         DATA_TYPE frameRate;
-         DATA_TYPE spatialRes;
-         DATA_TYPE varEst;
-         DATA_TYPE fgFluo;
-         DATA_TYPE bgFluo;
+         float frameRate;
+         float spatialRes;
+         float varEst;
+         float fgFluo;
+         float bgFluo;
          int northx;
          int northy;
          int preset;
