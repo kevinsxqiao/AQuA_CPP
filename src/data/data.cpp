@@ -17,7 +17,7 @@ namespace AQuA{
 
 
     /*
-     * crop the 2dImage from each direction by 'bdCrop'
+     * crop the 2d image from each direction by 'bdCrop'
      */
     void crop(cv::Mat& image, int bdCrop){
 //    cv::Rect roi = cv::Rect(bdCrop,bdCrop,W-2*bdCrop,H-2*bdCrop);
@@ -28,10 +28,10 @@ namespace AQuA{
 
     /*
      * load image data to a std::vector<std::vector<cv::Mat>>structure
-     * access pixel value by
+     * access pixel value by frame[t][k].at<float>(i,j)
      */
     std::vector<std::vector<cv::Mat>> loadData() {
-        T = 1;
+        T = 10;
         std::vector<std::vector<cv::Mat>> frame(T);
         std::string pre_name = "C:/Users/Kevin Qiao/Desktop/3D_data/3D_dataFrame ";
         std::string name_ext = ".tif";
@@ -106,6 +106,43 @@ namespace AQuA{
     }//loadData()
 
 
+    /*
+     * create a 3d matrix
+     */
+    float*** create3dMatrix(int h, int w, int l){
+        float*** data;
+        data = new float** [h];
+        for (int i = 0; i < h; ++i) {
+            data[i] = new float* [w];
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                data[i][j] = new float [l];
+            }
+        }
+//        for (int i = 0; i < h; ++i) {
+//            for (int j = 0; j < w; ++j) {
+//                for (int k = 0; k < L; ++k) {
+//                    data[i][j][k] = 0;
+//                }
+//            }
+//        }
+        return data;
+    }// create3dMatrix()
+
+
+    void release3dMatrix(float***& data, int h, int w){
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                delete[] data[i][j];
+            }
+            delete[] data[i];
+        }
+        delete[] data;
+        data = nullptr;
+    } // release3dMatrix
+
+
 
 //    /*
 //     * create a 4d matrix, which size is T,L,H,W
@@ -147,30 +184,7 @@ namespace AQuA{
 //    }// getData()
 //
 //
-//    /*
-//     * create a 3d matrix, which size is H,W,L
-//     * initialize the values with 0
-//     */
-//    DATA_TYPE*** create3dMatrix(){
-//        DATA_TYPE*** data;
-//        data = new DATA_TYPE** [H];
-//        for (int i = 0; i < H; ++i) {
-//            data[i] = new DATA_TYPE* [W];
-//        }
-//        for (int i = 0; i < H; ++i) {
-//            for (int j = 0; j < W; ++j) {
-//                data[i][j] = new DATA_TYPE [L];
-//            }
-//        }
-////        for (int i = 0; i < H; ++i) {
-////            for (int j = 0; j < W; ++j) {
-////                for (int k = 0; k < L; ++k) {
-////                    data[i][j][k] = 0;
-////                }
-////            }
-////        }
-//        return data;
-//    }// create3dMatrix()
+
 //
 //
 //    /*
@@ -247,27 +261,18 @@ namespace AQuA{
 //    }// releaseData
 
 
-    void releaseData(double*** data, int I, int J){
-        for (int i = 0; i < I; ++i) {
-            for (int j = 0; j < J; ++j) {
-                delete[] data[i][j];
-            }
-            delete[] data[i];
-        }
-        delete[] data;
-        data = NULL;
-    }// releaseData
+//    void releaseData(double*** data, int I, int J){
+//        for (int i = 0; i < I; ++i) {
+//            for (int j = 0; j < J; ++j) {
+//                delete[] data[i][j];
+//            }
+//            delete[] data[i];
+//        }
+//        delete[] data;
+//        data = NULL;
+//    }// releaseData
 
-    void releaseData(float*** data, int I, int J){
-        for (int i = 0; i < I; ++i) {
-            for (int j = 0; j < J; ++j) {
-                delete[] data[i][j];
-            }
-            delete[] data[i];
-        }
-        delete[] data;
-        data = NULL;
-    }// releaseData
+
 
 
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed

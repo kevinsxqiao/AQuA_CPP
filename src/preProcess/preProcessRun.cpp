@@ -6,8 +6,8 @@
 
 namespace AQuA{
 
-    void preProcessRun(DATA_TYPE**** data1, DATA_TYPE**** data2){
-        if(isDefault() || opts.alreadyPreprocess==0 ){ // judge whether this step is already done, since this is time-consuming
+    void preProcessRun(float**** data1, float**** data2){
+        if(isDefault() || opts.alreadyPreprocess==0 || opts.alreadyBleachCorrect==0){ // judge whether this step is already done, since this is time-consuming
             data1 = regCrossCorrelation(data1,data2);
             /*
              *     scl.hrg = [1,size(datOrg1,1)];

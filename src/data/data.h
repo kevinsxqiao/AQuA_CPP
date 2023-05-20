@@ -28,16 +28,18 @@ namespace AQuA{
     void Init();
     void crop(cv::Mat& image, int bdCrop);
     std::vector<std::vector<cv::Mat>> loadData();
-    void releaseData(float**** data, int I, int J, int k);
-    void releaseData(double*** data, int I, int J);
-    void releaseData(float*** data, int I, int J);
-    void releaseData(float* data);
-    void releaseData(int* data);
+    float*** create3dMatrix(int h, int w, int l);
+    void release3dMatrix(float***& data, int h, int w);
 //    float**** createSpace();
 //    float*** create3dMatrix();
 //    double*** create3dMatrix_ext_double();
 //    float*** create3dMatrix_ext_float();
 //    float**** create4dMatrix();
+//    void releaseData(float**** data, int I, int J, int k);
+//    void releaseData(double*** data, int I, int J);
+//    void releaseData(float*** data, int I, int J);
+//    void releaseData(float* data);
+//    void releaseData(int* data);
 
 
 

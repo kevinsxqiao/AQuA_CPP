@@ -13,13 +13,13 @@
 
 namespace AQuA{
 
-    DATA_TYPE medianFunc(DATA_TYPE *array, int size);
-    float*** dft(float*** a_add, float*** b_add);
-    double*** dft(double*** a_add, double*** b_add);
-    DATA_TYPE*** rotate2d(DATA_TYPE*** ref);
-    DATA_TYPE*** flip3d(DATA_TYPE*** ref, DATA_TYPE*** b_flip);
-    DATA_TYPE*** calCC(DATA_TYPE*** a, DATA_TYPE*** b, DATA_TYPE*** a_add, DATA_TYPE*** b_add, DATA_TYPE*** b_flip);
-    DATA_TYPE**** regCrossCorrelation(DATA_TYPE**** data1, DATA_TYPE**** data2);
+//    DATA_TYPE medianFunc(DATA_TYPE *array, int size);
+//    float*** dft(float*** a_add, float*** b_add);
+//    double*** dft(double*** a_add, double*** b_add);
+//    DATA_TYPE*** rotate2d(DATA_TYPE*** ref);
+//    DATA_TYPE*** flip3d(DATA_TYPE*** ref, DATA_TYPE*** b_flip);
+//    DATA_TYPE*** calCC(DATA_TYPE*** a, DATA_TYPE*** b, DATA_TYPE*** a_add, DATA_TYPE*** b_add, DATA_TYPE*** b_flip);
+//    DATA_TYPE**** regCrossCorrelation(DATA_TYPE**** data1, DATA_TYPE**** data2);
 
 }// namespace
 
