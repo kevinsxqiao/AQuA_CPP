@@ -31,7 +31,7 @@ namespace AQuA{
      * access pixel value by frame[t][k].at<float>(i,j)
      */
     std::vector<std::vector<cv::Mat>> loadData() {
-        T = 10;
+        T = 20;
         std::vector<std::vector<cv::Mat>> frame(T);
         std::string pre_name = "C:/Users/Kevin Qiao/Desktop/3D_data/3D_dataFrame ";
         std::string name_ext = ".tif";
@@ -41,8 +41,7 @@ namespace AQuA{
         int BitDepth = -1;
         float normalizedParameter;
 
-
-        std::cout<<"reading data ..."<<std::endl;
+        std::cout<<"--------reading data--------"<<std::endl;
         for (int t = 0; t < T; ++t) {
             cv::imreadmulti(pre_name + std::to_string(t+1) + name_ext, frame[t],  cv::IMREAD_GRAYSCALE); // uchar 8-bit unsigned int
             if (t == 0) {
@@ -55,7 +54,7 @@ namespace AQuA{
                 if (t==0 & k==0) {
                     H = frame[0][0].rows;
                     W = frame[0][0].cols;
-                    std::cout<<"  after cropping:"<< std::endl;
+                    std::cout<<"after cropping:"<< std::endl;
                     std::cout<<"height of image:"<< H << std::endl;
                     std::cout<<"width of image:"<< W << std::endl;
                     std::cout<<"length of image:"<< L << std::endl;
@@ -74,6 +73,7 @@ namespace AQuA{
 //            cv::waitKey();
             }//for(k)
         }//for(t)
+        std::cout<<"--------data loaded--------"<<std::endl;
         AQuA::opts.maxValueDat1 = mmax;
         AQuA::opts.minValueDat1 = mmin;
         normalizedParameter = static_cast<float>(mmax -mmin);
@@ -273,18 +273,17 @@ namespace AQuA{
 //    }// releaseData
 
 
-
-
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed
     bool isDefault() {
         return (preSetting.registrateCorrect == preSetting.registrateCorrect_default
                 && preSetting.bleachCorrect == preSetting.bleachCorrect_default);
     }// isDefault()
 
+
     void preSettingInit(){
         preSetting.registrateCorrect = preSetting.registrateCorrect_default;
         preSetting.bleachCorrect = preSetting.bleachCorrect_default;
-        std::cout<< "    preSetting initialized! "<<std::endl;
+        std::cout<< "--------preSetting initialized--------"<<std::endl;
     }// preSettingInit()
 
 
@@ -301,13 +300,15 @@ namespace AQuA{
         opts.bleachCorrect = 1;
         opts.smoXY = 0.5;
 
-        std::cout<< "    opts initialized! "<<std::endl;
+        std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()
+
 
     void rawDataSizeInit(){
         rawDataSize={0};
-        std::cout<< "    rawDataSize initialized! "<<std::endl;
+        std::cout<< "--------rawDataSize initialized--------"<<std::endl;
     }
+
 
     void Init(){
         preSettingInit();

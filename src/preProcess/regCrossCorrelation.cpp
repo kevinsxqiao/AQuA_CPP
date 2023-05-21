@@ -41,7 +41,7 @@ namespace AQuA{
             for (int j = 0; j < W_ext; ++j) {
                 for (int k = 0; k < L_ext; ++k) {
                     input_a[i * W_ext * L_ext + j * L_ext + k] = a_add[i][j][k];
-                    input_b[i * W_ext * L_ext + j * L_ext + k] = b_add[i][j][j];
+                    input_b[i * W_ext * L_ext + j * L_ext + k] = b_add[i][j][k];
 //                    std::cout<<input_a[i * W_ext * L_ext + j * L_ext + k]<<" ";
                 }
             }

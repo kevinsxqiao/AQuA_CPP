@@ -11,9 +11,10 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 
 
 # include FFTW library
+set(FFTW_DIR "C:/Program Files (x86)/fftw3.3.5-64")
 set(FFTW_LIBS libfftw3-3 libfftw3f-3 libfftw3l-3)
-link_directories(${CMAKE_SOURCE_DIR}/fftw3.3.5-64 )
-include_directories(${CMAKE_SOURCE_DIR}/fftw3.3.5-64)
+include_directories(${FFTW_DIR})
+link_directories(${FFTW_DIR})
 
 
 add_executable(${PROJECT_NAME}
@@ -22,5 +23,5 @@ add_executable(${PROJECT_NAME}
                     src/flow/flow.h  src/preProcess/preProcessRun.h
                     src/draft1.cpp src/draft.h )
 
-target_link_libraries(${PROJECT_NAME} ${FFTW_LIBS} ${OpenCV_LIBS} )
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${FFTW_LIBS})
 

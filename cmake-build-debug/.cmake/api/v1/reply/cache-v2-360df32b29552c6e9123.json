@@ -1290,6 +1290,30 @@
 			"value" : "FALSE"
 		},
 		{
+			"name" : "FFTW3_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for FFTW3."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFTW3_DIR-NOTFOUND"
+		},
+		{
+			"name" : "FFTW_DIR",
+			"properties" : 
+			[
+				{
+					"name" : "HELPSTRING",
+					"value" : "The directory containing a CMake configuration file for FFTW."
+				}
+			],
+			"type" : "PATH",
+			"value" : "FFTW_DIR-NOTFOUND"
+		},
+		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_OpenCV",
 			"properties" : 
 			[
