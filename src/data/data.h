@@ -8,6 +8,8 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
+#include <mat.h>
+#include <vector>
 
 
 #define H AQuA::rawDataSize.size1
@@ -26,7 +28,7 @@ namespace AQuA{
     void optsInit();
     void rawDataSizeInit();
     void Init();
-    void crop(cv::Mat& image, int bdCrop);
+//    void crop(cv::Mat& image, int bdCrop);
     std::vector<std::vector<cv::Mat>> loadData();
     float*** create3dMatrix(int h, int w, int l);
     void release3dMatrix(float***& data, int h, int w);

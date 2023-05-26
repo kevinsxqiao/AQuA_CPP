@@ -44,3 +44,13 @@ int main(){
     AQuA::release3dMatrix(b_add,3,3);
     return 1;
 }
+
+int main(){
+    AQuA::Init();
+    auto start = std::chrono::high_resolution_clock::now();
+    AQuA::loadData_1();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+    return 1;
+}

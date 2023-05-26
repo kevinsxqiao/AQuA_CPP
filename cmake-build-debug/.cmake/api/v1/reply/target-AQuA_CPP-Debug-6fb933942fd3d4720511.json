@@ -30,7 +30,7 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 20,
+				"line" : 27,
 				"parent" : 0
 			},
 			{
@@ -42,13 +42,19 @@
 			{
 				"command" : 2,
 				"file" : 0,
-				"line" : 26,
+				"line" : 33,
 				"parent" : 0
 			},
 			{
 				"command" : 3,
 				"file" : 0,
 				"line" : 16,
+				"parent" : 0
+			},
+			{
+				"command" : 3,
+				"file" : 0,
+				"line" : 22,
 				"parent" : 0
 			},
 			{
@@ -79,6 +85,10 @@
 				},
 				{
 					"backtrace" : 5,
+					"path" : "C:/Program Files/MATLAB/R2022b/extern/include"
+				},
+				{
+					"backtrace" : 6,
 					"isSystem" : true,
 					"path" : "C:/Program Files (x86)/opencv/mingw_build/install/include"
 				}
@@ -170,6 +180,16 @@
 			{
 				"backtrace" : 3,
 				"fragment" : "-llibfftw3l-3",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\microsoft\\libmat.lib\"",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 3,
+				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\microsoft\\libmx.lib\"",
 				"role" : "libraries"
 			},
 			{

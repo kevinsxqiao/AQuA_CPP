@@ -254,6 +254,12 @@ FFTW3_DIR:PATH=FFTW3_DIR-NOTFOUND
 //The directory containing a CMake configuration file for FFTW.
 FFTW_DIR:PATH=FFTW_DIR-NOTFOUND
 
+//Path to a library.
+MAT_LIBRARY:FILEPATH=C:/Program Files/MATLAB/R2022b/extern/lib/win64/microsoft/libmat.lib
+
+//Path to a library.
+MX_LIBRARY:FILEPATH=C:/Program Files/MATLAB/R2022b/extern/lib/win64/microsoft/libmx.lib
+
 
 ########################
 # INTERNAL cache entries

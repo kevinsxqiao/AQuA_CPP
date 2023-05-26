@@ -140,7 +140,7 @@ namespace AQuA{
 
     void regCrossCorrelation(std::vector<std::vector<cv::Mat>>& data1){
         float mean_sum, median;
-        int refer_start=0, refer_end =9;
+        int refer_start=0, refer_end =0;
         float*** ref = create3dMatrix(H,W,L); //remember to release with release3dMatrix(), the following matrix as well
         float* array_1d = new float [H*W*L]; //remember to release with delete[]
         float*** moving = create3dMatrix(H,W,L);
@@ -148,8 +148,9 @@ namespace AQuA{
         float*** b_add = create3dMatrix(H_ext,W_ext,L_ext);
         float*** b_flip = create3dMatrix(H,W,L);
         float*** matrix = create3dMatrix(H_ext,W_ext,L_ext);
-        float* matrix_1d = new float [H_ext*W_ext*L_ext];
-        int id,r1;
+//        float* matrix_1d = new float [H_ext*W_ext*L_ext];
+//        int id,r1;
+        float maxElement = 0;
         int wShift, hShift, lShift;
         int xs0, xe0, xs1, xe1, ys0, ye0, ys1, ye1, zs0, ze0, zs1, ze1;
         int* x_translation = new int [T];
@@ -168,6 +169,7 @@ namespace AQuA{
                         mean_sum += data1[t][k].at<float>(i,j);
                     }// for(t)
                     ref[i][j][k] = mean_sum / static_cast<float>(refer_end - refer_start + 1);
+                    std::cout<<ref[i][j][k]<< " ";
                     array_1d[m++] = ref[i][j][k]; //flatten ref[], 'm' is just index for the array
                 }// for(k)
             }// for(j)
@@ -179,10 +181,14 @@ namespace AQuA{
         /*
          * align bright part. Remove median is like remove background
          */
-        for(int i=0;i<H;++i){
+        for(int i=0, m=0;i<H;++i){
             for(int j=0;j<W;++j){
                 for(int k=0;k<L;++k){
                     ref[i][j][k] -= median;  // ref = ref - median(ref(:));
+                    if (m<10){
+                        std::cout<<ref[i][j][k]<< " ";
+                        m++;
+                    }
                 }// for(k)
             }// for(j)
         }// for(i)
@@ -212,22 +218,34 @@ namespace AQuA{
             matrix = calCC(moving, ref, a_add, b_add, b_flip); // matrix = calCC(moving,ref); run the first time is time-consuming, try 'wisdom' in fftw
             std::cout<<"--------end calCC--------"<<std::endl;
 
-            /*
-             * flatten matrix[] to find the position of the maximum element
-             */
-            for(int i=0, m=0;i<H_ext;++i){
+//            /*
+//             * flatten matrix[] to find the position of the maximum element
+//             */
+//            for(int i=0, m=0;i<H_ext;++i){
+//                for(int j=0;j<W_ext;++j){
+//                    for(int k=0;k<L_ext;++k){
+//                        matrix_1d[m++] = matrix[i][j][k];
+//                    }// for(k)
+//                } //for(j)
+//            }// for(i)
+//            id = std::max_element(matrix_1d, matrix_1d+(H_ext*W_ext*L_ext)) - matrix_1d;  //[~,id] = max(matrix(:));
+            for(int i=0;i<H_ext;++i){
                 for(int j=0;j<W_ext;++j){
                     for(int k=0;k<L_ext;++k){
-                        matrix_1d[m++] = matrix[i][j][k];
+                        if (matrix[i][j][k] > maxElement){
+                            maxElement = matrix[i][j][k];
+                            hShift = i;
+                            wShift = j;
+                            lShift = k;
+                        }
                     }// for(k)
                 } //for(j)
             }// for(i)
-            id = std::max_element(matrix_1d, matrix_1d+(H_ext*W_ext*L_ext)) - matrix_1d;  //[~,id] = max(matrix(:));
             // [hShift,wShift,lShift] = ind2sub(size(matrix),id);
-            hShift = id/(W_ext*L_ext);
-            r1 = id%(W_ext*L_ext);
-            wShift = r1 / L_ext;
-            lShift = r1 % L_ext;
+//            hShift = id/(W_ext*L_ext);
+//            r1 = id%(W_ext*L_ext);
+//            wShift = r1 / L_ext;
+//            lShift = r1 % L_ext;
             x_translation[t] = H - hShift;
             y_translation[t] = W - wShift;
             z_translation[t] = L - lShift;
@@ -321,7 +339,7 @@ namespace AQuA{
         release3dMatrix(b_flip,H,W);
         release3dMatrix(matrix,H_ext,W_ext);
         delete[] array_1d;
-        delete[] matrix_1d;
+//        delete[] matrix_1d;
         delete[] x_translation;
         delete[] y_translation;
         delete[] z_translation;
