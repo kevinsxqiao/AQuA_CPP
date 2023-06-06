@@ -105,7 +105,7 @@
 			"sourceIndexes" : 
 			[
 				1,
-				9
+				8
 			]
 		}
 	],
@@ -254,7 +254,7 @@
 				5,
 				6,
 				7,
-				8,
+				9,
 				10
 			]
 		},
@@ -263,7 +263,7 @@
 			"sourceIndexes" : 
 			[
 				1,
-				9
+				8
 			]
 		}
 	],
@@ -312,11 +312,6 @@
 		},
 		{
 			"backtrace" : 1,
-			"path" : "src/preProcess/preProcessRun.h",
-			"sourceGroupIndex" : 0
-		},
-		{
-			"backtrace" : 1,
 			"compileGroupIndex" : 0,
 			"path" : "src/draft1.cpp",
 			"sourceGroupIndex" : 1
@@ -324,6 +319,11 @@
 		{
 			"backtrace" : 1,
 			"path" : "src/draft.h",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"path" : "src/preProcess/preProcessRun.h",
 			"sourceGroupIndex" : 0
 		}
 	],

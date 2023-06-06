@@ -26,8 +26,7 @@ namespace AQuA{
         float normalizedParameter;
 
         std::cout<< "--------loading data--------"<<std::endl;
-        const char *filename = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
-        pmatFile = matOpen(filename, "r");
+        pmatFile = matOpen(opts.fileName1, "r");
         if (pmatFile == nullptr) {
             std::cout<< "--------error opening file--------"<<std::endl;
             std::exit(-1);
@@ -308,7 +307,8 @@ namespace AQuA{
 
 
     void optsInit(){
-        opts.alreadyPreprocess = 0;
+        opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
+        opts.alreadyPreprocess = false;
         opts.alreadyBleachCorrect = 0;
         opts.movAvgWin = 25;
         opts.cut = 200;
@@ -319,6 +319,7 @@ namespace AQuA{
         opts.registrateCorrect = 1;
         opts.bleachCorrect = 1;
         opts.smoXY = 0.5;
+        opts.medSmo = 1;
 
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()

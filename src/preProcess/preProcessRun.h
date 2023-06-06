@@ -9,11 +9,11 @@
 #include "regCrossCorrelation.h"
 #include "baselineRemoveAndNoiseEstimation.h"
 #include <cstdlib>
-#include <iostream>
+
 
 namespace AQuA{
 
-    void preProcessRun(float**** data1, float**** data2);
+
 
 }// namespace
 

@@ -108,7 +108,7 @@ namespace AQuA{
          int northy;
          int preset;
          std::string filePath1;
-         std::string fileName1;
+         const char* fileName1;
          std::string fileType1;
          std::string filePath2;
          std::string fileName2;
@@ -121,8 +121,9 @@ namespace AQuA{
          int maxdF2;
          int singleChannel;
          int alreadyBleachCorrect;
-         int alreadyPreprocess;
+         bool alreadyPreprocess;
          int enableTap;
+         double medSmo;
     };// struct opts
 
     extern opts_struct opts;

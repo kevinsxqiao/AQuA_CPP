@@ -27,8 +27,8 @@ find_library(MX_LIBRARY mx "${MATLAB_ROOT}/extern/lib/win64/mingw64")
 add_executable(${PROJECT_NAME}
                     src/data/data.h src/data/data.cpp
                     src/phaseRun.h src/getappdata.h src/feaRun.h src/evtRun.h src/actRun.h
-                    src/flow/flow.h  src/preProcess/preProcessRun.h
-                    src/draft1.cpp src/draft.h )
+                    src/flow/flow.h
+                    src/draft1.cpp src/draft.h src/preProcess/preProcessRun.h)
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${FFTW_LIBS} ${MAT_LIBRARY} ${MX_LIBRARY})
 

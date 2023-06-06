@@ -9,7 +9,8 @@
 
 
 namespace AQuA{
-    DATA_TYPE**** baselineRemoveAndNoiseEstimation(DATA_TYPE**** data);
+
+
 }// namespace
 
 #endif //AQUA_CPP_BASELINEREMOVEANDNOISEESTIMATION_H

@@ -6,36 +6,58 @@
 
 namespace AQuA{
 
-    void preProcessRun(float**** data1, float**** data2){
+    void preProcessRun(std::vector<std::vector<cv::Mat>> data1){
         if(isDefault() || opts.alreadyPreprocess==0 || opts.alreadyBleachCorrect==0){ // judge whether this step is already done, since this is time-consuming
-            data1 = regCrossCorrelation(data1,data2);
             /*
-             *     scl.hrg = [1,size(datOrg1,1)];
-                    scl.wrg = [1,size(datOrg1,2)];
-                    scl.lrg = [1,size(datOrg1,3)];
+             * image registration
              */
-
-        }
-
-        bool ** evtSpatialMask;
-        evtSpatialMask = new bool * [H];
-        for (int i = 0; i < H; ++i) {
-            evtSpatialMask[i] = new bool [W];
-        }
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                evtSpatialMask[i][j] = true;
+            if (opts.registrateCorrect == 2){
+                data1 = regCrossCorrelation(data1);
             }
+
+            /*
+             * bleach correction
+             */
+            if(opts.bleachCorrect == 2){
+
+            }
+
+            /*
+             * median filter to remove salt and pepper noise
+             */
+            if(opts.medSmo > 0){
+
+            }
+
+            opts.alreadyPreprocess = true;
+
         }
 
-//        % F0 bias calculation
+        /*
+         * only consider the pixels in the drawn cells
+         */
+
+//        bool ** evtSpatialMask;
+//        evtSpatialMask = new bool * [H];
+//        for (int i = 0; i < H; ++i) {
+//            evtSpatialMask[i] = new bool [W];
+//        }
+//        for (int i = 0; i < H; ++i) {
+//            for (int j = 0; j < W; ++j) {
+//                evtSpatialMask[i][j] = true;
+//            }
+//        }
+
+        /*
+         * F0 bias calculation
+         */
         opts.movAvgWin = std::min(opts.movAvgWin, 100);
         opts.cut = std::min(opts.cut, 10000);
-//        % load setting
-//        % obtain data
 
-//        % smooth + noise estimation + remove background
-        data1 = baselineRemoveAndNoiseEstimation(data1);
+        /*
+         * smooth + noise estimation + remove background
+         */
+//        data1 = baselineRemoveAndNoiseEstimation(data1);
 
     }// preProcessRun()
 
