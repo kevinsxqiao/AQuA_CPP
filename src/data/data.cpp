@@ -49,7 +49,8 @@ namespace AQuA{
         H = dims[0];
         W = dims[1];
         L = dims[2];
-        T = dims[3];
+//        T = dims[3];
+        T = 10;
 //        std::cout<<"original size: "<< std::endl;
 //        std::cout<<"height of image:"<< H << std::endl;
 //        std::cout<<"width of image:"<< W << std::endl;

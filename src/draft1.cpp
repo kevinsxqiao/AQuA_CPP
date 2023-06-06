@@ -27,33 +27,32 @@ namespace AQuA{
     float*** dft(float*** a_add, float*** b_add){
         float* input_a = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
         float* input_b = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
-        fftwf_complex* output_a = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2 + 1) * sizeof(fftwf_complex)));
-        fftwf_complex* output_b = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2 + 1) * sizeof(fftwf_complex)));
-        fftwf_complex* output_dotProduct = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2 + 1) * sizeof(fftwf_complex)));
+        fftwf_complex* output_a = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2+1) * sizeof(fftwf_complex)));
+        fftwf_complex* output_b = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2+1) * sizeof(fftwf_complex)));
+        fftwf_complex* output_dotProduct = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2+1) * sizeof(fftwf_complex)));
         float* result = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
+        float*** c = create3dMatrix(H_ext,W_ext,L_ext);
 
         // flatten the 3d image data and store in input_a[]
         for (int i = 0; i < H_ext; ++i) {
             for (int j = 0; j < W_ext; ++j) {
                 for (int k = 0; k < L_ext; ++k) {
-                    input_a[i * W_ext * L_ext + j * L_ext + k] = a_add[i][j][k];
-                    input_b[i * W_ext * L_ext + j * L_ext + k] = b_add[i][j][k];
+                    int index = i * W_ext * L_ext + j * L_ext + k;
+                    input_a[index] = a_add[i][j][k];
+                    input_b[index] = b_add[i][j][k];
 //                    std::cout<<input_a[i * W_ext * L_ext + j * L_ext + k]<<" ";
                 }
             }
         }
 
-//        std::cout<<std::endl;
-//        for (int k = 0; k < L_ext; ++k) {
-//            for (int i = 0; i < H_ext; ++i) {
-//                for (int j = 0; j < W_ext; ++j) {
-//                    std::cout<<input_a[i * W_ext * L_ext + j * L_ext + k]<<" ";
+//        std::cout<<"input_a"<<std::endl;
+//            for (int i = 0; i < 10; ++i) {
+//                for (int j = 0; j < 10; ++j) {
+//                    std::cout<<input_a[i * W_ext * L_ext + j * L_ext ]<<" ";
 //                }
 //                std::cout<<std::endl;
 //            }
 //            std::cout<<std::endl;
-//        }
-//        std::cout<<std::endl;
 
         // create fftw plan
         fftwf_plan fft_plan_a = fftwf_plan_dft_r2c_3d(H_ext, W_ext, L_ext, input_a, output_a, FFTW_ESTIMATE);
@@ -63,10 +62,11 @@ namespace AQuA{
         fftwf_execute(fft_plan_a);
         fftwf_execute(fft_plan_b);
 
-//        //display the matrix after fft_plan_a
-//        for (int k = 0; k < L_ext ; ++k) {
-//            for (int i = 0; i < H_ext; ++i) {
-//                for (int j = 0; j < W_ext; ++j) {
+////        display the matrix after fft_plan_a
+//        std::cout<<"output_a"<<std::endl;
+//        for (int k = 0; k < 1; ++k) {
+//            for (int i = 0; i < 10; ++i) {
+//                for (int j = 0; j < 10; ++j) {
 //                    int index = i * W_ext * (L_ext/2 + 1) + j * (L_ext/2 + 1) + k;
 //                    std::cout<< output_a[index][0]<< "+" << output_a[index][1]<< "i"<< "      ";
 //                }
@@ -76,26 +76,46 @@ namespace AQuA{
 //        }
 
         // dot product
-        for (int index = 0; index<H_ext * W_ext * (L_ext/2 + 1); ++index) {
+        for (int index = 0; index<H_ext * W_ext * (L_ext/2+1); ++index) {
             output_dotProduct[index][0] = output_a[index][0] * output_b[index][0] - output_a[index][1] * output_b[index][1];
             output_dotProduct[index][1] = output_a[index][0] * output_b[index][1] + output_a[index][1] * output_b[index][0];
 //            std::cout<< output_dotProduct[index][0]<< "+" << output_dotProduct[index][1]<< "i"<< "      ";
         }
 
-        fftwf_execute(ifft_plan);
+//        std::cout<<"output_dotProduct"<<std::endl;
+//        for (int k = 0; k < 1; ++k) {
+//            for (int i = 0; i < 10; ++i) {
+//                for (int j = 0; j < 10; ++j) {
+//                    int index = i * W_ext * (L_ext/2 + 1) + j * (L_ext/2 + 1) + k;
+//                    std::cout<< output_dotProduct[index][0]<< "+" << output_dotProduct[index][1]<< "i"<< "      ";
+//                }
+//                std::cout<< std::endl;
+//            }
+//            std::cout<< std::endl;
+//        }
+//
+//        fftwf_execute(ifft_plan);
 
-        float*** c = create3dMatrix(H_ext,W_ext,L_ext);
+
 
         // normalize the IFFT output, since ifftn() will automatically normalize in matlab
+        int total = H_ext*W_ext*L_ext;
         for (int i = 0; i < H_ext; ++i) {
             for (int j = 0; j < W_ext; ++j) {
                 for (int k = 0; k < L_ext; ++k) {
-                    result[i * W_ext * L_ext + j * L_ext + k] /= H_ext*W_ext*L_ext;
-                    c[i][j][k] = result[i * W_ext * L_ext + j * L_ext + k];
+                    int index = i * W_ext * L_ext + j * L_ext + k;
+                    c[i][j][k] = result[index]/static_cast<float>(total) - 9.45;//difference between library
 //                    std::cout<< c[i][j][k]<< " ";
                 }
             }
         }
+//        std::cout<<" c=ifftn(fftn(a_add).*fftn(b_add));"<<std::endl;
+//        for (int i = 0; i < 10; ++i) {
+//            for (int j = 0; j < 10; ++j) {
+//                std::cout<<c[i][j][0]<< " ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
         // release memory
         fftwf_destroy_plan(fft_plan_a);
@@ -134,13 +154,28 @@ namespace AQuA{
                 } //for(k)
             } //for(j)
         }// for(i)
+
+//        for (int i = 0; i < 10; ++i) {
+//            for (int j = 0; j < 10; ++j) {
+//                std::cout<<a_add[i][j][0]<< " ";
+//            }
+//            std::cout<<std::endl;
+//        }
+//        std::cout<<std::endl;
+//        for (int i = 0; i < 10; ++i) {
+//            for (int j = 0; j < 10; ++j) {
+//                std::cout<<b_add[i][j][0]<< " ";
+//            }
+//            std::cout<<std::endl;
+//        }
+//        std::cout<<std::endl;
         return dft(a_add,b_add);
     }// calCC
 
 
-    void regCrossCorrelation(std::vector<std::vector<cv::Mat>>& data1){
+    std::vector<std::vector<cv::Mat>> regCrossCorrelation(std::vector<std::vector<cv::Mat>>& data1){
         float mean_sum, median;
-        int refer_start=0, refer_end =0;
+        int refer_start=0, refer_end =9;
         float*** ref = create3dMatrix(H,W,L); //remember to release with release3dMatrix(), the following matrix as well
         float* array_1d = new float [H*W*L]; //remember to release with delete[]
         float*** moving = create3dMatrix(H,W,L);
@@ -150,7 +185,7 @@ namespace AQuA{
         float*** matrix = create3dMatrix(H_ext,W_ext,L_ext);
 //        float* matrix_1d = new float [H_ext*W_ext*L_ext];
 //        int id,r1;
-        float maxElement = 0;
+        float maxElement = -100000;
         int wShift, hShift, lShift;
         int xs0, xe0, xs1, xe1, ys0, ye0, ys1, ye1, zs0, ze0, zs1, ze1;
         int* x_translation = new int [T];
@@ -169,7 +204,7 @@ namespace AQuA{
                         mean_sum += data1[t][k].at<float>(i,j);
                     }// for(t)
                     ref[i][j][k] = mean_sum / static_cast<float>(refer_end - refer_start + 1);
-                    std::cout<<ref[i][j][k]<< " ";
+//                    std::cout<<ref[i][j][k]<< " ";
                     array_1d[m++] = ref[i][j][k]; //flatten ref[], 'm' is just index for the array
                 }// for(k)
             }// for(j)
@@ -185,13 +220,16 @@ namespace AQuA{
             for(int j=0;j<W;++j){
                 for(int k=0;k<L;++k){
                     ref[i][j][k] -= median;  // ref = ref - median(ref(:));
-                    if (m<10){
-                        std::cout<<ref[i][j][k]<< " ";
-                        m++;
-                    }
                 }// for(k)
             }// for(j)
         }// for(i)
+
+//        for (int i = 0; i < 10; ++i) {
+//            for (int j = 0; j < 10; ++j) {
+//                std::cout<<ref[i][j][0]<< " ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
         std::cout<<"--------start cross correlation--------"<<std::endl;
         /*
@@ -214,9 +252,16 @@ namespace AQuA{
                     }// for(k)
                 } //for(j)
             }// for(i)
-            std::cout<<"--------start calCC--------"<<std::endl;
+//            for (int i = 0; i < 10; ++i) {
+//                for (int j = 0; j < 10; ++j) {
+//                    std::cout<<moving[i][j][0]<< " ";
+//                }
+//                std::cout<<std::endl;
+//            }
+
+//            std::cout<<"--------start calCC--------"<<std::endl;
             matrix = calCC(moving, ref, a_add, b_add, b_flip); // matrix = calCC(moving,ref); run the first time is time-consuming, try 'wisdom' in fftw
-            std::cout<<"--------end calCC--------"<<std::endl;
+//            std::cout<<"--------end calCC--------"<<std::endl;
 
 //            /*
 //             * flatten matrix[] to find the position of the maximum element
@@ -232,11 +277,13 @@ namespace AQuA{
             for(int i=0;i<H_ext;++i){
                 for(int j=0;j<W_ext;++j){
                     for(int k=0;k<L_ext;++k){
+//                        std::cout<<matrix[i][j][k]<<" ";
                         if (matrix[i][j][k] > maxElement){
                             maxElement = matrix[i][j][k];
-                            hShift = i;
-                            wShift = j;
-                            lShift = k;
+                            hShift = i+1;
+                            wShift = j+1;
+                            lShift = k+1;
+//                            std::cout<<"hShift: "<<hShift<<"wShift: "<<wShift<<"lShift: "<<lShift<<std::endl;
                         }
                     }// for(k)
                 } //for(j)
@@ -284,8 +331,8 @@ namespace AQuA{
                 ze1 = L - 1;
                 //data1(xs1:xe1,ys1:ye1,zs1:ze1,t) = data1(xs0:xe0,ys0:ye0,zs0:ze0,t);
                 for (int k = ze0, target = ze1; k >= zs0; --k, --target) {
-                    cv::Rect srcRect(xs0, ys0, xe0 - xs0 + 1, ye0 - ys0 + 1);
-                    cv::Rect dstRect(xs1, ys1, xe1 - xs1 + 1, ye1 - ys1 + 1);
+                    cv::Rect srcRect(ys0, xs0, ye0 - ys0 + 1, xe0 - xs0 + 1);
+                    cv::Rect dstRect(ys1, xs1, ye1 - ys1 + 1, xe1 - xs1 + 1);
                     data1[t][target](dstRect) = data1[t][k](srcRect).clone();
                 }//for(k)
             } else {//index decrease
@@ -295,8 +342,8 @@ namespace AQuA{
                 ze1 = L + z_translation[t] - 1;
                 //data1(xs1:xe1,ys1:ye1,zs1:ze1,t) = data1(xs0:xe0,ys0:ye0,zs0:ze0,t);
                 for (int k = zs0, target = zs1; k <= ze0; ++k, ++target) {
-                    cv::Rect srcRect(xs0, ys0, xe0 - xs0 + 1, ye0 - ys0 + 1);
-                    cv::Rect dstRect(xs1, ys1, xe1 - xs1 + 1, ye1 - ys1 + 1);
+                    cv::Rect srcRect(ys0, xs0, ye0 - ys0 + 1, xe0 - xs0 + 1);
+                    cv::Rect dstRect(ys1, xs1, ye1 - ys1 + 1, xe1 - xs1 + 1);
                     data1[t][target](dstRect) = data1[t][k](srcRect).clone();
                 }//for(k)
             }//else
@@ -304,6 +351,9 @@ namespace AQuA{
 
 //      data1 = data1(max(x_translation)+1:end+min(x_translation),max(y_translation)+1:end+min(y_translation),
 //      max(z_translation)+1:end+min(z_translation),:);
+//        for (int i = 0; i < T; ++i) {
+//            std::cout<<"x_translation["<<i<<"]: "<<x_translation[i]<<std::endl;
+//        }
         int x_max = *std::max_element(x_translation, x_translation+T);
         int x_min = *std::min_element(x_translation, x_translation+T);
         int y_max = *std::max_element(y_translation, y_translation+T);
@@ -319,19 +369,37 @@ namespace AQuA{
         if (z_min > 0){
             z_min = 0;
         }
-        std::cout<< " x: "<<x_min<<" y: "<<y_min<<" z: "<<z_min<<std::endl;
+//        std::cout<<"x_max:"<<x_max<<std::endl;
+//        std::cout<<"x_min:"<<x_min<<std::endl;
+//        std::cout<<"y_max:"<<y_max<<std::endl;
+//        std::cout<<"y_min:"<<y_min<<std::endl;
+//        std::cout<<"z_max:"<<z_max<<std::endl;
+//        std::cout<<"z_min:"<<z_min<<std::endl;
         xs0 = x_max, xe0 = H - 1 + x_min;
         ys0 = y_max, ye0 = W - 1 + y_min;
         zs0 = z_max, ze0 = L - 1 + z_min;
-        for (int t = 0; t < T; ++t) {
-            for (int k = zs0, target = 0; k <= ze0; ++k, ++target) {
-                cv::Range rowRange(xs0, xe0);
-                cv::Range colRange(ys0, ye0);
-                data1[t][target] = data1[t][target](rowRange, colRange);
-            }//for(k)
-            data1[t].resize(ze0 - zs0 + 1);
-        }//for(t)
 
+        std::vector<std::vector<cv::Mat>> data_new(T);
+        for (int t = 0; t < T; ++t) {
+            for (int k = zs0; k<=ze0; ++k) {
+//                std::cout<<"zs0: "<<zs0<<std::endl;
+//                std::cout<<"ze0: "<<ze0<<std::endl;
+//                if (data1[t][k].empty()) {
+//                    std::cout << "empty" << std::endl;
+//                    break;
+//                }
+                    cv::Rect roi(ys0, xs0, ye0-ys0+1, xe0-xs0+1);
+                    data_new[t].emplace_back(data1[t][k](roi).clone());
+            }
+        }
+//        for (int t = 0; t < T; ++t) {
+//            for (int k = zs0; k <= ze0; ++k) {
+////                std::cout<<data1[t][k].size()<<std::endl;
+//                cv::Range rowRange(xs0, xe0);
+//                cv::Range colRange(ys0, ye0);
+//                data_new[t].emplace_back(data1[t][k](rowRange, colRange).clone());
+//            }//for(k)
+//        }//for(t)
         release3dMatrix(ref, H, W);
         release3dMatrix(moving,H,W);
         release3dMatrix(a_add,H_ext,W_ext);
@@ -344,9 +412,10 @@ namespace AQuA{
         delete[] y_translation;
         delete[] z_translation;
 
-        std::cout<<"height of image:"<< data1[0][0].rows << std::endl;
-        std::cout<<"width of image:"<< data1[0][0].cols  << std::endl;
-        std::cout<<"length of image:"<< data1[0].size() << std::endl;
+//        std::cout<<"height of image:"<< data_new[0][0].rows << std::endl;
+//        std::cout<<"width of image:"<< data_new[0][0].cols  << std::endl;
+//        std::cout<<"length of image:"<< data_new[0].size() << std::endl;
+        return data_new;
     }//regCrossCorrelation()
 
 
@@ -354,11 +423,6 @@ namespace AQuA{
 
 
 
-int main(){
-    AQuA::Init();
-    std::vector<std::vector<cv::Mat>> data = AQuA::loadData();
-    AQuA::regCrossCorrelation(data);
-    return 1;
-}
+
 
 

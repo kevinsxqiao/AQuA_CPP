@@ -13,6 +13,11 @@
 
 namespace AQuA{
 
+    float medianFunc(float* array, int size);
+    float*** dft(float*** a_add, float*** b_add);
+    float*** flip3dMatrix(float*** ref, float*** b_flip);
+    float*** calCC(float*** a, float*** b, float*** a_add, float*** b_add, float*** b_flip);
+    std::vector<std::vector<cv::Mat>> regCrossCorrelation(std::vector<std::vector<cv::Mat>>& data1);
 //    DATA_TYPE medianFunc(DATA_TYPE *array, int size);
 //    float*** dft(float*** a_add, float*** b_add);
 //    double*** dft(double*** a_add, double*** b_add);
