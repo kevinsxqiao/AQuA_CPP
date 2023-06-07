@@ -6,9 +6,14 @@
 #define AQUA_CPP_BASELINEREMOVEANDNOISEESTIMATION_H
 
 #include "../data/data.h"
+#include <iostream>
 
 
 namespace AQuA{
+
+    std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn);
+    void baseLineLinearEstimate(std::vector<std::vector<cv::Mat>>& data);
+    void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& data1);
 
 
 }// namespace

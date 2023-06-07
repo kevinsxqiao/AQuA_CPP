@@ -107,12 +107,8 @@ namespace AQuA{
          int northx;
          int northy;
          int preset;
-         std::string filePath1;
          const char* fileName1;
-         std::string fileType1;
-         std::string filePath2;
-         std::string fileName2;
-         std::string fileType2;
+         const char* fileName2;
          double maxValueDat1;
          double minValueDat1;
          int sz[4];
