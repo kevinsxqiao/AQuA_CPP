@@ -43,6 +43,7 @@ namespace AQuA{
                 }
             }
         }
+        double nSegment = std::max(1.0, std::ceil(T/step)-1);
 
 //        std::cout<<"datMA: "<< std::endl;
 //        for (int i = 0; i < 10; ++i) {
