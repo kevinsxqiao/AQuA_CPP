@@ -26,6 +26,7 @@ namespace AQuA{
         float normalizedParameter;
 
         std::cout<< "--------loading data--------"<<std::endl;
+//        const char *filename = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         pmatFile = matOpen(opts.fileName1, "r");
         if (pmatFile == nullptr) {
             std::cout<< "--------error opening file--------"<<std::endl;
@@ -114,13 +115,14 @@ namespace AQuA{
         AQuA::opts.sz[3] = T;
         AQuA::opts.BitDepth = BitDepth;
 
+//        std::cout<<"data: "<<std::endl;
 //        for (int i = 0; i < 10; ++i) {
 //            for (int j = 0; j < 10; ++j) {
-//                std::cout<< frame[2][3].at<float>(i,j)<< " ";
+//                std::cout<< frame[0][0].at<float>(i,j)<< "  ";
 //            }
 //            std::cout<<std::endl;
 //        }
-
+//
         return frame;
     }//loadData()
 
@@ -179,15 +181,15 @@ namespace AQuA{
     void optsInit(){
         opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         opts.alreadyPreprocess = false;
-        opts.alreadyBleachCorrect = 0;
+        opts.alreadyBleachCorrect = false;
         opts.movAvgWin = 25;
         opts.cut = 200;
         opts.smoXY = 0.5;
         opts.BitDepth;
         opts.regMaskGap = 5;
         opts.singleChannel = true;
-        opts.registrateCorrect = 1;
-        opts.bleachCorrect = 1;
+        opts.registrateCorrect = 0;
+        opts.bleachCorrect = 0;
         opts.medSmo = 1;
         opts.cut = 200;
 

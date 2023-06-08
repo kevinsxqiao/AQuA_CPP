@@ -12,7 +12,7 @@
 namespace AQuA{
 
     std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn);
-    void baseLineLinearEstimate(std::vector<std::vector<cv::Mat>>& data);
+    void baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data);
     void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& data1);
 
 

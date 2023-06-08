@@ -27,7 +27,7 @@ namespace AQuA{
     }
 
 
-    void baseLineLinearEstimate(std::vector<std::vector<cv::Mat>>& data){
+    void baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data){
         std::vector<std::vector<cv::Mat>> datMA(T, std::vector<cv::Mat>(L));
         datMA = movmean(data);
         int step = std::round(0.5 * opts.cut);
@@ -51,7 +51,7 @@ namespace AQuA{
 //            }
 //            std::cout<<std::endl;
 //        }
-    }//baseLineLinearEstimate()
+    }//baselineLinearEstimate()
 
 
     void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& data1){
@@ -60,19 +60,27 @@ namespace AQuA{
          * smooth the data
          */
 //        std::vector<std::vector<cv::Mat>> data1_smo(T);
+        std::cout<< "--------start baselineRemoveAndNoiseEstimation--------"<<std::endl;
         int ksize = 2 * ceil(2 * opts.smoXY) + 1;
         std::vector<std::vector<cv::Mat>> data1_smo(T, std::vector<cv::Mat>(L));
-//        for (int t = 0; t < T; ++t) {
-//            for (int k = 0; k < L; ++k) {
-//                data1_smo[t].emplace_back(data1[t][k].clone());
-//            }
-//        }
         if (opts.smoXY > 0 ){
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
                     cv::GaussianBlur(data1[t][k],data1_smo[t][k],cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
                 }
-            }
+                for (int i = 0; i < H; ++i) {
+                    for (int j = 0; j < W; ++j) {
+                        cv::Mat slice(L,1,CV_32F);
+                        for (int k = 0; k < L; ++k) {
+                            slice.at<float>(k) = data1_smo[t][k].at<float>(i,j);
+                        }
+                        cv::GaussianBlur(slice,slice,cv::Size(1,ksize),0,opts.smoXY);
+                        for (int k = 0; k < L; ++k) {
+                            data1_smo[t][k].at<float>(i,j) = slice.at<float>(k);
+                        }
+                    }
+                }
+            }//for(t)
         }//if(smoXY>0)
 //        std::cout<<"data1_smo: "<< std::endl;
 //        for (int i = 0; i < 10; ++i) {
@@ -88,7 +96,7 @@ namespace AQuA{
          */
         opts.cut = std::min(opts.cut, T);
         //remove baseline
-        baseLineLinearEstimate(data1_smo);
+        baselineLinearEstimate(data1_smo);
 
 
 

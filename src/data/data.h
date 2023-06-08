@@ -116,7 +116,7 @@ namespace AQuA{
          int maxdF1;
          int maxdF2;
          int singleChannel;
-         int alreadyBleachCorrect;
+         bool alreadyBleachCorrect;
          bool alreadyPreprocess;
          int enableTap;
          double medSmo;

@@ -8,7 +8,7 @@
 namespace AQuA{
 
     int menu(){
-        std::cout << "select the task:" << std::endl;
+        std::cout << "select the task: " << std::endl;
         std::cout << "1.preProcessRun" << std::endl;
         std::cout << "2.actRun" << std::endl;
         std::cout << "3.phaseRun" << std::endl;

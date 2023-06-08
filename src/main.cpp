@@ -16,21 +16,18 @@ namespace AQuA{
 
     int main() {
 
-        // load the data
-        DATA_TYPE**** datOrg1 = loadData();
-        DATA_TYPE**** datOrg2 = loadData();
-        preSettingInit();
-        optsInit();
+        AQuA::Init();
+        std::vector<std::vector<cv::Mat>> data1 = AQuA::loadData();
 
 
         int ixTab = menu(); // select action
         switch (ixTab) {
             case 1:
-                preProcessRun(datOrg1,datOrg2);
+                AQuA::preProcessRun(data1);
                 break;
-//        case 2:
-//            AQuA::actRun();
-//            break;
+            case 2:
+                AQuA::actRun();
+                break;
 //        case 3:
 //            AQuA::phaseRun();
 //            break;
@@ -42,8 +39,6 @@ namespace AQuA{
 //            break;
         }
 
-        releaseData(datOrg1);
-        releaseData(datOrg2);
 
         return 0;
     }
