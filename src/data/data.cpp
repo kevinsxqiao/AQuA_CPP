@@ -116,8 +116,8 @@ namespace AQuA{
         AQuA::opts.BitDepth = BitDepth;
 
 //        std::cout<<"data: "<<std::endl;
-//        for (int i = 0; i < 10; ++i) {
-//            for (int j = 0; j < 10; ++j) {
+//        for (int i = 0; i < 7; ++i) {
+//            for (int j = 0; j < 7; ++j) {
 //                std::cout<< frame[0][0].at<float>(i,j)<< "  ";
 //            }
 //            std::cout<<std::endl;

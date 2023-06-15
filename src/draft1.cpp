@@ -1,5 +1,6 @@
 #include "data/data.h"
 #include <iostream>
+#include <cmath>
 //#include <opencv2/opencv.hpp>
 //#include "preProcess/baselineRemoveAndNoiseEstimation.h"
 
@@ -25,6 +26,11 @@ namespace AQuA{
     }
 
 
+    void truncated_kept_var(std::vector<cv::Mat> quantiles){
+
+    }
+
+
     std::vector<std::vector<cv::Mat>> baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data){
         std::vector<std::vector<cv::Mat>> datMA(T, std::vector<cv::Mat>(L));
         datMA = movmean(data);
@@ -44,15 +50,18 @@ namespace AQuA{
                 }
             }
         }
-        std::cout<<"datMA: "<< std::endl;
-        for (int i = 0; i < 10; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                std::cout<<datMA[0][0].at<float>(i,j)<<" ";
-            }
-            std::cout<<std::endl;
-        }
+//        std::cout<<"datMA: "<< std::endl;
+////        for (int k = 0; k < 2; ++k) {
+//            for (int i = 0; i < 7; ++i) {
+//                for (int j = 0; j < 7; ++j) {
+//                    std::cout<<datMA[0][0].at<float>(i,j)<<" ";
+//                }
+//                std::cout<<std::endl;
+//            }
+//        }
 
-        int step = std::round(0.5 * opts.cut);
+
+        int step = static_cast<int>(std::round(0.5 * opts.cut));
         float maxV = 0;
         double maxVal = 0;
         for (int t = 0; t < T; ++t) {
@@ -64,28 +73,63 @@ namespace AQuA{
             }
         }
         int nSegment = static_cast<int>(std::max(1.0, std::ceil(T/step)-1));
-        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L, cv::Mat::ones(H, W, CV_32F)));
+//        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L, cv::Mat::ones(H, W, CV_32S)));
+        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L));
+        for (int kk = 0; kk < nSegment; ++kk) {
+            for (int k = 0; k < L; ++k) {
+                minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
+            }
+        }
         for (int kk = 0; kk < nSegment; ++kk) {
             int t0 = kk * step;
             int t1 = std::min(T, t0 + opts.cut);
             for (int k = 0; k < L; ++k) {
+//                minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
-                        float minV = 1.0;
+                        float minV = 10;
                         for (int t = t0; t < t1; ++t) {
                             if (datMA[t][k].at<float>(i, j) < minV) {
                                 minV = datMA[t][k].at<float>(i, j);
                                 minPosition[kk][k].at<int>(i, j) = t;
-                            }
-                        }
+                            }//if
+                        }//for(t)
                     }
                 }
             }//for(k)
+//            float minV = 10;
+//            for (int t = t0; t < t1; ++t) {
+//                if (datMA[t][0].at<float>(1,1) < minV) {
+//                    minV = datMA[t][0].at<float>(1,1);
+//                    minPosition[kk][0].at<int>(1,1) = t;
+//                }
+//            }
+        }//for(kk)
+
+//        for (int k = 0; k < 10; ++k) {
+//            std::cout<<k<<" :"<< minPosition[0][k].at<int>(1,1)<<"  "<< std::endl;
+//        }
+//        std::cout<<"minPosition"<<std::endl;
+//        std::cout<<minPosition[0][0].at<int>(1,1)<<" : ";
+//        std::cout<<datMA[minPosition[0][0].at<int>(1,1)][0].at<float>(1,1)<<"   ";
+//        std::cout<<std::endl;
+//        std::cout<<"datMA[t]"<<std::endl;
+//        for (int t = 0; t < 200; ++t) {
+//            std::cout<<t<<" :"<< datMA[t][0].at<float>(1,2)<<"  ";
+//        }
+//        std::cout<<"minPosition"<<std::endl;
+//        for (int i = 1; i < 20; ++i) {
+//            std::cout<<minPosition[0][0].at<int>(i,1)<<"  ";
+//        }
+//        std::cout<<std::endl;
+
+
+        std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L));
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                F0[t][k] = cv::Mat::ones(H, W, CV_32F);
+            }
         }
-        for (int i = 0; i < 10; ++i) {
-            std::cout<<minPosition[0][0].at<int>(0,i)<<" "<<std::endl;
-        }
-            std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L, cv::Mat::zeros(H, W, CV_32F)));
             for (int k = 0; k < L; ++k) {
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
@@ -100,7 +144,7 @@ namespace AQuA{
                             curP.erase(it, curP.end());
                         }
                         for (int tt = 0; tt < curP.size(); ++tt) {
-                            value.push_back(datMA[tt][k].at<float>(i,j));
+                            value.push_back(datMA[curP[tt]][k].at<float>(i,j));
 //                            if (!isnan(value[tt])){
 //                                curP[tt] = curP[tt];
 //                                value[tt] = value[tt];
@@ -132,10 +176,10 @@ namespace AQuA{
                             }
                         }//else
                         for (int t = 0; t < T; ++t) {
-                            F0[t][k].at<float>(i,j) = curve.at<float>(t);
+                            F0[t][k].at<float>(i,j) = curve.at<float>(0,t);
                         }
                     }//for(j)
-                }
+                }//for(i)
             }//for(k)
 
         for (int t = 0; t < T; ++t) {
@@ -150,57 +194,105 @@ namespace AQuA{
             }
         }
 
-        std::cout<<"F0: "<< std::endl;
-        std::cout<<"height of image:"<< F0[0][0].rows << std::endl;
-        std::cout<<"width of image:"<< F0[0][0].cols << std::endl;
-        std::cout<<"length of image:"<< F0[0].size() << std::endl;
-        std::cout<<"time frames of image:"<< F0.size() << std::endl;
-        for (int i = 0; i < 10; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                std::cout<<F0[0][0].at<float>(i,j)<<" ";
-            }
-            std::cout<<std::endl;
-        }
+//        std::cout<<"F0: "<< std::endl;
+//        std::cout<<"height of image:"<< F0[0][0].rows << std::endl;
+//        std::cout<<"width of image:"<< F0[0][0].cols << std::endl;
+//        std::cout<<"length of image:"<< F0[0].size() << std::endl;
+//        std::cout<<"time frames of image:"<< F0.size() << std::endl;
+//        for (int i = 0; i < 7; ++i) {
+//            for (int j = 0; j < 7; ++j) {
+//                std::cout<<F0[0][0].at<float>(i,j)<<" ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
         return F0;
     }//baselineLinearEstimate()
 
 
-    void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& data1){
+    void noiseEstimationFunction(std::vector<std::vector<cv::Mat>>& dataOrg){
+        /*
+         * variance map
+         * calculate the variance of raw data
+         */
+        bool correctNoise = true;
+        std::vector<cv::Mat> tempMap(L,cv::Mat(H,W,CV_32F));
+        std::vector<cv::Mat> tempVarOrg(L,cv::Mat(H,W,CV_32F));
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    double sum = 0;
+                    for (int t = 0; t < T-1; ++t) {
+                        sum += pow(dataOrg[t][k].at<float>(i,j) - dataOrg[t+1][k].at<float>(i,j), 2);
+                    }
+                    tempMap[k].at<float>(i,j) = static_cast<float>(sum/T);
+                }
+            }
+            tempVarOrg[k] = tempMap[k] / 2;
+        }
+        std::vector<cv::Mat> countInValid(L,cv::Mat(H,W,CV_32S));
+        std::vector<cv::Mat> totalSamples(L,cv::Mat(H,W,CV_32S));
+        std::vector<cv::Mat> ratio(L,cv::Mat(H,W,CV_32F));
+        if (correctNoise){
+            for (int k = 0; k < L; ++k) {
+                for (int i = 0; i < H; ++i) {
+                    for (int j = 0; j < W; ++j) {
+                        int count_invalid = 0, count_samples=0;
+                        for (int t = 0; t < T; ++t) {
+                            if (dataOrg[t][k].at<float>(i,j) == 0){
+                                ++count_invalid;
+                            }
+                            if (!isnan(dataOrg[t][k].at<float>(i,j))){
+                                ++count_samples;
+                            }
+                            countInValid[k].at<int>(i,j) = count_invalid;
+                            totalSamples[k].at<int>(i,j) = count_samples;
+                        }
+                    }
+                }
+                ratio[k] = countInValid[k] / totalSamples[k];
+            }//for(k)
+
+        }//if(correctNoise)
+
+    }//noiseEstimationFunction()
+
+
+    void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& dataOrg){
         /*
          * smooth the data
          */
         std::cout<< "--------start baselineRemoveAndNoiseEstimation--------"<<std::endl;
         int ksize = 2 * ceil(2 * opts.smoXY) + 1;
-        std::vector<std::vector<cv::Mat>> data1_smo(T, std::vector<cv::Mat>(L));
+        std::vector<std::vector<cv::Mat>> dataSmo(T, std::vector<cv::Mat>(L));
         if (opts.smoXY > 0 ){
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
-                    cv::GaussianBlur(data1[t][k],data1_smo[t][k],cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
+                    cv::GaussianBlur(dataOrg[t][k],dataSmo[t][k],cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
                 }
 //                // 3rd dimension smoothing
 //                for (int i = 0; i < H; ++i) {
 //                    for (int j = 0; j < W; ++j) {
 //                        cv::Mat slice(L,1,CV_32F);
 //                        for (int k = 0; k < L; ++k) {
-//                            slice.at<float>(k) = data1_smo[t][k].at<float>(i,j);
+//                            slice.at<float>(k) = dataSmo[t][k].at<float>(i,j);
 //                        }
 //                        cv::GaussianBlur(slice,slice,cv::Size(1,ksize),0,opts.smoXY);
 //                        for (int k = 0; k < L; ++k) {
-//                            data1_smo[t][k].at<float>(i,j) = slice.at<float>(k);
+//                            dataSmo[t][k].at<float>(i,j) = slice.at<float>(k);
 //                        }
 //                    }
 //                }
             }//for(t)
         }//if(smoXY>0)
 
-        std::cout<<"data1_smo: "<< std::endl;
-        for (int i = 0; i < 10; ++i) {
-            for (int j = 0; j < 10; ++j) {
-                std::cout<<data1_smo[0][0].at<float>(i,j)<<" ";
-            }
-            std::cout<<std::endl;
-        }
+//        std::cout<<"dataSmo: "<< std::endl;
+//        for (int i = 0; i < 7; ++i) {
+//            for (int j = 0; j < 7; ++j) {
+//                std::cout<<dataSmo[0][0].at<float>(i,j)<<" ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
 
         /*
@@ -210,7 +302,7 @@ namespace AQuA{
         //remove baseline
         std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L));
         std::vector<cv::Mat> F0Pro(L,cv::Mat(H,W,CV_32F));
-        F0 = baselineLinearEstimate(data1_smo);
+        F0 = baselineLinearEstimate(dataSmo);
         for (int i = 0; i < H; ++i) {
             for (int j = 0; j < W; ++j) {
                 for (int k = 0; k < L; ++k) {
@@ -224,7 +316,7 @@ namespace AQuA{
         }
 
         //noise estimation
-
+//        noiseEstimationFunction();
 
 
 
@@ -234,8 +326,8 @@ namespace AQuA{
 }// namespace
 
 int main(){
-    AQuA::Init();
     auto start = std::chrono::high_resolution_clock::now();
+    AQuA::Init();
     std::vector<std::vector<cv::Mat>> data = AQuA::loadData();
     AQuA::baselineRemoveAndNoiseEstimation(data);
     auto end = std::chrono::high_resolution_clock::now();
