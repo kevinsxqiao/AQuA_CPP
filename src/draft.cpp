@@ -1,26 +1,22 @@
-#include "data/data.h"
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <boost/math/distributions/normal.hpp>
 
-namespace AQuA{
+int main() {
+    // 创建一个标准正态分布（均值为0，标准差为1）
+    boost::math::normal_distribution<> standardNormal(0.0, 1.0);
 
-}
+    // 测试点
+    double x = 1.0;
 
-int main(){
-        cv::Mat mat  = cv::Mat::zeros(7,7,CV_32F);;
-        mat.at<float>(3,3) = 1;
-        for (int i = 0; i < 7; ++i) {
-            for (int j = 0; j < 7; ++j) {
-                std::cout<<mat.at<float>(i,j)<< "  ";
-            }
-            std::cout<<std::endl;
-        }
-        std::cout<<std::endl;
-        cv::GaussianBlur(mat,mat,cv::Size(5,5),1,1);
-        for (int i = 0; i < 7; ++i) {
-            for (int j = 0; j < 7; ++j) {
-                std::cout<< std::fixed << std::setprecision(4)<<mat.at<float>(i,j)<< "  ";
-            }
-            std::cout<<std::endl;
-        }
+    // 计算概率密度函数(PDF)在x处的值
+    double pdfValue = boost::math::pdf(standardNormal, x);
+
+    // 计算累积分布函数(CDF)在x处的值
+    double cdfValue = boost::math::cdf(standardNormal, x);
+
+    // 输出结果
+    std::cout << "PDF value at " << x << " is " << pdfValue << std::endl;
+    std::cout << "CDF value at " << x << " is " << cdfValue << std::endl;
+
+    return 0;
 }

@@ -23,6 +23,12 @@ AQuA_CPP_IS_TOP_LEVEL:STATIC=ON
 //Value Computed by CMake
 AQuA_CPP_SOURCE_DIR:STATIC=C:/Users/Kevin Qiao/Desktop/AQuA_CPP
 
+//The directory containing a CMake configuration file for Boost.
+Boost_DIR:PATH=Boost_DIR-NOTFOUND
+
+//Path to a file.
+Boost_INCLUDE_DIR:PATH=C:/Program Files (x86)/boost_1_82_0/boost_1_82_0
+
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=C:/Program Files/JetBrains/CLion 2022.3.2/bin/mingw/bin/addr2line.exe
 
@@ -265,6 +271,10 @@ MX_LIBRARY:FILEPATH=C:/Program Files/MATLAB/R2022b/extern/lib/win64/microsoft/li
 # INTERNAL cache entries
 ########################
 
+//ADVANCED property for variable: Boost_DIR
+Boost_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: Boost_INCLUDE_DIR
+Boost_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_ADDR2LINE
 CMAKE_ADDR2LINE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_AR
@@ -417,8 +427,20 @@ CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 CMAKE_STRIP-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
+//Details about finding Boost
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[C:/Program Files (x86)/boost_1_82_0/boost_1_82_0][c ][v1.82.0()]
 //Details about finding OpenCV
 FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[C:/Program Files (x86)/opencv/mingw_build/install][v4.7.0()]
+//Last used BOOST_ROOT value.
+_BOOST_ROOT_LAST:INTERNAL=C:/Program Files (x86)/boost_1_82_0/boost_1_82_0
+//Components requested for this build tree.
+_Boost_COMPONENTS_SEARCHED:INTERNAL=
+//Last used Boost_INCLUDE_DIR value.
+_Boost_INCLUDE_DIR_LAST:INTERNAL=C:/Program Files (x86)/boost_1_82_0/boost_1_82_0
+//Last used Boost_NAMESPACE value.
+_Boost_NAMESPACE_LAST:INTERNAL=boost
+//Last used Boost_USE_MULTITHREADED value.
+_Boost_USE_MULTITHREADED_LAST:INTERNAL=TRUE
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
 

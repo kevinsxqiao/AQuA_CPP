@@ -10,6 +10,7 @@
 #include <iostream>
 #include <mat.h>
 #include <vector>
+#include <boost/math/distributions/normal.hpp>
 
 
 #define H AQuA::rawDataSize.size1

@@ -1,6 +1,6 @@
 #include "data/data.h"
 #include <iostream>
-#include <cmath>
+//#include <cmath>
 //#include <opencv2/opencv.hpp>
 //#include "preProcess/baselineRemoveAndNoiseEstimation.h"
 
@@ -26,9 +26,30 @@ namespace AQuA{
     }
 
 
-    void truncated_kept_var(std::vector<cv::Mat> quantiles){
+    std::vector<cv::Mat> truncated_kept_var(std::vector<cv::Mat>& quantiles){
+        std::vector<cv::Mat> pars(L);
+        boost::math::normal_distribution<float> normal_dist;
+        for (int k = 0; k < L; ++k) {
+            pars[k] = cv::Mat(H,W,CV_32F);
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    float quantile = quantiles[k].at<float>(i,j);
+                    if (quantile == 0.0f){
+                        pars[k].at<float>(i,j) = 2.0f;
+                    }
+                    else{
+                        float a = boost::math::quantile(normal_dist, quantile);
+                        float phi_a = boost::math::pdf(normal_dist,a);
+                        float mu = a * quantile + phi_a;
+                        float second_order = a * a * quantile + 1 - quantile + a * phi_a;
+                        pars[k].at<float>(i,j) = (second_order - mu * mu) * 2;
+                    }
+                }
+            }
+        }//for(k)
 
-    }
+        return pars;
+    }//truncated_kept_var()
 
 
     std::vector<std::vector<cv::Mat>> baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data){
@@ -260,6 +281,7 @@ namespace AQuA{
                 }
                 ratio[k] = countInValid[k] / totalSamples[k];
             }//for(k)
+            truncated_kept_var(ratio);
 
         }//if(correctNoise)
 
