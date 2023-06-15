@@ -60,7 +60,6 @@ namespace AQuA{
 //            }
 //        }
 
-
         int step = static_cast<int>(std::round(0.5 * opts.cut));
         float maxV = 0;
         double maxVal = 0;
@@ -216,8 +215,12 @@ namespace AQuA{
          * calculate the variance of raw data
          */
         bool correctNoise = true;
-        std::vector<cv::Mat> tempMap(L,cv::Mat(H,W,CV_32F));
-        std::vector<cv::Mat> tempVarOrg(L,cv::Mat(H,W,CV_32F));
+        std::vector<cv::Mat> tempMap(L);
+        std::vector<cv::Mat> tempVarOrg(L);
+        for (int k = 0; k < L; ++k) {
+            tempMap[k] = cv::Mat(H,W,CV_32F);
+            tempVarOrg[k] = cv::Mat(H,W,CV_32F);
+        }
         for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
@@ -229,11 +232,16 @@ namespace AQuA{
                 }
             }
             tempVarOrg[k] = tempMap[k] / 2;
-        }
-        std::vector<cv::Mat> countInValid(L,cv::Mat(H,W,CV_32S));
-        std::vector<cv::Mat> totalSamples(L,cv::Mat(H,W,CV_32S));
-        std::vector<cv::Mat> ratio(L,cv::Mat(H,W,CV_32F));
+        }//for(k)
         if (correctNoise){
+            std::vector<cv::Mat> countInValid(L);
+            std::vector<cv::Mat> totalSamples(L);
+            std::vector<cv::Mat> ratio(L);
+            for (int k = 0; k < L; ++k) {
+                tempMap[k] = cv::Mat(H,W,CV_32F);
+                tempVarOrg[k] = cv::Mat(H,W,CV_32F);
+                ratio[k] = cv::Mat(H,W,CV_32F);
+            }
             for (int k = 0; k < L; ++k) {
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
@@ -301,7 +309,10 @@ namespace AQuA{
         opts.cut = std::min(opts.cut, T);
         //remove baseline
         std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L));
-        std::vector<cv::Mat> F0Pro(L,cv::Mat(H,W,CV_32F));
+        std::vector<cv::Mat> F0Pro(L);
+        for (int k = 0; k < L; ++k) {
+            F0Pro[k] = cv::Mat(H,W,CV_32F);
+        }
         F0 = baselineLinearEstimate(dataSmo);
         for (int i = 0; i < H; ++i) {
             for (int j = 0; j < W; ++j) {
