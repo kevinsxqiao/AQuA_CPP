@@ -96,15 +96,10 @@ namespace AQuA{
 //        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L, cv::Mat::ones(H, W, CV_32S)));
         std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L));
         for (int kk = 0; kk < nSegment; ++kk) {
-            for (int k = 0; k < L; ++k) {
-                minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
-            }
-        }
-        for (int kk = 0; kk < nSegment; ++kk) {
             int t0 = kk * step;
             int t1 = std::min(T, t0 + opts.cut);
             for (int k = 0; k < L; ++k) {
-//                minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
+                minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
                         float minV = 10;
@@ -241,8 +236,6 @@ namespace AQuA{
         for (int k = 0; k < L; ++k) {
             tempMap[k] = cv::Mat(H,W,CV_32F);
             tempVarOrg[k] = cv::Mat(H,W,CV_32F);
-        }
-        for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
                     double sum = 0;
@@ -262,8 +255,6 @@ namespace AQuA{
                 tempMap[k] = cv::Mat(H,W,CV_32F);
                 tempVarOrg[k] = cv::Mat(H,W,CV_32F);
                 ratio[k] = cv::Mat(H,W,CV_32F);
-            }
-            for (int k = 0; k < L; ++k) {
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
                         int count_invalid = 0, count_samples=0;
