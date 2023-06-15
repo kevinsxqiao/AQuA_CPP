@@ -26,7 +26,7 @@ namespace AQuA{
     }
 
 
-    std::vector<cv::Mat> truncated_kept_var(std::vector<cv::Mat>& quantiles){
+    std::vector<cv::Mat> truncated_kept_var(const std::vector<cv::Mat>& quantiles){
         std::vector<cv::Mat> pars(L);
         boost::math::normal_distribution<float> normal_dist;
         for (int k = 0; k < L; ++k) {
@@ -272,9 +272,20 @@ namespace AQuA{
                 }
                 ratio[k] = countInValid[k] / totalSamples[k];
             }//for(k)
-            truncated_kept_var(ratio);
-
+            std::vector<cv::Mat> correctPars = truncated_kept_var(ratio);
+            std::vector<cv::Mat> varMapOrg(L);
+            for (int k = 0; k < L; ++k) {
+                varMapOrg[k] = cv::Mat(H,W,CV_32F);
+                varMapOrg[k] = tempMap[k] / correctPars[k];
+            }
         }//if(correctNoise)
+        else{
+            std::vector<cv::Mat> varMapOrg(L);
+            for (int k = 0; k < L; ++k) {
+                varMapOrg[k] = cv::Mat(H,W,CV_32F);
+                varMapOrg[k] = tempVarOrg[k];
+            }
+        }//else
 
     }//noiseEstimationFunction()
 
