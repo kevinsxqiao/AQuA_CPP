@@ -6,6 +6,311 @@
 
 namespace AQuA{
 
+    bool*** createEvt(){
+        bool*** evtSpatialMask;
+        evtSpatialMask = new bool** [H];
+        for (int i = 0; i < H; ++i) {
+            evtSpatialMask[i] = new bool* [W];
+        }
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                evtSpatialMask[i][j] = new bool [L];
+            }
+        }
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    evtSpatialMask[i][j][k] = true;
+                }
+            }
+        }
+        return evtSpatialMask;
+    }
+
+
+    std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg) {
+        std::vector<cv::Mat> varMapOut (std::vector<cv::Mat>(L));
+        std::vector<cv::Mat> F0Pro (std::vector<cv::Mat>(L));
+        std::vector<cv::Mat> varMap (std::vector<cv::Mat>(L));
+        std::vector<cv::Mat> select (std::vector<cv::Mat>(L));
+        for (int k = 0; k < L; ++k) {
+            F0Pro[k] = cv::Mat(H,W,CV_32F);
+            varMapOut[k] = cv::Mat(H,W,CV_32F);
+            varMap[k] = cv::Mat(H,W,CV_32F);
+            select[k] = cv::Mat::zeros(H,W,CV_8U);
+        }
+
+        //remove values close to 0
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (varMapOrg[k].at<float>(i,j) > 1e-8){
+                        F0Pro[k].at<float>(i,j) = F0ProOrg[k].at<float>(i,j);
+                        varMap[k].at<float>(i,j) = varMapOrg[k].at<float>(i,j);
+                    }
+                }
+            }
+        }
+
+//        if isempty(F0Pro)
+//           % if no valid variance
+//        varMapOut = ones(size(F0ProOrg)) * 1e-8;
+//        return;
+//        end
+
+        //downsample --- the number of original pixels is too large.
+        float maxX = 0;
+        float minX = 0;
+        double maxVal = 0;
+        double minVal = 0;
+        for (int k = 0; k < L; ++k) {
+            cv::minMaxLoc(cv::Mat(F0Pro[k]), &minVal, &maxVal);
+            if (maxVal > maxX){
+                maxX = static_cast<float>(maxVal);
+            }
+            if (minVal < minX){
+                minX = static_cast<float>(minVal);
+            }
+        }
+        float delta = std::max(static_cast<float>(1e-5), (maxX - minX)/2000);
+        cv::Mat x = cv::Mat::zeros(2000,1,CV_32F);
+        cv::Mat y = cv::Mat::zeros(2000,1,CV_32F);
+        cv::Mat valid = cv::Mat::zeros(2000,1,CV_8U);
+        for (int ii = 0; ii < 2000; ++ii) {
+            bool flag = false;
+            for (int k = 0; k < L; ++k) {
+                for (int i = 0; i < H; ++i) {
+                    for (int j = 0; j < W; ++j) {
+                        if (ii == 0 ){
+                            if (F0Pro[k].at<float>(i,j) >= minX + ii*delta && F0Pro[k].at<float>(i,j) <= minX + (ii+1)*delta){
+                                select[k].at<int>(i,j) = 1;
+                                flag == true;
+                            }
+                        }else{
+                            if (F0Pro[k].at<float>(i,j) > minX + ii*delta && F0Pro[k].at<float>(i,j) < minX + (ii+1)*delta){
+                                select[k].at<int>(i,j) = 1;
+                                flag == true;
+                            }
+                        }
+                    }//for(j)
+                }//for(i)
+            }//for(k)
+            if(flag){
+                float sumX = 0;
+                float sumY = 0;
+                int count = 0;
+                for (int k = 0; k < L; ++k) {
+                    for (int i = 0; i < H; ++i) {
+                        for (int j = 0; j < W; ++j) {
+                            if (select[k].at<int>(i,j) == 1){
+                                sumX += F0Pro[k].at<float>(i,j);
+                                sumY += varMap[k].at<float>(i,j);
+                                ++count;
+                            }
+                        }
+                    }
+                }
+                x.at<float>(ii,0) = sumX / static_cast<float>(count);
+                y.at<float>(ii,0) = sumY / static_cast<float>(count);
+                valid.at<int>(ii,0) = 1;
+            }//if(flag)
+        }//for(ii)
+        std::vector<float> x_new;
+        std::vector<float> y_new;
+        for (int i = 0; i < 2000; ++i) {
+            if (valid.at<int>(i,0) == 1){
+                x_new.push_back(x.at<float>(i,0));
+                y_new.push_back(x.at<float>(i,0));
+            }
+        }
+
+        if (x_new.size() == 1){
+            for (int k = 0; k < L; ++k) {
+                varMapOut[k] = y_new[0];
+            }
+            return varMapOut;
+        }
+
+        //graph construction --- the start point and end point, if pick the most extreme ones, too
+        // unstable. Since source is more dense, we could use more points.
+        int source = std::ceil(y_new.size() * 0.05);
+        int sink = std::max(static_cast<double>(1), std::floor(y_new.size() * 0.99));
+        //first layer
+        std::vector<double> dist1(y_new.size(), std::numeric_limits<double>::infinity());
+        std::vector<int> preMap1(y_new.size(), 0);
+        for (int j = 0; j < y_new.size(); ++j) {
+            double minCost = std::numeric_limits<double>::infinity();
+            int preNode = j;
+            for (int i = 0; i < std::min(j - 1, source); ++i) {
+                double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
+                double b = y_new[i] - a * x_new[i];
+//                % first term => first inclined segment
+//                % second term => horizontal
+                double cost = 0;
+                double cost1 = 0;
+                double cost2 = 0;
+                for (int k = i; k < j; ++k) {
+                    cost1 += std::abs(y_new[k] - a*x_new[k]+b);
+                }
+                for (int k = 0; k < i; ++k) {
+                    cost2 += std::abs(y_new[k] - y_new[i]);
+                }
+                cost = cost1 + cost2;
+                if (cost < minCost){
+                    minCost = cost;
+                    preNode = i;
+                }
+                dist1[j] = minCost;
+                preMap1[j] = preNode;
+            }//for(i)
+        }//for(j)
+        //second layer
+        std::vector<double> dist2(y_new.size(), std::numeric_limits<double>::infinity());
+        std::vector<int> preMap2(y_new.size(), 0);
+        for (int j = 0; j < y_new.size(); ++j) {
+            double minCost = std::numeric_limits<double>::infinity();
+            int preNode = j;
+            for (int i = 0; i < j-1; ++i) {
+                double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
+                double b = y_new[i] - a * x_new[i];
+                double cost = 0;
+                for (int k = i; k < j; ++k) {
+                    cost += std::abs(y_new[k] - a*x_new[k]+b);
+                }
+                if (dist1[i] + cost < minCost){
+                    minCost = dist1[i] + cost;
+                    preNode = i;
+                }
+                dist2[j] = minCost;
+                preMap2[j] = preNode;
+            }//for(i)
+        }//for(j)
+        //third layer
+        std::vector<double> dist3(y_new.size(), std::numeric_limits<double>::infinity());
+        std::vector<int> preMap3(y_new.size(), 0);
+        for (int j = sink-1; j < y_new.size(); ++j) {
+            double minCost = std::numeric_limits<double>::infinity();
+            int preNode = j;
+            for (int i = 0; i < j-1; ++i) {
+                double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
+                double b = y_new[i] - a * x_new[i];
+                double cost = 0;
+                double cost1 = 0;
+                double cost2 = 0;
+                for (int k = i; k < j; ++k) {
+                    cost1 += std::abs(y_new[k] - a*x_new[k]+b);
+                }
+                for (int k = j; k < y_new.size(); ++k) {
+                    cost2 += std::abs(y_new[k] - y_new[j]);
+                }
+                cost = cost1 + cost2;
+                if (dist2[i] + cost < minCost){
+                    minCost = dist2[i] + cost;
+                    preNode = i;
+                }
+                dist3[j] = minCost;
+                preMap3[j] = preNode;
+            }//for(i)
+        }//for(j)
+        //sink
+        int node3 = std::min_element(dist3.begin(), dist3.end()) - dist3.begin();
+        double x3 = x_new[node3];
+        double y3 = y_new[node3];
+        //end of 2nd segment
+        int node2 = preMap3[node3];
+        double x2 = x_new[node2];
+        double y2 = y_new[node2];
+        //end of 1st segment
+        int node1 = preMap2[node2];
+        double x1 = x_new[node1];
+        double y1 = y_new[node1];
+        //start of 1st segment
+        int node0 = preMap1[node1];
+        double x0 = x_new[node0];
+        double y0 = y_new[node0];
+
+        double a1 = (y0 - y1) / (x0 -x1);
+        double b1 = y1 - a1*x1;
+
+        double a2 = (y1 - y2) / (x1 -x2);
+        double b2 = y2 - a2*x2;
+
+        double a3 = (y3 - y2) / (x3 -x2);
+        double b3 = y3 - a3*x3;
+
+        //fitting
+        for (int k = 0; k < L; ++k) {
+            varMapOut[k] = varMapOrg[k];
+        }
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (F0ProOrg[k].at<float>(i,j) <=0){
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(y0);
+                    }
+                    if (F0ProOrg[k].at<float>(i,j) >= x0 && F0ProOrg[k].at<float>(i,j) < x1){
+                        select[k].at<int>(i,j) = 1;
+                    } else{
+                        select[k].at<int>(i,j) = 0;
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (select[k].at<int>(i,j) ==1){
+                        varMapOut[k].at<float>(i,j) = a1 * F0ProOrg[k].at<float>(i,j) + b1;
+                    }
+                    if (F0ProOrg[k].at<float>(i,j) >= x1 && F0ProOrg[k].at<float>(i,j) < x2){
+                        select[k].at<int>(i,j) = 1;
+                    } else{
+                        select[k].at<int>(i,j) = 0;
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (select[k].at<int>(i,j) ==1){
+                        varMapOut[k].at<float>(i,j) = a2 * F0ProOrg[k].at<float>(i,j) + b2;
+                    }
+                    if (F0ProOrg[k].at<float>(i,j) >= x2 && F0ProOrg[k].at<float>(i,j) <= x3){
+                        select[k].at<int>(i,j) = 1;
+                    } else{
+                        select[k].at<int>(i,j) = 0;
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (select[k].at<int>(i,j) ==1){
+                        varMapOut[k].at<float>(i,j) = a3 * F0ProOrg[k].at<float>(i,j) + b3;
+                    }
+                    if (F0ProOrg[k].at<float>(i,j) >= x3){
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(y3);
+                    }
+                }
+            }
+        }
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    if (std::isnan(varMapOut[k].at<float>(i,j))){
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(y0);
+                    }
+                }
+            }
+        }
+
+
+        return varMapOut;
+    }
+
+
     std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn) {
         std::vector<std::vector<cv::Mat>> dataOut(T, std::vector<cv::Mat>(L));
         int halfWin = opts.movAvgWin/2;
@@ -225,14 +530,53 @@ namespace AQuA{
     }//baselineLinearEstimate()
 
 
-    void noiseEstimationFunction(std::vector<std::vector<cv::Mat>>& dataOrg){
+    void correctBoundaryStd(){
+        //gaussian filter
+        int dist = std::ceil(2 * opts.smoXY);
+        std::vector<cv::Mat> filter0(dist*2+1);
+        std::vector<cv::Mat> filter(dist*2+1);
+        for (int k = 0; k < dist * 2 + 1; ++k) {
+            filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
+        }
+        filter0[dist+1].at<float>(dist+1, dist+1) = 1;
+        int ksize = 2 * ceil(2 * opts.smoXY) + 1;
+        for (int k = 0; k < dist * 2 + 1; ++k) {
+            cv::GaussianBlur(filter0[k],filter0[k], cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
+            cv::pow(filter0[k], 2, filter[k]);
+        }
+
+        std::vector<cv::Mat> correctMap(dist*2+1);
+        for (int k = 0; k < dist * 2 + 1; ++k) {
+            correctMap[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
+        }
+
+//        for (int k = dist; k < 2*dist+1; ++k) {
+//            for (int i = dist; i < 2*dist+1; ++i) {
+//                for (int j = dist; j < 2*dist+1; ++j) {
+//                    std::vector<cv::Mat> filter1(dist*2+1);
+//                    for (int kk = 0; kk < dist * 2 + 1; ++kk) {
+//                        filter1[k] = filter0[k];
+//                    }//for(kk)
+//                    for (int x = ; x < ; ++x) {
+//
+//                    }
+//                }
+//            }
+//        }
+
+    }
+
+
+    void noiseEstimationFunction(const std::vector<std::vector<cv::Mat>>& dataOrg, const std::vector<std::vector<cv::Mat>>& dataSmo,
+                                 const std::vector<cv::Mat>& F0Pro, bool*** evtSpatialMask, std::vector<cv::Mat>& stdMapOrg, std::vector<cv::Mat>& stdMapSmo,
+                                 std::vector<cv::Mat>& tempVarOrg,   std::vector<cv::Mat>& correctPars){
         /*
+         * return "stdMapOrg,stdMapSmo,tempVarOrg,correctPars"
          * variance map
          * calculate the variance of raw data
          */
         bool correctNoise = true;
         std::vector<cv::Mat> tempMap(L);
-        std::vector<cv::Mat> tempVarOrg(L);
         for (int k = 0; k < L; ++k) {
             tempMap[k] = cv::Mat(H,W,CV_32F);
             tempVarOrg[k] = cv::Mat(H,W,CV_32F);
@@ -247,6 +591,7 @@ namespace AQuA{
             }
             tempVarOrg[k] = tempMap[k] / 2;
         }//for(k)
+        std::vector<cv::Mat> varMapOrg(L);
         if (correctNoise){
             std::vector<cv::Mat> countInValid(L);
             std::vector<cv::Mat> totalSamples(L);
@@ -272,25 +617,98 @@ namespace AQuA{
                 }
                 ratio[k] = countInValid[k] / totalSamples[k];
             }//for(k)
-            std::vector<cv::Mat> correctPars = truncated_kept_var(ratio);
-            std::vector<cv::Mat> varMapOrg(L);
+            correctPars = truncated_kept_var(ratio);
             for (int k = 0; k < L; ++k) {
                 varMapOrg[k] = cv::Mat(H,W,CV_32F);
                 varMapOrg[k] = tempMap[k] / correctPars[k];
             }
         }//if(correctNoise)
         else{
-            std::vector<cv::Mat> varMapOrg(L);
             for (int k = 0; k < L; ++k) {
                 varMapOrg[k] = cv::Mat(H,W,CV_32F);
                 varMapOrg[k] = tempVarOrg[k];
             }
         }//else
 
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    if (!evtSpatialMask[i][j][k]){
+                        varMapOrg[k].at<float>(i,j) = NAN;
+                    }
+                }
+            }
+        }
+        std::vector<cv::Mat> varMapOut = fit_F0_var(F0Pro, varMapOrg);
+        std::vector<cv::Mat> varMapSmo(L);
+        for (int k = 0; k < L; ++k) {
+            cv::sqrt(varMapOut[k],stdMapOrg[k]);
+            varMapSmo[k] = cv::Mat(H,W,CV_32F);
+        }
+        if (opts.smoXY == 0){
+            for (int k = 0; k < L; ++k) {
+                stdMapSmo[k] = stdMapOrg[k];
+                varMapSmo[k] = varMapOrg[k];
+            }
+        }
+
+        //gaussian filter
+        int dist = std::ceil(2 * opts.smoXY);
+        std::vector<cv::Mat> filter0(dist*2+1);
+        std::vector<cv::Mat> filter(dist*2+1);
+        for (int k = 0; k < dist * 2 + 1; ++k) {
+            filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
+        }
+        filter0[dist+1].at<float>(dist+1, dist+1) = 1;
+        int ksize = 2 * ceil(2 * opts.smoXY) + 1;
+        for (int k = 0; k < dist * 2 + 1; ++k) {
+            cv::GaussianBlur(filter0[k],filter0[k], cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
+            cv::pow(filter0[k], 2, filter[k]);
+        }
+
+        //estimated variance from smoothed data
+        for (int k = 0; k < L; ++k) {
+            for (int i = 0; i < H; ++i) {
+                for (int j = 0; j < W; ++j) {
+                    double sum = 0;
+                    for (int t = 0; t < T-1; ++t) {
+                        sum += pow(dataSmo[t][k].at<float>(i,j) - dataSmo[t+1][k].at<float>(i,j), 2);
+                    }
+                    varMapSmo[k].at<float>(i,j) = static_cast<float>(sum/T);
+                }
+            }
+        }//for(k)
+
+        //correct the variance according to truncated model
+        if (correctNoise){
+            for (int k = 0; k < L; ++k) {
+                cv::Mat temp1, temp2;
+                cv::filter2D(tempMap[k]/correctPars[k], temp1, -1, filter[k]);
+                cv::filter2D(varMapOrg[k], temp2, -1, filter[k]);
+                varMapSmo[k] = varMapSmo[k] * temp1 / temp2;
+            }
+        }//if
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    if (!evtSpatialMask[i][j][k]){
+                        varMapSmo[k].at<float>(i,j) = NAN;
+                    }
+                }
+            }
+        }
+
+        //correct the variance in the boundary(caused by smoothing operation)
+//        correctMap2 = correctBoundaryStd();
+        varMapOut = fit_F0_var(F0Pro, varMapSmo);
+        for (int k = 0; k < L; ++k) {
+            cv::sqrt(varMapOut[k],stdMapSmo[k]);
+        }
+
     }//noiseEstimationFunction()
 
 
-    void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& dataOrg){
+    void baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& dataOrg, bool*** evtSpatialMask){
         /*
          * smooth the data
          */
@@ -351,7 +769,11 @@ namespace AQuA{
         }
 
         //noise estimation
-//        noiseEstimationFunction();
+        std::vector<cv::Mat> stdMapOrg(L);
+        std::vector<cv::Mat> stdMapGau(L);
+        std::vector<cv::Mat> tempVarOrg(L);
+        std::vector<cv::Mat> correctPars(L);
+        noiseEstimationFunction(dataOrg, dataSmo, F0Pro, evtSpatialMask, stdMapOrg, stdMapGau, tempVarOrg, correctPars);
 
 
 
@@ -363,8 +785,9 @@ namespace AQuA{
 int main(){
     auto start = std::chrono::high_resolution_clock::now();
     AQuA::Init();
-    std::vector<std::vector<cv::Mat>> data = AQuA::loadData();
-    AQuA::baselineRemoveAndNoiseEstimation(data);
+    bool*** evtSpatialMask = AQuA::createEvt();
+    std::vector<std::vector<cv::Mat>> dataOrg = AQuA::loadData();
+    AQuA::baselineRemoveAndNoiseEstimation(dataOrg, evtSpatialMask);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
     std::cout << "used time: " << duration/1000 << " seconds" << std::endl;

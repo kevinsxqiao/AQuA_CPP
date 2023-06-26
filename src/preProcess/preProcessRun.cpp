@@ -48,6 +48,23 @@ namespace AQuA{
 //            }
 //        }
 
+        bool*** evtSpatialMask;
+        evtSpatialMask = new bool** [H];
+        for (int i = 0; i < H; ++i) {
+            evtSpatialMask[i] = new bool* [W];
+        }
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                evtSpatialMask[i][j] = new bool [L];
+            }
+        }
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    evtSpatialMask[i][j][k] = true;
+                }
+            }
+        }
         /*
          * F0 bias calculation
          */
