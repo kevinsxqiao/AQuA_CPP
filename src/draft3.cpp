@@ -8,7 +8,7 @@ int main() {
 
     double minVal, maxVal;
     cv::Point minLoc, maxLoc;
-
+    cv::filter2D(mat,mat,-1);
     cv::minMaxLoc(mat, &minVal, &maxVal, &minLoc, &maxLoc);
 
     std::cout << "Min value: " << minVal << " at (" << minLoc.x << ", " << minLoc.y << ")\n";

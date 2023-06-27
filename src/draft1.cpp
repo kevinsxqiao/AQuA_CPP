@@ -37,7 +37,6 @@ namespace AQuA{
             F0Pro[k] = cv::Mat(H,W,CV_32F);
             varMapOut[k] = cv::Mat(H,W,CV_32F);
             varMap[k] = cv::Mat(H,W,CV_32F);
-            select[k] = cv::Mat::zeros(H,W,CV_8U);
         }
 
         //remove values close to 0
@@ -51,7 +50,6 @@ namespace AQuA{
                 }
             }
         }
-
 //        if isempty(F0Pro)
 //           % if no valid variance
 //        varMapOut = ones(size(F0ProOrg)) * 1e-8;
@@ -60,7 +58,7 @@ namespace AQuA{
 
         //downsample --- the number of original pixels is too large.
         float maxX = 0;
-        float minX = 0;
+        float minX = 1;
         double maxVal = 0;
         double minVal = 0;
         for (int k = 0; k < L; ++k) {
@@ -75,21 +73,22 @@ namespace AQuA{
         float delta = std::max(static_cast<float>(1e-5), (maxX - minX)/2000);
         cv::Mat x = cv::Mat::zeros(2000,1,CV_32F);
         cv::Mat y = cv::Mat::zeros(2000,1,CV_32F);
-        cv::Mat valid = cv::Mat::zeros(2000,1,CV_8U);
+        cv::Mat valid = cv::Mat::zeros(2000,1,CV_32S);
         for (int ii = 0; ii < 2000; ++ii) {
             bool flag = false;
             for (int k = 0; k < L; ++k) {
+                select[k] = cv::Mat::zeros(H,W,CV_32S);
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
                         if (ii == 0 ){
-                            if (F0Pro[k].at<float>(i,j) >= minX + ii*delta && F0Pro[k].at<float>(i,j) <= minX + (ii+1)*delta){
+                            if ((F0Pro[k].at<float>(i,j) >= minX + ii*delta) && (F0Pro[k].at<float>(i,j) <= minX + (ii+1)*delta)){
                                 select[k].at<int>(i,j) = 1;
-                                flag == true;
+                                flag = true;
                             }
                         }else{
-                            if (F0Pro[k].at<float>(i,j) > minX + ii*delta && F0Pro[k].at<float>(i,j) < minX + (ii+1)*delta){
+                            if ((F0Pro[k].at<float>(i,j) > minX + ii*delta) && (F0Pro[k].at<float>(i,j) < minX + (ii+1)*delta)){
                                 select[k].at<int>(i,j) = 1;
-                                flag == true;
+                                flag = true;
                             }
                         }
                     }//for(j)
@@ -120,7 +119,7 @@ namespace AQuA{
         for (int i = 0; i < 2000; ++i) {
             if (valid.at<int>(i,0) == 1){
                 x_new.push_back(x.at<float>(i,0));
-                y_new.push_back(x.at<float>(i,0));
+                y_new.push_back(y.at<float>(i,0));
             }
         }
 
@@ -130,9 +129,8 @@ namespace AQuA{
             }
             return varMapOut;
         }
-
         //graph construction --- the start point and end point, if pick the most extreme ones, too
-        // unstable. Since source is more dense, we could use more points.
+        // unstable. Since source is denser, we could use more points.
         int source = std::ceil(y_new.size() * 0.05);
         int sink = std::max(static_cast<double>(1), std::floor(y_new.size() * 0.99));
         //first layer
@@ -237,7 +235,6 @@ namespace AQuA{
 
         double a3 = (y3 - y2) / (x3 -x2);
         double b3 = y3 - a3*x3;
-
         //fitting
         for (int k = 0; k < L; ++k) {
             varMapOut[k] = varMapOrg[k];
@@ -245,10 +242,10 @@ namespace AQuA{
         for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
-                    if (F0ProOrg[k].at<float>(i,j) <=0){
+                    if (F0ProOrg[k].at<float>(i,j) <=x0){
                         varMapOut[k].at<float>(i,j) = static_cast<float>(y0);
                     }
-                    if (F0ProOrg[k].at<float>(i,j) >= x0 && F0ProOrg[k].at<float>(i,j) < x1){
+                    if ((F0ProOrg[k].at<float>(i,j) >= x0) && (F0ProOrg[k].at<float>(i,j) < x1)){
                         select[k].at<int>(i,j) = 1;
                     } else{
                         select[k].at<int>(i,j) = 0;
@@ -260,9 +257,9 @@ namespace AQuA{
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
                     if (select[k].at<int>(i,j) ==1){
-                        varMapOut[k].at<float>(i,j) = a1 * F0ProOrg[k].at<float>(i,j) + b1;
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(a1 * F0ProOrg[k].at<float>(i,j) + b1);
                     }
-                    if (F0ProOrg[k].at<float>(i,j) >= x1 && F0ProOrg[k].at<float>(i,j) < x2){
+                    if ((F0ProOrg[k].at<float>(i,j) >= x1) && (F0ProOrg[k].at<float>(i,j) < x2)){
                         select[k].at<int>(i,j) = 1;
                     } else{
                         select[k].at<int>(i,j) = 0;
@@ -274,9 +271,9 @@ namespace AQuA{
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
                     if (select[k].at<int>(i,j) ==1){
-                        varMapOut[k].at<float>(i,j) = a2 * F0ProOrg[k].at<float>(i,j) + b2;
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(a2 * F0ProOrg[k].at<float>(i,j) + b2);
                     }
-                    if (F0ProOrg[k].at<float>(i,j) >= x2 && F0ProOrg[k].at<float>(i,j) <= x3){
+                    if ((F0ProOrg[k].at<float>(i,j) >= x2) && (F0ProOrg[k].at<float>(i,j) <= x3)){
                         select[k].at<int>(i,j) = 1;
                     } else{
                         select[k].at<int>(i,j) = 0;
@@ -288,7 +285,7 @@ namespace AQuA{
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
                     if (select[k].at<int>(i,j) ==1){
-                        varMapOut[k].at<float>(i,j) = a3 * F0ProOrg[k].at<float>(i,j) + b3;
+                        varMapOut[k].at<float>(i,j) = static_cast<float>(a3 * F0ProOrg[k].at<float>(i,j) + b3);
                     }
                     if (F0ProOrg[k].at<float>(i,j) >= x3){
                         varMapOut[k].at<float>(i,j) = static_cast<float>(y3);
@@ -538,7 +535,7 @@ namespace AQuA{
         for (int k = 0; k < dist * 2 + 1; ++k) {
             filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
         }
-        filter0[dist+1].at<float>(dist+1, dist+1) = 1;
+        filter0[dist].at<float>(dist, dist) = 1;
         int ksize = 2 * ceil(2 * opts.smoXY) + 1;
         for (int k = 0; k < dist * 2 + 1; ++k) {
             cv::GaussianBlur(filter0[k],filter0[k], cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
@@ -597,8 +594,8 @@ namespace AQuA{
             std::vector<cv::Mat> totalSamples(L);
             std::vector<cv::Mat> ratio(L);
             for (int k = 0; k < L; ++k) {
-                tempMap[k] = cv::Mat(H,W,CV_32F);
-                tempVarOrg[k] = cv::Mat(H,W,CV_32F);
+                countInValid[k] = cv::Mat(H,W,CV_32F);
+                totalSamples[k] = cv::Mat(H,W,CV_32F);
                 ratio[k] = cv::Mat(H,W,CV_32F);
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
@@ -629,7 +626,6 @@ namespace AQuA{
                 varMapOrg[k] = tempVarOrg[k];
             }
         }//else
-
         for (int i = 0; i < H; ++i) {
             for (int j = 0; j < W; ++j) {
                 for (int k = 0; k < L; ++k) {
@@ -659,13 +655,12 @@ namespace AQuA{
         for (int k = 0; k < dist * 2 + 1; ++k) {
             filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
         }
-        filter0[dist+1].at<float>(dist+1, dist+1) = 1;
+        filter0[dist].at<float>(dist, dist) = 1;
         int ksize = 2 * ceil(2 * opts.smoXY) + 1;
         for (int k = 0; k < dist * 2 + 1; ++k) {
             cv::GaussianBlur(filter0[k],filter0[k], cv::Size(ksize, ksize), opts.smoXY, opts.smoXY);
             cv::pow(filter0[k], 2, filter[k]);
         }
-
         //estimated variance from smoothed data
         for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
@@ -678,14 +673,16 @@ namespace AQuA{
                 }
             }
         }//for(k)
-
         //correct the variance according to truncated model
         if (correctNoise){
             for (int k = 0; k < L; ++k) {
-                cv::Mat temp1, temp2;
-                cv::filter2D(tempMap[k]/correctPars[k], temp1, -1, filter[k]);
-                cv::filter2D(varMapOrg[k], temp2, -1, filter[k]);
-                varMapSmo[k] = varMapSmo[k] * temp1 / temp2;
+                cv::Mat temp1 = cv::Mat(H,W,CV_32F);
+                cv::Mat temp2 = cv::Mat(H,W,CV_32F);
+                cv::filter2D(tempMap[k]/correctPars[k], temp1, -1, filter[dist]);
+                cv::filter2D(varMapOrg[k], temp2, -1, filter[dist]);
+                cv::divide(temp1, temp2, temp1);
+                cv::multiply(varMapSmo[k], temp1, varMapSmo[k]);
+//                varMapSmo[k] = varMapSmo[k] * temp1 / temp2;
             }
         }//if
         for (int i = 0; i < H; ++i) {
@@ -697,7 +694,6 @@ namespace AQuA{
                 }
             }
         }
-
         //correct the variance in the boundary(caused by smoothing operation)
 //        correctMap2 = correctBoundaryStd();
         varMapOut = fit_F0_var(F0Pro, varMapSmo);
@@ -775,6 +771,34 @@ namespace AQuA{
         std::vector<cv::Mat> correctPars(L);
         noiseEstimationFunction(dataOrg, dataSmo, F0Pro, evtSpatialMask, stdMapOrg, stdMapGau, tempVarOrg, correctPars);
 
+        std::cout<<"stdMapOrg: "<< std::endl;
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 7; ++j) {
+                std::cout<<stdMapOrg[0].at<float>(i,j)<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<"stdMapGau: "<< std::endl;
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 7; ++j) {
+                std::cout<<stdMapGau[0].at<float>(i,j)<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<"tempVarOrg: "<< std::endl;
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 7; ++j) {
+                std::cout<<tempVarOrg[0].at<float>(i,j)<<" ";
+            }
+            std::cout<<std::endl;
+        }
+        std::cout<<"correctPars: "<< std::endl;
+        for (int i = 0; i < 7; ++i) {
+            for (int j = 0; j < 7; ++j) {
+                std::cout<<correctPars[0].at<float>(i,j)<<" ";
+            }
+            std::cout<<std::endl;
+        }
 
 
     }//baselineRemoveAndNoiseEstimation()
@@ -785,8 +809,8 @@ namespace AQuA{
 int main(){
     auto start = std::chrono::high_resolution_clock::now();
     AQuA::Init();
-    bool*** evtSpatialMask = AQuA::createEvt();
     std::vector<std::vector<cv::Mat>> dataOrg = AQuA::loadData();
+    bool*** evtSpatialMask = AQuA::createEvt();
     AQuA::baselineRemoveAndNoiseEstimation(dataOrg, evtSpatialMask);
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
