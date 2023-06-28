@@ -114,13 +114,17 @@ namespace AQuA{
          double minValueDat1;
          int sz[4];
          int BitDepth;
-         int maxdF1;
-         int maxdF2;
+         float maxdF1;
+         float maxdF2;
          int singleChannel;
          bool alreadyBleachCorrect;
          bool alreadyPreprocess;
          int enableTap;
          double medSmo;
+         std::vector<cv::Mat> stdMapOrg1;
+         std::vector<cv::Mat> stdMapGau1;
+         std::vector<cv::Mat> tempVarOrg1;
+         std::vector<cv::Mat> correctPars1;
     };// struct opts
 
     extern opts_struct opts;

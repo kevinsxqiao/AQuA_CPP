@@ -191,7 +191,6 @@ namespace AQuA{
         opts.bleachCorrect = 0;
         opts.medSmo = 1;
         opts.cut = 200;
-
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()
 
