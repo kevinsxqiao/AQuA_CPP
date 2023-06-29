@@ -8,9 +8,13 @@
 #include <opencv2/opencv.hpp>
 #include <string>
 #include <iostream>
-#include <mat.h>
 #include <vector>
 #include <boost/math/distributions/normal.hpp>
+#include <omp.h>
+#include <fftw3.h>
+#include <mat.h>
+#include <mex.h>
+#include <matrix.h>
 
 
 #define H AQuA::rawDataSize.size1
@@ -33,6 +37,9 @@ namespace AQuA{
     std::vector<std::vector<cv::Mat>> loadData();
     float*** create3dMatrix(int h, int w, int l);
     void release3dMatrix(float***& data, int h, int w);
+    void release3dMatrix_bool(bool***& data, int h, int w);
+    mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
+    void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);
 //    float**** createSpace();
 //    float*** create3dMatrix();
 //    double*** create3dMatrix_ext_double();

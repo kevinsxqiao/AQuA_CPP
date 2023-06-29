@@ -13,7 +13,7 @@
 
 namespace AQuA{
 
-    void preProcessRun(std::vector<std::vector<cv::Mat>> data1);
+    std::vector<std::vector<cv::Mat>> preProcessRun(std::vector<std::vector<cv::Mat>> data1);
 
 }// namespace
 

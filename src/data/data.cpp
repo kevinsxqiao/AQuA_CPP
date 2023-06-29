@@ -25,6 +25,7 @@ namespace AQuA{
         float normalizedParameter;
 
         std::cout<< "--------loading data--------"<<std::endl;
+//        std::cout<<'\r'<< 0 << "% "<<std::flush;
 //        const char *filename = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         pmatFile = matOpen(opts.fileName1, "r");
         if (pmatFile == nullptr) {
@@ -58,8 +59,10 @@ namespace AQuA{
 
         std::vector<std::vector<cv::Mat>> frame(T);
         for (int t = 0; t < T; ++t) {
+//            std::cout<<'\r'<< 100*t/T/2 <<"% "<<std::flush;
             for (int k = 0; k < L; ++k) {
                 frame[t].emplace_back(H- 2*bdCrop,W- 2*bdCrop,CV_32F);
+//#pragma omp parallel for collapse(2)
                 for (int i = 0, i_src = bdCrop; i < H - 2*bdCrop; ++i, ++ i_src) {
                     for (int j = 0, j_src= bdCrop; j < W - 2*bdCrop; ++j, ++j_src) {
                         frame[t][k].at<float>(i,j) = static_cast<float>(pdata[j_src*H + i_src + k*H*W + t*H*W*L]);
@@ -77,11 +80,7 @@ namespace AQuA{
 
         H = dims[0] - 2*bdCrop;
         W = dims[1] - 2*bdCrop;
-        std::cout<<"after cropping: "<< std::endl;
-        std::cout<<"height of image:"<< H << std::endl;
-        std::cout<<"width of image:"<< W << std::endl;
-        std::cout<<"length of image:"<< L << std::endl;
-        std::cout<<"time frames of image:"<< T << std::endl;
+
 
         //release MAT pointer
         if (pMxArray != nullptr) {
@@ -96,9 +95,10 @@ namespace AQuA{
         AQuA::opts.minValueDat1 = mmin;
 //        std::cout<<"minValue: "<< opts.minValueDat1 << "  maxValue: "<<opts.maxValueDat1<<std::endl;
         normalizedParameter = static_cast<float>(mmax -mmin);
-        std::cout<<"--------data loaded--------"<<std::endl;
 
+//#pragma omp parallel for collapse(4)
         for (int t = 0; t < T; ++t) {
+//            std::cout<<'\r'<< 50+ (100*t/T/2) <<"%"<<std::flush;
             for (int k = 0; k < L; ++k) {
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
@@ -108,6 +108,7 @@ namespace AQuA{
                 }//for(j)
             }//for(k)
         }//for(t)
+//        std::cout << "\r" << 100 << "%" << std::endl;
         AQuA::opts.sz[0] = H;
         AQuA::opts.sz[1] = W;
         AQuA::opts.sz[2] = L;
@@ -121,9 +122,64 @@ namespace AQuA{
 //            }
 //            std::cout<<std::endl;
 //        }
-//
+    std::cout<<"after cropping: "<< std::endl;
+    std::cout<<"height of image:"<< H << std::endl;
+    std::cout<<"width of image:"<< W << std::endl;
+    std::cout<<"length of image:"<< L << std::endl;
+    std::cout<<"time frames of image:"<< T << std::endl;
+    std::cout<<"--------data loaded--------"<<std::endl;
         return frame;
     }//loadData()
+
+
+    mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data) {
+        // Calculate the size of the 4D matrix
+        mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
+
+        // Create a 4D mxArray
+        mxArray* pMxArray = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+
+        // Copy data from your vector to the mxArray
+        float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
+        for (int t = 0; t < data.size(); ++t) {
+            for (int k = 0; k < data[t].size(); ++k) {
+                const cv::Mat& mat = data[t][k];
+                std::memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(float));
+                ptr += mat.rows * mat.cols;
+            }
+        }
+
+        return pMxArray;
+    }
+    void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename) {
+        std::cout<<"--------start writing--------"<<std::endl;
+        MATFile *pmatFile;
+
+        // Open the mat file
+        pmatFile = matOpen(filename.c_str(), "w");
+        if (pmatFile == nullptr) {
+            std::cout << "--------error opening file--------" << std::endl;
+            std::exit(-1);
+        }
+
+        // Convert your data to a mxArray
+        mxArray* pMxArray = cvDataToMxArray(data);
+
+        // Write the variable to the mat file
+        if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
+            std::cout << "--------error writing variable to file--------" << std::endl;
+            std::exit(-1);
+        }
+
+        // Free the mxArray
+        mxDestroyArray(pMxArray);
+
+        // Close the mat file
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+        std::cout<<"--------finish writing--------"<<std::endl;
+    }
 
 
     /*
@@ -161,6 +217,17 @@ namespace AQuA{
         delete[] data;
         data = nullptr;
     } // release3dMatrix
+
+    void release3dMatrix_bool(bool***& data, int h, int w){
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                delete[] data[i][j];
+            }
+            delete[] data[i];
+        }
+        delete[] data;
+        data = nullptr;
+    } // release3dMatrix_bool
 
 
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed

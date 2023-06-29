@@ -6,7 +6,7 @@
 
 namespace AQuA{
 
-    void preProcessRun(std::vector<std::vector<cv::Mat>> data1){
+    std::vector<std::vector<cv::Mat>> preProcessRun(std::vector<std::vector<cv::Mat>> data1){
         if(isDefault() || !opts.alreadyPreprocess || !opts.alreadyBleachCorrect){ // judge whether this step is already done, since this is time-consuming
             /*
              * image registration
@@ -48,23 +48,8 @@ namespace AQuA{
 //            }
 //        }
 
-        bool*** evtSpatialMask;
-        evtSpatialMask = new bool** [H];
-        for (int i = 0; i < H; ++i) {
-            evtSpatialMask[i] = new bool* [W];
-        }
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                evtSpatialMask[i][j] = new bool [L];
-            }
-        }
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                for (int k = 0; k < L; ++k) {
-                    evtSpatialMask[i][j][k] = true;
-                }
-            }
-        }
+        bool*** evtSpatialMask = createEvtSpatialMask();
+
         /*
          * F0 bias calculation
          */
@@ -74,8 +59,9 @@ namespace AQuA{
         /*
          * smooth + noise estimation + remove background
          */
-//        data1 = baselineRemoveAndNoiseEstimation(data1);
+        std::vector<std::vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
 
+        return dF1;
     }// preProcessRun()
 
 }// namespace

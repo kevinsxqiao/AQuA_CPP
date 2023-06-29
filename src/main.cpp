@@ -2,7 +2,6 @@
 // Created by Kevin Qiao on 2/10/2023.
 //
 
-#include <iostream>
 #include "preProcess/preProcessRun.h"
 #include "actRun.h"
 #include "phaseRun.h"
@@ -18,7 +17,6 @@ namespace AQuA{
 
         AQuA::Init();
         std::vector<std::vector<cv::Mat>> data1 = AQuA::loadData();
-
 
         int ixTab = menu(); // select action
         switch (ixTab) {
