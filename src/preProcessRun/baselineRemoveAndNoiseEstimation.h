@@ -11,7 +11,7 @@
 namespace AQuA{
 
     bool*** createEvtSpatialMask();
-    std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg);
+    std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg, int dist=0);
     std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn);
     std::vector<cv::Mat> truncated_kept_var(const std::vector<cv::Mat>& quantiles);
     std::vector<std::vector<cv::Mat>> baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data);

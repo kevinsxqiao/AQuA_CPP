@@ -39,7 +39,9 @@ namespace AQuA{
     void release3dMatrix(float***& data, int h, int w);
     void release3dMatrix_bool(bool***& data, int h, int w);
     mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
+    mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data);
     void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);
+    void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename);
 //    float**** createSpace();
 //    float*** create3dMatrix();
 //    double*** create3dMatrix_ext_double();

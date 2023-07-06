@@ -108,7 +108,7 @@ namespace AQuA{
                 }//for(j)
             }//for(k)
         }//for(t)
-//        std::cout << "\r" << 100 << "%" << std::endl;
+//        std::cout << "\r" << 100 << "%" << std::flush<< std::endl;
         AQuA::opts.sz[0] = H;
         AQuA::opts.sz[1] = W;
         AQuA::opts.sz[2] = L;
@@ -151,7 +151,58 @@ namespace AQuA{
 
         return pMxArray;
     }
+
+
+    mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data) {
+        // Calculate the size of the 3D matrix
+        mwSize dims[3] = {static_cast<mwSize>(data[0].rows), static_cast<mwSize>(data[0].cols), static_cast<mwSize>(data.size())};
+
+        // Create a 3D mxArray
+        mxArray* pMxArray = mxCreateNumericArray(3, dims, mxSINGLE_CLASS, mxREAL);
+
+        // Copy data from your vector to the mxArray
+        float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
+            for (int k = 0; k < data.size(); ++k) {
+                const cv::Mat& mat = data[k];
+                std::memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(float));
+                ptr += mat.rows * mat.cols;
+            }
+        return pMxArray;
+    }
+
+
     void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename) {
+        std::cout<<"--------start writing--------"<<std::endl;
+        MATFile *pmatFile;
+
+        // Open the mat file
+        pmatFile = matOpen(filename.c_str(), "w");
+        if (pmatFile == nullptr) {
+            std::cout << "--------error opening file--------" << std::endl;
+            std::exit(-1);
+        }
+
+        // Convert your data to a mxArray
+        mxArray* pMxArray = cvDataToMxArray(data);
+
+        // Write the variable to the mat file
+        if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
+            std::cout << "--------error writing variable to file--------" << std::endl;
+            std::exit(-1);
+        }
+
+        // Free the mxArray
+        mxDestroyArray(pMxArray);
+
+        // Close the mat file
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+        std::cout<<"--------finish writing--------"<<std::endl;
+    }
+
+
+    void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename) {
         std::cout<<"--------start writing--------"<<std::endl;
         MATFile *pmatFile;
 
