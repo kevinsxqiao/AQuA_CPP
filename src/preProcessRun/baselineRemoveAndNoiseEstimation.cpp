@@ -7,30 +7,6 @@
 
 namespace AQuA{
 
-    bool*** createEvtSpatialMask(){
-        bool*** evtSpatialMask;
-        evtSpatialMask = new bool** [H];
-        //#pragma omp parallel for
-        for (int i = 0; i < H; ++i) {
-            evtSpatialMask[i] = new bool* [W];
-        }
-        //#pragma omp parallel for collapse(2)
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                evtSpatialMask[i][j] = new bool [L];
-            }
-        }
-        //#pragma omp parallel for collapse(3)
-        for (int i = 0; i < H; ++i) {
-            for (int j = 0; j < W; ++j) {
-                for (int k = 0; k < L; ++k) {
-                    evtSpatialMask[i][j][k] = true;
-                }
-            }
-        }
-        return evtSpatialMask;
-    }
-
 
     std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg, int dist) {
         std::vector<cv::Mat> varMapOut (std::vector<cv::Mat>(L));
@@ -1114,7 +1090,6 @@ namespace AQuA{
 //        std::cout<< opts.stdMapOrg1[0].size()<<std::endl;
 
         //for visualize
-        opts.maxdF1 = 0;
         double maxVal = 0;
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {

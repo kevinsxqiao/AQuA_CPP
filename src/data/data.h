@@ -15,6 +15,7 @@
 #include <mat.h>
 #include <mex.h>
 #include <matrix.h>
+#include <cstdlib>
 
 
 #define H AQuA::rawDataSize.size1
@@ -36,6 +37,7 @@ namespace AQuA{
 //    void crop(cv::Mat& image, int bdCrop);
     std::vector<std::vector<cv::Mat>> loadData();
     float*** create3dMatrix(int h, int w, int l);
+    bool*** createEvtSpatialMask();
     void release3dMatrix(float***& data, int h, int w);
     void release3dMatrix_bool(bool***& data, int h, int w);
     mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
@@ -81,11 +83,12 @@ namespace AQuA{
          int bleachCorrect;
          float smoXY;
          float noiseEstimation;
-         int thrARScl;
+         float thrARScl;
          int minDur;
          int minSize;
          int maxSize;
          float circularityThr;
+         float spaMergeDist;
          int needTemp;
          float sigThr;
          float maxDelay;
@@ -134,6 +137,7 @@ namespace AQuA{
          std::vector<cv::Mat> stdMapGau1;
          std::vector<cv::Mat> tempVarOrg1;
          std::vector<cv::Mat> correctPars1;
+         std::vector<std::vector<cv::Mat>> dF1;
     };// struct opts
 
     extern opts_struct opts;

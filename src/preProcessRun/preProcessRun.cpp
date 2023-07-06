@@ -6,7 +6,7 @@
 
 namespace AQuA{
 
-    std::vector<std::vector<cv::Mat>> preProcessRun(std::vector<std::vector<cv::Mat>> data1){
+    void preProcessRun(std::vector<std::vector<cv::Mat>> data1){
         if(isDefault() || !opts.alreadyPreprocess || !opts.alreadyBleachCorrect){ // judge whether this step is already done, since this is time-consuming
             /*
              * image registration
@@ -60,8 +60,13 @@ namespace AQuA{
          * smooth + noise estimation + remove background
          */
         std::vector<std::vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                opts.dF1[t][k].push_back(dF1[t][k].clone());
+            }
+        }
+        release3dMatrix_bool(evtSpatialMask,H,W);
 
-        return dF1;
     }// preProcessRun()
 
 }// namespace

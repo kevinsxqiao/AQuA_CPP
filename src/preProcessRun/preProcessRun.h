@@ -8,12 +8,11 @@
 #include "../data/data.h"
 #include "regCrossCorrelation.h"
 #include "baselineRemoveAndNoiseEstimation.h"
-#include <cstdlib>
 
 
 namespace AQuA{
 
-    std::vector<std::vector<cv::Mat>> preProcessRun(std::vector<std::vector<cv::Mat>> data1);
+    void preProcessRun(std::vector<std::vector<cv::Mat>> data1);
 
 }// namespace
 

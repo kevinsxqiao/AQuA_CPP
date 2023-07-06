@@ -258,6 +258,31 @@ namespace AQuA{
     }// create3dMatrix()
 
 
+    bool*** createEvtSpatialMask(){
+        bool*** evtSpatialMask;
+        evtSpatialMask = new bool** [H];
+        //#pragma omp parallel for
+        for (int i = 0; i < H; ++i) {
+            evtSpatialMask[i] = new bool* [W];
+        }
+        //#pragma omp parallel for collapse(2)
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                evtSpatialMask[i][j] = new bool [L];
+            }
+        }
+        //#pragma omp parallel for collapse(3)
+        for (int i = 0; i < H; ++i) {
+            for (int j = 0; j < W; ++j) {
+                for (int k = 0; k < L; ++k) {
+                    evtSpatialMask[i][j][k] = true;
+                }
+            }
+        }
+        return evtSpatialMask;
+    }
+
+
     void release3dMatrix(float***& data, int h, int w){
         for (int i = 0; i < h; ++i) {
             for (int j = 0; j < w; ++j) {
@@ -302,13 +327,21 @@ namespace AQuA{
         opts.movAvgWin = 25;
         opts.cut = 200;
         opts.smoXY = 0.5;
-        opts.BitDepth;
+        opts.BitDepth = -1;
         opts.regMaskGap = 5;
         opts.singleChannel = true;
         opts.registrateCorrect = 0;
         opts.bleachCorrect = 0;
         opts.medSmo = 1;
         opts.cut = 200;
+        opts.maxdF1 = 1;
+        opts.thrARScl = 3;
+        opts.minSize = 20;
+        opts.maxSize = INFINITY;
+        opts.minDur = 5;
+        opts.circularityThr = 0;
+        opts.spaMergeDist = 0;
+
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()
 

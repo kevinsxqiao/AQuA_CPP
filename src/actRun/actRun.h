@@ -5,10 +5,11 @@
 #ifndef AQUA_ACTRUN_H
 #define AQUA_ACTRUN_H
 
-namespace AQuA{
-    void actRun(){
+#include "../data/data.h"
 
-    }
+namespace AQuA{
+    void actRun();
+
 }
 
 #endif //AQUA_ACTRUN_H
