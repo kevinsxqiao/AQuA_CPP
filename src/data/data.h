@@ -66,6 +66,13 @@ namespace AQuA{
 
     extern rawDataSize_struct rawDataSize;
 
+    struct Point_struct {
+        int t;
+        int k;
+        int i;
+        int j;
+    };
+
 
 
     struct preSetting_struct{//  member clarification

@@ -339,7 +339,7 @@ namespace AQuA{
 
 
         return varMapOut;
-    }
+    }//fit_F0-var
 
 
     std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn) {
