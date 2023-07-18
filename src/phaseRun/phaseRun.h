@@ -5,10 +5,11 @@
 #ifndef AQUA_PHASERUN_H
 #define AQUA_PHASERUN_H
 
-namespace AQuA{
-    void phaseRun(){
+#include "../data/data.h"
 
-    }
+namespace AQuA{
+    void phaseRun();
+
 }
 
 #endif //AQUA_PHASERUN_H

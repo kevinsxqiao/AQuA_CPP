@@ -4,7 +4,7 @@
 
 #include "preProcessRun/preProcessRun.h"
 #include "actRun/actRun.h"
-#include "phaseRun.h"
+#include "phaseRun/phaseRun.h"
 #include "evtRun.h"
 #include "feaRun.h"
 #include "flow/flow.h"
@@ -13,14 +13,14 @@
     int main() {
 
         AQuA::Init();
-        std::vector<std::vector<cv::Mat>> data1 = AQuA::loadData();
+        std::vector<std::vector<cv::Mat>> data1_org = AQuA::loadData();
         int ixTab = AQuA::menu(); // select action
         while(1){
             switch (ixTab) {
                 case 0:
                     return 0;
                 case 1:
-                    AQuA::preProcessRun(data1);
+                    AQuA::preProcessRun(data1_org);
                     break;
                 case 2:
                     AQuA::actRun();

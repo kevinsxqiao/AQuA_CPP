@@ -62,14 +62,14 @@ namespace AQuA{
         std::vector<std::vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
 //        writeDataToMatFile(dF1,"C:/Users/Kevin Qiao/Desktop/AQuA_data/dF1.mat");
 //        auto start = std::chrono::high_resolution_clock::now();
-
-        for (int t = 0; t < T; ++t) {
-            std::vector<cv::Mat> frame;
-            for (int k = 0; k < L; ++k) {
-                frame.push_back(dF1[t][k].clone());
-            }
-            opts.dF1.push_back(frame);
-        }
+        opts.dF1 = dF1;
+//        for (int t = 0; t < T; ++t) {
+//            std::vector<cv::Mat> frame;
+//            for (int k = 0; k < L; ++k) {
+//                frame.push_back(dF1[t][k].clone());
+//            }
+//            opts.dF1.push_back(frame);
+//        }
 
 //        auto end = std::chrono::high_resolution_clock::now();
 //        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();

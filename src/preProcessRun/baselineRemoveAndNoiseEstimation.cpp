@@ -1080,12 +1080,16 @@ namespace AQuA{
 //        }
 
         //if (ch==1)
-        for (int k = 0; k < L; ++k) {
-            opts.stdMapGau1.push_back(stdMapGau[k].clone());
-            opts.stdMapOrg1.push_back(stdMapOrg[k].clone());
-            opts.tempVarOrg1.push_back(tempVarOrg[k].clone());
-            opts.correctPars1.push_back(correctPars[k].clone());
-        }
+        opts.stdMapGau1 = stdMapGau;
+        opts.stdMapOrg1 = stdMapOrg;
+        opts.tempVarOrg1 = tempVarOrg;
+        opts.correctPars1 = correctPars;
+//        for (int k = 0; k < L; ++k) {
+//            opts.stdMapGau1.push_back(stdMapGau[k].clone());
+//            opts.stdMapOrg1.push_back(stdMapOrg[k].clone());
+//            opts.tempVarOrg1.push_back(tempVarOrg[k].clone());
+//            opts.correctPars1.push_back(correctPars[k].clone());
+//        }
 //        std::cout<< opts.stdMapOrg1.size()<<std::endl;
 //        std::cout<< opts.stdMapOrg1[0].size()<<std::endl;
 

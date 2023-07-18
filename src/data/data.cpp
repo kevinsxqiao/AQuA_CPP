@@ -128,7 +128,17 @@ namespace AQuA{
     std::cout<<"length of image:"<< L << std::endl;
     std::cout<<"time frames of image:"<< T << std::endl;
     std::cout<<"--------data loaded--------"<<std::endl;
-        return frame;
+    opts.data1_org = frame;
+
+//    for (int t = 0; t < T; ++t) {
+//        std::vector<cv::Mat> dat(L);
+//        for (int k = 0; k < L; ++k) {
+//            dat[t].push_back(frame[t][k].clone());
+//        }
+//        opts.data1_org.push_back(dat);
+//    }
+
+    return frame;
     }//loadData()
 
 
@@ -176,10 +186,6 @@ namespace AQuA{
                 frame[t][k] = cv::Mat(H,W,CV_32F);
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j){
-                        if (isnan(pdata[i + j*H + k*H*W + t*H*W*L])) {
-                            frame[t][k].at<float>(i,j) = 0;
-                            continue;
-                        }
                         frame[t][k].at<float>(i,j) = static_cast<float>(pdata[i + j*H + k*H*W + t*H*W*L]);
                     }//for(j)
                 }//for(i)
@@ -458,7 +464,6 @@ namespace AQuA{
 
 
     void optsInit(){
-//        opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         opts.alreadyPreprocess = false;
         opts.alreadyBleachCorrect = false;
@@ -480,6 +485,13 @@ namespace AQuA{
         opts.circularityThr = 0;
         opts.spaMergeDist = 0;
         opts.compress = 0;
+        opts.needTemp = true;
+        opts.step = 0.5;
+        opts.sigThr = 3.5;
+        opts.maxDelay = 0.6;
+        opts.seedSzRatio = 3.5;
+        opts.needRefine = false;
+        opts.needGrow = false;
 
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()

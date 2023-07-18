@@ -68,7 +68,7 @@ namespace AQuA{
                 }
             }
         }//for(t)
-        std::cout<<"connected regions: "<<regions.size()<<std::endl;
+//        std::cout<<"connected regions: "<<regions.size()<<std::endl;
         return regions;
     }//bwconncomp4D
 
@@ -245,7 +245,8 @@ namespace AQuA{
             }//for(i_cur)
             nReg += valid_count;
         }//for(k_thr)
-        std::cout<<"number of regions detected: "<<arLst.size()<<std::endl;
+//        std::cout<<"number of regions detected: "<<arLst.size()<<std::endl;
+        opts.arLst1 = arLst;
         return arLst;
     }//acDetect()
 

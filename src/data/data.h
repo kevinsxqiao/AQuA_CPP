@@ -100,11 +100,11 @@ namespace AQuA{
          int maxSize;
          float circularityThr;
          float spaMergeDist;
-         int needTemp;
+         bool needTemp;
          float sigThr;
          float maxDelay;
-         int needRefine;
-         int needGrow;
+         bool needRefine;
+         bool needGrow;
          int needSpa;
          int sourceSize;
          int cDelay;
@@ -144,11 +144,15 @@ namespace AQuA{
          bool alreadyPreprocess;
          int enableTap;
          double medSmo;
+         float step;
+         float seedSzRatio;
          std::vector<cv::Mat> stdMapOrg1;
          std::vector<cv::Mat> stdMapGau1;
          std::vector<cv::Mat> tempVarOrg1;
          std::vector<cv::Mat> correctPars1;
          std::vector<std::vector<cv::Mat>> dF1;
+         std::vector<std::vector<cv::Mat>> data1_org;
+         std::vector<std::vector<Point_struct>> arLst1;
     };// struct opts
 
     extern opts_struct opts;
