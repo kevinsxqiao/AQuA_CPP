@@ -132,6 +132,79 @@ namespace AQuA{
     }//loadData()
 
 
+    std::vector<std::vector<cv::Mat>> load4DData_clean(const char* fileName, const char* varName) {
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+        double *pdata;
+
+        std::cout<< "--------loading data--------"<<std::endl;
+//        std::cout<<'\r'<< 0 << "% "<<std::flush;
+//        const char *filename = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            std::cout<< "--------error opening file--------"<<std::endl;
+            std::exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+//        pMxArray = matGetVariable(pmatFile, "dF");
+        if (pMxArray == nullptr) {
+            std::cout<< "--------error reading variable from file--------"<<std::endl;
+            std::exit(-1);
+        }
+
+        pdata = mxGetPr(pMxArray);
+        if (pdata == nullptr) {
+            std::cout<< "--------error reading data from variable-------"<<std::endl;
+            std::exit(-1);
+        }
+
+        const mwSize *dims = mxGetDimensions(pMxArray);
+        H = dims[0];
+        W = dims[1];
+        L = dims[2];
+        T = dims[3];
+        std::cout<<"original size: "<< std::endl;
+        std::cout<<"height of image:"<< H << std::endl;
+        std::cout<<"width of image:"<< W << std::endl;
+        std::cout<<"length of image:"<< L << std::endl;
+        std::cout<<"time frames of image:"<< T << std::endl;
+
+        std::vector<std::vector<cv::Mat>> frame(T,std::vector<cv::Mat>(L));
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                frame[t][k] = cv::Mat(H,W,CV_32F);
+                for (int i = 0; i < H; ++i) {
+                    for (int j = 0; j < W; ++j){
+                        if (isnan(pdata[i + j*H + k*H*W + t*H*W*L])) {
+                            frame[t][k].at<float>(i,j) = 0;
+                            continue;
+                        }
+                        frame[t][k].at<float>(i,j) = static_cast<float>(pdata[i + j*H + k*H*W + t*H*W*L]);
+                    }//for(j)
+                }//for(i)
+            }//for(k)
+        }//for(t)
+
+
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+
+        std::cout<<"height of image:"<< H << std::endl;
+        std::cout<<"width of image:"<< W << std::endl;
+        std::cout<<"length of image:"<< L << std::endl;
+        std::cout<<"time frames of image:"<< T << std::endl;
+        std::cout<<"--------data loaded--------"<<std::endl;
+        return frame;
+    }//loadData()
+
+
     mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data) {
         // Calculate the size of the 4D matrix
         mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
@@ -236,7 +309,7 @@ namespace AQuA{
     /*
      * create a 3d matrix
      */
-    float*** create3dMatrix(int h, int w, int l){
+    float*** create3dMatrix_float(int h, int w, int l){
         float*** data;
         data = new float** [h];
         for (int i = 0; i < h; ++i) {
@@ -249,13 +322,64 @@ namespace AQuA{
         }
 //        for (int i = 0; i < h; ++i) {
 //            for (int j = 0; j < w; ++j) {
-//                for (int k = 0; k < L; ++k) {
+//                for (int k = 0; k < l; ++k) {
 //                    data[i][j][k] = 0;
 //                }
 //            }
 //        }
         return data;
-    }// create3dMatrix()
+    }// create3dMatrix_float
+
+    int*** create3dMatrix_int(int h, int w, int l){
+        int*** data;
+        data = new int** [h];
+        for (int i = 0; i < h; ++i) {
+            data[i] = new int* [w];
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                data[i][j] = new int [l];
+            }
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                for (int k = 0; k < l; ++k) {
+                    data[i][j][k] = 0;
+                }
+            }
+        }
+        return data;
+    }// create3dMatrix_int
+
+    int**** create4dMatrix_int(int h, int w, int l, int t){
+        int**** data;
+        data = new int*** [h];
+        for (int i = 0; i < h; ++i) {
+            data[i] = new int** [w];
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                data[i][j] = new int* [l];
+            }
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                for (int k = 0; k < l; ++k) {
+                    data[i][j][k] = new int [t];
+                }
+            }
+        }
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                for (int k = 0; k < l; ++k) {
+                    for (int tt = 0; tt < t; ++tt) {
+                        data[i][j][k][tt] = 0;
+                    }
+                }
+            }
+        }
+        return data;
+    }// create4dMatrix()
 
 
     bool*** createEvtSpatialMask(){
@@ -294,6 +418,7 @@ namespace AQuA{
         data = nullptr;
     } // release3dMatrix
 
+
     void release3dMatrix_bool(bool***& data, int h, int w){
         for (int i = 0; i < h; ++i) {
             for (int j = 0; j < w; ++j) {
@@ -304,6 +429,18 @@ namespace AQuA{
         delete[] data;
         data = nullptr;
     } // release3dMatrix_bool
+
+    
+    void release3dMatrix_int(int***& data, int h, int w){
+        for (int i = 0; i < h; ++i) {
+            for (int j = 0; j < w; ++j) {
+                delete[] data[i][j];
+            }
+            delete[] data[i];
+        }
+        delete[] data;
+        data = nullptr;
+    } // release3dMatrix_int
 
 
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed
@@ -321,6 +458,7 @@ namespace AQuA{
 
 
     void optsInit(){
+//        opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         opts.alreadyPreprocess = false;
         opts.alreadyBleachCorrect = false;
@@ -341,6 +479,7 @@ namespace AQuA{
         opts.minDur = 5;
         opts.circularityThr = 0;
         opts.spaMergeDist = 0;
+        opts.compress = 0;
 
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()

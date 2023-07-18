@@ -36,10 +36,14 @@ namespace AQuA{
     void Init();
 //    void crop(cv::Mat& image, int bdCrop);
     std::vector<std::vector<cv::Mat>> loadData();
-    float*** create3dMatrix(int h, int w, int l);
+    std::vector<std::vector<cv::Mat>> load4DData_clean(const char* fileName, const char* varName);
+    float*** create3dMatrix_float(int h, int w, int l);
     bool*** createEvtSpatialMask();
+    int*** create3dMatrix_int(int h, int w, int l);
+    int**** create4dMatrix_int(int h, int w, int l, int t);
     void release3dMatrix(float***& data, int h, int w);
     void release3dMatrix_bool(bool***& data, int h, int w);
+    void release3dMatrix_int(int***& data, int h, int w);
     mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
     mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data);
     void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);

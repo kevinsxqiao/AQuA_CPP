@@ -1,32 +1,30 @@
 #include "data/data.h"
 #include "actRun/actRun.h"
+#include "preProcessRun/preProcessRun.h"
 
 
 
 int main(){
-    std::vector<std::vector<cv::Mat>> mat(5,std::vector<cv::Mat>(5));
-    for (int t = 0; t < 5; ++t) {
-        for (int k = 0; k < 5; ++k) {
-            mat[t][k] = cv::Mat::zeros(5,5,CV_32S);
-        }
-    }
-
-    mat[0][0].at<int>(0,0) = 1;
-//    mat[0][0].at<int>(1,0) = 1;
-//    mat[0][1].at<int>(1,2) = 1;
-
-    mat[0][1].at<int>(4,4) = 1;
-    mat[0][1].at<int>(3,4) = 1;
-//    mat[0][2].at<int>(1,2) = 1;
-//    mat[0][2].at<int>(1,0) = 1;
-
-    mat[4][0].at<int>(1,1) = 1;
-    std::vector<std::vector<AQuA::Point_struct>> poi = AQuA::bw2Reg(mat);
-    std::cout<< poi.size()<<std::endl;
-    std::cout<< poi[0].size()<<std::endl;
-    std::cout<< poi[1].size()<<std::endl;
-    std::cout<< poi[1][0].t<< poi[1][0].k<< poi[1][0].i<< poi[1][0].j<<std::endl;
+    AQuA::Init();
+    auto start = std::chrono::high_resolution_clock::now();
+//    std::vector<std::vector<cv::Mat>> dataOrg = AQuA::loadData();
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//    bool*** evtSpatialMask = AQuA::createEvtSpatialMask();
+    start = std::chrono::high_resolution_clock::now();
+//    AQuA::preProcessRun(dataOrg);
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+    start = std::chrono::high_resolution_clock::now();
+    AQuA::actRun();
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//    AQuA::writeDataToMatFile(dataNew, "C:/Users/Kevin Qiao/Desktop/AQuA_data/test2.mat");
 
 
+//    AQuA::release3dMatrix_bool(evtSpatialMask,H,W);
     return 0;
 }

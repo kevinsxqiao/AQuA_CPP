@@ -60,11 +60,21 @@ namespace AQuA{
          * smooth + noise estimation + remove background
          */
         std::vector<std::vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
+//        writeDataToMatFile(dF1,"C:/Users/Kevin Qiao/Desktop/AQuA_data/dF1.mat");
+//        auto start = std::chrono::high_resolution_clock::now();
+
         for (int t = 0; t < T; ++t) {
+            std::vector<cv::Mat> frame;
             for (int k = 0; k < L; ++k) {
-                opts.dF1[t][k].push_back(dF1[t][k].clone());
+                frame.push_back(dF1[t][k].clone());
             }
+            opts.dF1.push_back(frame);
         }
+
+//        auto end = std::chrono::high_resolution_clock::now();
+//        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//        std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+
         release3dMatrix_bool(evtSpatialMask,H,W);
 
     }// preProcessRun()

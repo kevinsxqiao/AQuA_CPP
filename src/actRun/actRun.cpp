@@ -94,7 +94,7 @@ namespace AQuA{
     }
 
 
-    void acDetect(std::vector<std::vector<cv::Mat>> dF1, bool*** evtSpatialMask) {
+    std::vector<std::vector<Point_struct>> acDetect(std::vector<std::vector<cv::Mat>> dF1, bool*** evtSpatialMask) {
 //        if (ch == 1){
 //
 //        }
@@ -122,15 +122,16 @@ namespace AQuA{
         }//for(i)
 
         //valid region
-        std::vector<std::vector<cv::Mat>> activeMap(T);
-        std::vector<std::vector<cv::Mat>> selectMap(T);
+        std::vector<std::vector<cv::Mat>> activeMap(T, std::vector<cv::Mat>(L));
+        std::vector<std::vector<cv::Mat>> selectMap(T, std::vector<cv::Mat>(L));
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {
                 activeMap[t][k] = cv::Mat::zeros(H,W,CV_32S);
                 selectMap[t][k] = cv::Mat::zeros(H,W,CV_32S);
             }
         }
-        float nReg = 0;
+        int nReg = 0;
+        std::vector<std::vector<Point_struct>> arLst;
         for (int k_thr = 0; k_thr < thrs.size(); ++k_thr) {
             float thr = thrs[k_thr];
             for (int t = 0; t < T; ++t) {
@@ -148,9 +149,105 @@ namespace AQuA{
             }//for(t)
             std::vector<std::vector<Point_struct>> curRegions;
             curRegions = bw2Reg(selectMap);
-        }//for(k_thr)
+            std::vector<bool> valid(curRegions.size(), false);
+            for (int i_cur = 0; i_cur < curRegions.size(); ++i_cur) {
+                std::vector<int> ih;
+                std::vector<int> iw;
+                std::vector<int> il;
+                std::vector<int> it;
+                for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
+                    ih.push_back(curRegions[i_cur][i_ite].i);
+                    iw.push_back(curRegions[i_cur][i_ite].j);
+                    il.push_back(curRegions[i_cur][i_ite].k);
+                    it.push_back(curRegions[i_cur][i_ite].t);
+                }//for(i_ite)
+//                int curSz = 0;
+//                for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
+//                    if (curRegions[i_cur].size() == 1){
+//                        if (curRegions[i_cur][i_ite])
+//                    }
+//                }
+                int ih_min = *std::min_element(ih.begin(),ih.end());
+                int H0 = *std::max_element(ih.begin(),ih.end()) - ih_min + 1;
+                int iw_min = *std::min_element(iw.begin(),iw.end());
+                int W0 = *std::max_element(iw.begin(),iw.end()) - iw_min + 1;
+                int il_min = *std::min_element(il.begin(),il.end());
+                int L0 = *std::max_element(il.begin(),il.end()) - il_min + 1;
+                int it_min = *std::min_element(it.begin(),it.end());
+                int T0 = *std::max_element(it.begin(),it.end()) - it_min + 1;
+                for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
+                    ih[i_ite] = ih[i_ite] - ih_min;
+                    iw[i_ite] = iw[i_ite] - iw_min;
+                    il[i_ite] = il[i_ite] - il_min;
+                    it[i_ite] = it[i_ite] - it_min;
+                }//for(i_ite)
+                int**** curMap = create4dMatrix_int(H0,W0,L0,T0);  //initialize all with 0
+                int*** curMap_new = create3dMatrix_int(H0,W0,L0);//initialize all with 0
+                int curSz = 0;
+                for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
+                    curMap[ih[i_ite]][iw[i_ite]][il[i_ite]][it[i_ite]] = 1;
+                }//for(i_ite)
+                for (int i = 0; i < H0; ++i) {
+                    for (int j = 0; j < W0; ++j) {
+                        for (int k = 0; k < L0; ++k) {
+                            int sum = 0;
+                            for (int t = 0; t < T0; ++t) {
+                                sum+= curMap[i][j][k][t];
+                            }//for(t)
+                            if (sum>=opts.compress*T0){
+                                curMap_new[i][j][k] = 1;
+                                ++curSz;
+                            }//if
+                        }//for(k)
+                    }
+                }//for(i)
+                if (curSz > opts.maxSize || curSz < opts.minSize || T0 < opts.minDur){
+                    continue;
+                }
+                if (opts.circularityThr == 0){
+                    valid[i_cur] = true;
+                    continue;
+                }
+                if (dF1[0].size() == 1){
+//                    erodeMap = imerode(curMap,strel('disk',1));
+//                    boundary = curSz - sum(erodeMap(:));
+//                    circularity = 4*pi*curSz/(boundary^2);
+                } else{
 
-    }
+                }
+
+//                if (circularity > opts.circularityThr){
+//
+//                }
+
+            }//for(i_cur)
+
+            int valid_count = 0;
+            for (int i_cur = 0; i_cur < curRegions.size(); ++i_cur) {// different regions
+                if (valid[i_cur]){
+                    ++valid_count;
+                    std::vector<Point_struct> region_result;
+                    for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {// different points in a region
+                        int tt = curRegions[i_cur][i_ite].t;
+                        int kk = curRegions[i_cur][i_ite].k;
+                        int ii = curRegions[i_cur][i_ite].i;
+                        int jj = curRegions[i_cur][i_ite].j;
+                        activeMap[tt][kk].at<int>(ii,jj) = nReg + i_cur + 1;
+                        Point_struct point;
+                        point.t = tt;
+                        point.k = kk;
+                        point.i = ii;
+                        point.j = jj;
+                        region_result.push_back(point);
+                    }//for(i_ite)
+                    arLst.push_back(region_result);
+                }//if
+            }//for(i_cur)
+            nReg += valid_count;
+        }//for(k_thr)
+        std::cout<<"number of regions detected: "<<arLst.size()<<std::endl;
+        return arLst;
+    }//acDetect()
 
 
 
@@ -158,12 +255,12 @@ namespace AQuA{
      * active region detection and update overlay map
      */
     void actRun(){
-        std::cout<< "--------start detecting--------"<<std::endl;
+        std::cout<< "--------start active region detecting--------"<<std::endl;
         bool*** evtSpatialMask = createEvtSpatialMask();
-
+//        std::vector<std::vector<cv::Mat>> dF1 = load4DData_clean("C:/Users/Kevin Qiao/Desktop/AQuA_data/dF_real.mat","dF");
         //foreground and seed detection
         acDetect(opts.dF1, evtSpatialMask);
-
+        release3dMatrix_bool(evtSpatialMask,H,W);
     }
 
 }

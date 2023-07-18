@@ -31,7 +31,7 @@ namespace AQuA{
         fftwf_complex* output_b = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2+1) * sizeof(fftwf_complex)));
         fftwf_complex* output_dotProduct = static_cast<fftwf_complex *>(fftwf_malloc(H_ext * W_ext * (L_ext/2+1) * sizeof(fftwf_complex)));
         float* result = static_cast<float *>(fftwf_malloc(H_ext * W_ext * L_ext * sizeof(float)));
-        float*** c = create3dMatrix(H_ext,W_ext,L_ext);
+        float*** c = create3dMatrix_float(H_ext,W_ext,L_ext);
 
         // flatten the 3d image data and store in input_a[]
         for (int i = 0; i < H_ext; ++i) {
@@ -176,13 +176,13 @@ namespace AQuA{
     std::vector<std::vector<cv::Mat>> regCrossCorrelation(std::vector<std::vector<cv::Mat>>& data1){
         float mean_sum, median;
         int refer_start=0, refer_end =9;
-        float*** ref = create3dMatrix(H,W,L); //remember to release with release3dMatrix(), the following matrix as well
+        float*** ref = create3dMatrix_float(H,W,L); //remember to release with release3dMatrix(), the following matrix as well
         float* array_1d = new float [H*W*L]; //remember to release with delete[]
-        float*** moving = create3dMatrix(H,W,L);
-        float*** a_add = create3dMatrix(H_ext,W_ext,L_ext);
-        float*** b_add = create3dMatrix(H_ext,W_ext,L_ext);
-        float*** b_flip = create3dMatrix(H,W,L);
-        float*** matrix = create3dMatrix(H_ext,W_ext,L_ext);
+        float*** moving = create3dMatrix_float(H,W,L);
+        float*** a_add = create3dMatrix_float(H_ext,W_ext,L_ext);
+        float*** b_add = create3dMatrix_float(H_ext,W_ext,L_ext);
+        float*** b_flip = create3dMatrix_float(H,W,L);
+        float*** matrix = create3dMatrix_float(H_ext,W_ext,L_ext);
 //        float* matrix_1d = new float [H_ext*W_ext*L_ext];
 //        int id,r1;
         float maxElement = -100000;
