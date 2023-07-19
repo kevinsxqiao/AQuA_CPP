@@ -10,36 +10,47 @@ int main(){
     std::vector<std::vector<cv::Mat>> mat2(5000);
     for (int t = 0; t < 5000; ++t) {
         for (int k = 0; k < 5000; ++k) {
-            mat2[t].emplace_back(temp1.clone());
+            mat2[t].emplace_back(cv::Mat::zeros(5,5,CV_32S));
         }
     }
     auto end = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout<<mat2.size()<<"   "<<mat2[0].size()<<std::endl;
     std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<cv::Mat>> mat1(5000);
-    for (int t = 0; t < 5000; ++t) {
-        mat1[t].resize(5000);
-        for (int k = 0; k < 5000; ++k) {
-            mat1[t][k] = mat2[t][k];
-        }
-    }
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-    start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<cv::Mat>> mat3(5000);
-    for (int t = 0; t < 5000; ++t) {
-        mat3[t].resize(5000);
-        for (int k = 0; k < 5000; ++k) {
-            mat3[t][k] = mat2[t][k].clone();
-        }
-    }
-    end = std::chrono::high_resolution_clock::now();
-    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-    std::cout<<&mat1<<" "<<&mat2<<std::endl;
-    std::cout<<&mat3<<" "<<&mat2<<std::endl;
+//    start = std::chrono::high_resolution_clock::now();
+//    std::vector<std::vector<cv::Mat>> mat4(5000);
+//    for (int t = 0; t < 5000; ++t) {
+//        for (int k = 0; k < 5000; ++k) {
+//            mat4[t].emplace_back(cv::Mat::zeros(5,5,CV_32S));
+//        }
+//    }
+//    end = std::chrono::high_resolution_clock::now();
+//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//    start = std::chrono::high_resolution_clock::now();
+//    std::vector<std::vector<cv::Mat>> mat1(5000);
+//    for (int t = 0; t < 5000; ++t) {
+//        mat1[t].resize(5000);
+//        for (int k = 0; k < 5000; ++k) {
+//            mat1[t][k] = cv::Mat::zeros(5,5,CV_32S);
+//        }
+//    }
+//    end = std::chrono::high_resolution_clock::now();
+//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//    start = std::chrono::high_resolution_clock::now();
+//    std::vector<std::vector<cv::Mat>> mat3(5000);
+//    for (int t = 0; t < 5000; ++t) {
+//        mat3[t].resize(5000);
+//        for (int k = 0; k < 5000; ++k) {
+//            mat3[t][k] = temp1.clone();
+//        }
+//    }
+//    end = std::chrono::high_resolution_clock::now();
+//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//    std::cout<<&mat1<<" "<<&mat2<<std::endl;
+//    std::cout<<&mat3<<" "<<&mat2<<std::endl;
 //    start = std::chrono::high_resolution_clock::now();
 //    std::vector<std::vector<cv::Mat>> mat(5000,std::vector<cv::Mat>(5000));
 //    for (int t = 0; t < 5000; ++t) {

@@ -23,7 +23,7 @@ namespace AQuA{
             //consider the possible noise correlation, need to re-estimate noise
             std::vector<cv::Mat> curVarMap(L);
             for (int k = 0; k < L; ++k) {
-                curVarMap[k] = cv::Mat(datDS[0][0].rows,datDS[0][0].cols,CV_32F);
+                curVarMap.emplace_back(cv::Mat(datDS[0][0].rows,datDS[0][0].cols,CV_32F));
                 for (int i = 0; i < datDS[0][0].rows; ++i) {
                     for (int j = 0; j < datDS[0][0].cols; ++j) {
                         double sum = 0;
@@ -51,15 +51,22 @@ namespace AQuA{
                 cv::sqrt(temp2, curStdMap[k]);
                 cv::divide(datDS[k], curStdMap[k], datDS[k]); // since it is only used in seed detection,
                 // and seed detection only check single pixel's score. Not need to fitting again
-            }
+            }//for(k)
 
-            datResize[ii].resize(T);
             for (int t = 0; t < T; ++t) {
-                datResize[ii][t].resize(L);
                 for (int k = 0; k < L; ++k) {
-                    datResize[ii][t][k] = datDS[t][k];
+                    datResize[ii][t].emplace_back(datDS[t][k]);
                 }//for(k)
             }//for(t)
+
+//            datResize[ii].resize(T);
+//            for (int t = 0; t < T; ++t) {
+//                datResize[ii][t].resize(L);
+//                for (int k = 0; k < L; ++k) {
+//                    datResize[ii][t][k] = datDS[t][k];
+//                }//for(k)
+//            }//for(t)
+
 
         }//for(ii)
 
@@ -72,7 +79,7 @@ namespace AQuA{
 
         std::vector<float> Thrs;
         for (int i = opts.maxdF1; i >=opts.thrARScl ; i=i-opts.step) {
-            Thrs.push_back(i);
+            Thrs.emplace_back(i);
         }
         std::vector<int> scaleRatios = {2,4,8};
         opts.scaleRatios = scaleRatios;
@@ -94,9 +101,8 @@ namespace AQuA{
         std::vector<float> regSz(arLst.size());
         std::vector<std::vector<cv::Mat>> activeMap(T);
         for (int t = 0; t < T; ++t) {
-            activeMap[t].resize(L);
             for (int k = 0; k < L; ++k) {
-                activeMap[t][k] = cv::Mat::zeros(H,W,CV_32S);
+                activeMap[t].emplace_back(cv::Mat::zeros(H,W,CV_32S));
             }
         }
         //active map
@@ -113,9 +119,34 @@ namespace AQuA{
             }//for(ii_ite)
             regSz[ii] = unique_indices.size();
         }//for(ii)
+
         //down sampled data
-        std::vector<int> validMaps(scaleRatios.size());
+        std::vector<std::vector<std::vector<std::vector<cv::Mat>>>> validMaps(scaleRatios.size()); //treat as boolean
         std::vector<std::vector<std::vector<std::vector<cv::Mat>>>> datResize = normalizeAndResize(dataOrg); //normalized data to do significance test
+        std::vector<std::vector<std::vector<std::vector<cv::Mat>>>> dFResize(scaleRatios.size()); //down sampled data to do selection
+        std::vector<int> H0s(scaleRatios.size(), 0);
+        std::vector<int> W0s(scaleRatios.size(), 0);
+        for (int ii = 0; ii < scaleRatios.size(); ++ii) {
+//            datResize[ii] = reshape
+            for (int t = 0; t < T; ++t) {
+                for (int k = 0; k < L; ++k) {
+                    cv::resize(dF[t][k], dFResize[ii][t][k], cv::Size(), 1 / scaleRatios[ii], 1 / scaleRatios[ii], cv::INTER_AREA);
+                    cv::resize(activeMap[t][k], validMaps[ii][t][k], cv::Size(), 1 / scaleRatios[ii], 1 / scaleRatios[ii], cv::INTER_AREA);
+                }//for(k)
+            }//for(t)
+            H0s[ii] = std::ceil(H/scaleRatios[ii]);
+            W0s[ii] = std::ceil(W/scaleRatios[ii]);
+        }//for(ii)
+
+        //seed map
+        std::vector<std::vector<cv::Mat>> zscoreMap(dF.size());
+        for (int t = 0; t < dF.size(); ++t) {
+            for (int k = 0; k < dF[0].size(); ++k) {
+                zscoreMap[t].emplace_back(cv::Mat::zeros(dF[0][0].rows,dF[0][0].cols, CV_32F));
+            }
+        }//for(t)
+        
+
 
 
 
@@ -126,7 +157,7 @@ namespace AQuA{
                      const std::vector<std::vector<Point_struct>>& arLst){
         //may be according to active region size, set different scale
         for (int i = opts.maxSpaScale; i <= opts.minSpaScale; --i) {
-            opts.scaleRatios.push_back(i);
+            opts.scaleRatios.emplace_back(i);
         }
         std::cout<< "--------start seed detecting--------"<<std::endl;
         /*

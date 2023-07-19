@@ -133,9 +133,9 @@ namespace AQuA{
 //    for (int t = 0; t < T; ++t) {
 //        std::vector<cv::Mat> dat(L);
 //        for (int k = 0; k < L; ++k) {
-//            dat[t].push_back(frame[t][k].clone());
+//            dat[t].emplace_back(frame[t][k].clone());
 //        }
-//        opts.data1_org.push_back(dat);
+//        opts.data1_org.emplace_back(dat);
 //    }
 
     return frame;
