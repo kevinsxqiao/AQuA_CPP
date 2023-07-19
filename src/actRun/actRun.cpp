@@ -11,7 +11,7 @@ namespace AQuA{
      * the outer vector contains different points
      * the outermost vector contains different regions
      */
-    std::vector<std::vector<Point_struct>> bwconncomp4D(std::vector<std::vector<cv::Mat>> BW){
+    std::vector<std::vector<Point_struct>> bwconncomp4D(std::vector<std::vector<cv::Mat>>& BW){
         std::vector<std::vector<cv::Mat>> visited(BW.size(),std::vector<cv::Mat>(BW[0].size()));
         for (int t = 0; t < BW.size(); ++t) {
             for (int k = 0; k < BW[0].size(); ++k) {
@@ -73,7 +73,7 @@ namespace AQuA{
     }//bwconncomp4D
 
 
-    std::vector<std::vector<Point_struct>> bw2Reg(std::vector<std::vector<cv::Mat>> BW){
+    std::vector<std::vector<Point_struct>> bw2Reg(std::vector<std::vector<cv::Mat>>& BW){
 //        if (opts.spaMergeDist>0){
 //            if (BW[0].size() == 1){
 //
@@ -94,7 +94,7 @@ namespace AQuA{
     }
 
 
-    std::vector<std::vector<Point_struct>> acDetect(std::vector<std::vector<cv::Mat>> dF1, bool*** evtSpatialMask) {
+    std::vector<std::vector<Point_struct>> acDetect(std::vector<std::vector<cv::Mat>>& dF1, bool*** evtSpatialMask) {
 //        if (ch == 1){
 //
 //        }

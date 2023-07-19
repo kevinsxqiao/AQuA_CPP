@@ -189,5 +189,38 @@ int main() {
     }
     delete[] data_array;
 
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<cv::Mat>> mat1(5000);
+    cv::Mat temp1 = cv::Mat::zeros(5,5,CV_32S);
+    for (int t = 0; t < 5000; ++t) {
+        mat1[t].resize(5000);
+        for (int k = 0; k < 5000; ++k) {
+            mat1[t][k] = temp1.clone();
+        }
+    }
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<cv::Mat>> mat2(5000);
+    for (int t = 0; t < 5000; ++t) {
+        for (int k = 0; k < 5000; ++k) {
+            mat2[t].emplace_back(temp1.clone());
+        }
+    }
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+    start = std::chrono::high_resolution_clock::now();
+    std::vector<std::vector<cv::Mat>> mat(5000,std::vector<cv::Mat>(5000));
+    for (int t = 0; t < 5000; ++t) {
+        for (int k = 0; k < 5000; ++k) {
+            mat[t][k] = temp1.clone();
+        }
+    }
+    end = std::chrono::high_resolution_clock::now();
+    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+
     return 0;
 }

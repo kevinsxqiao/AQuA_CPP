@@ -494,7 +494,7 @@ namespace AQuA{
                     for (int kk = 0; kk < nSegment; ++kk) {
                         curP.push_back(minPosition[kk][k].at<int>(i,j));
                     }
-                    if (nSegment > 1){
+                    if (nSegment > 1){//try unsorted_set
                         std::sort(curP.begin(),curP.end());
                         auto it = std::unique(curP.begin(),curP.end());
                         curP.erase(it, curP.end());

@@ -16,6 +16,7 @@
 #include <mex.h>
 #include <matrix.h>
 #include <cstdlib>
+#include <unordered_set>
 
 
 #define H AQuA::rawDataSize.size1
@@ -48,16 +49,9 @@ namespace AQuA{
     mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data);
     void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);
     void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename);
-//    float**** createSpace();
-//    float*** create3dMatrix();
-//    double*** create3dMatrix_ext_double();
-//    float*** create3dMatrix_ext_float();
-//    float**** create4dMatrix();
-//    void releaseData(float**** data, int I, int J, int k);
-//    void releaseData(double*** data, int I, int J);
-//    void releaseData(float*** data, int I, int J);
-//    void releaseData(float* data);
-//    void releaseData(int* data);
+    int sub2ind(int i, int j, int k, int h, int w);
+    int sub2ind(int i, int j, int k,int t, int h, int w, int l);
+
 
 
 
@@ -146,6 +140,9 @@ namespace AQuA{
          double medSmo;
          float step;
          float seedSzRatio;
+         int maxSpaScale;
+         int minSpaScale;
+         std::vector<int> scaleRatios;
          std::vector<cv::Mat> stdMapOrg1;
          std::vector<cv::Mat> stdMapGau1;
          std::vector<cv::Mat> tempVarOrg1;

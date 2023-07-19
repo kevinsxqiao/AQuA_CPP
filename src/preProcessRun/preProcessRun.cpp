@@ -6,7 +6,7 @@
 
 namespace AQuA{
 
-    void preProcessRun(std::vector<std::vector<cv::Mat>> data1){
+    void preProcessRun(std::vector<std::vector<cv::Mat>>& data1){
         if(isDefault() || !opts.alreadyPreprocess || !opts.alreadyBleachCorrect){ // judge whether this step is already done, since this is time-consuming
             /*
              * image registration
