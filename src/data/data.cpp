@@ -142,10 +142,9 @@ namespace AQuA{
     }//loadData()
 
 
-    std::vector<std::vector<cv::Mat>> load4DData_clean(const char* fileName, const char* varName) {
+    std::vector<std::vector<cv::Mat>> load4D(const char* fileName, const char* varName) {
         MATFile *pmatFile;
         mxArray *pMxArray;
-        double *pdata;
 
         std::cout<< "--------loading data--------"<<std::endl;
         pmatFile = matOpen(fileName, "r");
@@ -155,13 +154,14 @@ namespace AQuA{
         }
 
         pMxArray = matGetVariable(pmatFile, varName);
-//        pMxArray = matGetVariable(pmatFile, "dF");
         if (pMxArray == nullptr) {
             std::cout<< "--------error reading variable from file--------"<<std::endl;
             std::exit(-1);
         }
 
-        pdata = mxGetPr(pMxArray);
+        void* pdata = mxGetData(pMxArray);
+        mxClassID classID = mxGetClassID(pMxArray);
+
         if (pdata == nullptr) {
             std::cout<< "--------error reading data from variable-------"<<std::endl;
             std::exit(-1);
@@ -172,25 +172,42 @@ namespace AQuA{
         W = dims[1];
         L = dims[2];
         T = dims[3];
-        std::cout<<"original size: "<< std::endl;
-        std::cout<<"height of image:"<< H << std::endl;
-        std::cout<<"width of image:"<< W << std::endl;
-        std::cout<<"length of image:"<< L << std::endl;
-        std::cout<<"time frames of image:"<< T << std::endl;
 
         std::vector<std::vector<cv::Mat>> frame(T,std::vector<cv::Mat>(L));
-        for (int t = 0; t < T; ++t) {
-            for (int k = 0; k < L; ++k) {
-                frame[t][k] = cv::Mat(H,W,CV_32F);
-                for (int i = 0; i < H; ++i) {
-                    for (int j = 0; j < W; ++j){
-                        frame[t][k].at<float>(i,j) = static_cast<float>(pdata[sub2ind(i,j,k,t,H,W,L)]);
-//                        std::cout<<t<<" "<<k<<" "<<i<<" "<<j<<" "<<std::endl;
-                    }//for(j)
-                }//for(i)
-            }//for(k)
-        }//for(t)
+        frame.resize(T,std::vector<cv::Mat>(L));
 
+        if (classID == mxSINGLE_CLASS){
+            for (int t = 0; t < T; ++t) {
+                for (int k = 0; k < L; ++k) {
+                    frame[t][k] = cv::Mat(H,W,CV_32F);
+                    for (int i = 0; i < H; ++i) {
+                        for (int j = 0; j < W; ++j){
+                            frame[t][k].at<float>(i,j) = static_cast<float*>(pdata)[sub2ind(i,j,k,t,H,W,L)];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+            }//for(t)
+        } else if(classID == mxDOUBLE_CLASS){
+            for (int t = 0; t < T; ++t) {
+                for (int k = 0; k < L; ++k) {
+                    frame[t][k] = cv::Mat(H,W,CV_32F);
+                    for (int i = 0; i < H; ++i) {
+                        for (int j = 0; j < W; ++j){
+                            frame[t][k].at<float>(i,j) = static_cast<double*>(pdata)[sub2ind(i,j,k,t,H,W,L)];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+            }//for(t)
+        } else{
+            std::cout << "Unhandled data type." << std::endl;
+        }
+
+//        for (int i = 0; i < 7; ++i) {
+//            for (int j = 0; j < 7; ++j) {
+//                std::cout<<frame[0][0].at<float>(i,j)<<" ";
+//            }
+//            std::cout<<std::endl;
+//        }
 
         //release MAT pointer
         if (pMxArray != nullptr) {
@@ -207,7 +224,7 @@ namespace AQuA{
         std::cout<<"time frames of image:"<< T << std::endl;
         std::cout<<"--------data loaded--------"<<std::endl;
         return frame;
-    }//loadData()
+    }//load4D()
 
 
     mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data) {
@@ -455,6 +472,26 @@ namespace AQuA{
         return i + j*h + k*h*w + t*h*w*l;
     }
 
+    Point_struct ind2sub(int ind, int h, int w){
+        Point_struct ans;
+        ans.k = ind / (h*w);
+        ind -= ans.k * h * w;
+        ans.j = ind / h;
+        ans.i = ind % h;
+        return ans;
+    }
+
+    Point_struct ind2sub(int ind, int h, int w, int l){
+        Point_struct ans;
+        ans.t = ind / (h*w*l);
+        ind -= ans.t * h * w * l;
+        ans.k = ind / (h*w);
+        ind -= ans.k*h*w;
+        ans.j = ind / h;
+        ans.i = ind % h;
+        return ans;
+    }
+
 
 //    judge if registration and bleach have been executed; ---- true = no ; false = both executed
     bool isDefault() {
@@ -501,6 +538,7 @@ namespace AQuA{
         opts.needGrow = false;
         opts.maxSpaScale = 7;
         opts.minSpaScale = 3;
+        opts.TPatch = 20;
 
         std::cout<< "--------opts initialized--------"<<std::endl;
     }// optsInit()

@@ -30,31 +30,6 @@
 
 namespace AQuA{
 
-    bool isDefault();
-    void preSettingInit();
-    void optsInit();
-    void rawDataSizeInit();
-    void Init();
-//    void crop(cv::Mat& image, int bdCrop);
-    std::vector<std::vector<cv::Mat>> loadData();
-    std::vector<std::vector<cv::Mat>> load4DData_clean(const char* fileName, const char* varName);
-    float*** create3dMatrix_float(int h, int w, int l);
-    bool*** createEvtSpatialMask();
-    int*** create3dMatrix_int(int h, int w, int l);
-    int**** create4dMatrix_int(int h, int w, int l, int t);
-    void release3dMatrix(float***& data, int h, int w);
-    void release3dMatrix_bool(bool***& data, int h, int w);
-    void release3dMatrix_int(int***& data, int h, int w);
-    mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
-    mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data);
-    void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);
-    void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename);
-    int sub2ind(int i, int j, int k, int h, int w);
-    int sub2ind(int i, int j, int k,int t, int h, int w, int l);
-
-
-
-
     struct rawDataSize_struct{ // clarification structure of raw data size
         int size1;
         int size2;
@@ -70,6 +45,40 @@ namespace AQuA{
         int i;
         int j;
     };
+
+    struct Score_struct {
+        float z_score1;
+        float z_score2;
+        float t_score1;
+        float t_score2;
+    };
+
+
+    bool isDefault();
+    void preSettingInit();
+    void optsInit();
+    void rawDataSizeInit();
+    void Init();
+//    void crop(cv::Mat& image, int bdCrop);
+    std::vector<std::vector<cv::Mat>> loadData();
+    std::vector<std::vector<cv::Mat>> load4D(const char* fileName, const char* varName);
+    float*** create3dMatrix_float(int h, int w, int l);
+    bool*** createEvtSpatialMask();
+    int*** create3dMatrix_int(int h, int w, int l);
+    int**** create4dMatrix_int(int h, int w, int l, int t);
+    void release3dMatrix(float***& data, int h, int w);
+    void release3dMatrix_bool(bool***& data, int h, int w);
+    void release3dMatrix_int(int***& data, int h, int w);
+    mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data);
+    mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data);
+    void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename);
+    void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename);
+    int sub2ind(int i, int j, int k, int h, int w);
+    int sub2ind(int i, int j, int k,int t, int h, int w, int l);
+    Point_struct ind2sub(int ind, int h, int w);
+    Point_struct ind2sub(int ind, int h, int w, int l);
+
+
 
 
 
@@ -142,7 +151,8 @@ namespace AQuA{
          float seedSzRatio;
          int maxSpaScale;
          int minSpaScale;
-         std::vector<int> scaleRatios;
+         int TPatch;
+         std::vector<float> scaleRatios;
          std::vector<cv::Mat> stdMapOrg1;
          std::vector<cv::Mat> stdMapGau1;
          std::vector<cv::Mat> tempVarOrg1;

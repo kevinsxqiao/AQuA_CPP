@@ -2,99 +2,45 @@
 #include "actRun/actRun.h"
 #include "preProcessRun/preProcessRun.h"
 #include "data/data.h"
+#include "phaseRun/phaseRun.h"
 
 int main(){
-//    std::vector<std::vector<cv::Mat>> mat(5,std::vector<cv::Mat>(5));
-    cv::Mat temp1 = cv::Mat::zeros(5,5,CV_32S);
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<std::vector<cv::Mat>> mat2(5000);
-    for (int t = 0; t < 5000; ++t) {
-        for (int k = 0; k < 5000; ++k) {
-            mat2[t].emplace_back(cv::Mat::zeros(5,5,CV_32S));
+    cv::Mat mat = cv::Mat::ones(5,5,CV_32F);
+    mat.at<float>(0, 1) = 2.0f;
+    mat.at<float>(1, 1) = 3.0f;
+    mat.at<float>(2, 2) = 3.0f;
+    mat.at<float>(4, 4) = 3.0f;
+    mat.at<float>(4, 0) = 3.0f;
+    for (int i = 0; i < mat.rows; ++i) {
+        for (int j = 0; j < mat.cols; ++j) {
+            std::cout<<mat.at<float>(i,j)<<"  ";
         }
+        std::cout<<std::endl;
     }
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout<<mat2.size()<<"   "<<mat2[0].size()<<std::endl;
-    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-//    start = std::chrono::high_resolution_clock::now();
-//    std::vector<std::vector<cv::Mat>> mat4(5000);
-//    for (int t = 0; t < 5000; ++t) {
-//        for (int k = 0; k < 5000; ++k) {
-//            mat4[t].emplace_back(cv::Mat::zeros(5,5,CV_32S));
-//        }
-//    }
-//    end = std::chrono::high_resolution_clock::now();
-//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-//    start = std::chrono::high_resolution_clock::now();
-//    std::vector<std::vector<cv::Mat>> mat1(5000);
-//    for (int t = 0; t < 5000; ++t) {
-//        mat1[t].resize(5000);
-//        for (int k = 0; k < 5000; ++k) {
-//            mat1[t][k] = cv::Mat::zeros(5,5,CV_32S);
-//        }
-//    }
-//    end = std::chrono::high_resolution_clock::now();
-//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-//    start = std::chrono::high_resolution_clock::now();
-//    std::vector<std::vector<cv::Mat>> mat3(5000);
-//    for (int t = 0; t < 5000; ++t) {
-//        mat3[t].resize(5000);
-//        for (int k = 0; k < 5000; ++k) {
-//            mat3[t][k] = temp1.clone();
-//        }
-//    }
-//    end = std::chrono::high_resolution_clock::now();
-//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-//    std::cout<<&mat1<<" "<<&mat2<<std::endl;
-//    std::cout<<&mat3<<" "<<&mat2<<std::endl;
-//    start = std::chrono::high_resolution_clock::now();
-//    std::vector<std::vector<cv::Mat>> mat(5000,std::vector<cv::Mat>(5000));
-//    for (int t = 0; t < 5000; ++t) {
-//        for (int k = 0; k < 5000; ++k) {
-//            mat[t][k] = temp1.clone();
-//        }
-//    }
-//    end = std::chrono::high_resolution_clock::now();
-//    duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
-//    cv::Mat temp;
-//    cv::multiply(mat[0][0],2,temp);
+    cv::Mat dst = AQuA::myResize(mat,2,2);
+    for (int i = 0; i < dst.rows; ++i) {
+        for (int j = 0; j < dst.cols; ++j) {
+            std::cout<<dst.at<float>(i,j)<<"  ";
+        }
+        std::cout<<std::endl;
+    }
+//    std::cout<<mat.type()<<std::endl;
+//    mat.at<uchar>(1,1) = 0;
+//    mat.at<uchar>(2,2) = 0;
+//    int flag = 0;
 //    for (int i = 0; i < 5; ++i) {
 //        for (int j = 0; j < 5; ++j) {
-//            std::cout<<mat[3][2].at<int>(i,j)<<" ";
+//            std::cout<<static_cast<int>(mat.at<uchar>(i,j))<<"  ";
+//            if (mat.at<uchar>(i,j) !=1){
+//                flag++;
+//            }
 //        }
 //        std::cout<<std::endl;
 //    }
-//std::cout<<mat.size()<<std::endl;
-//std::cout<<mat[0].size()<<std::endl;
-//
-//    mat[0][0].at<int>(0,0) = 1;
-//    mat[1][0].at<int>(0,0) = 1;
-//
-//    mat[1][0].at<int>(1,2) = 1;
-//
-//    mat[0][1].at<int>(4,4) = 1;
-//    mat[0][1].at<int>(3,4) = 1;
-////    mat[0][2].at<int>(1,2) = 1;
-////    mat[0][2].at<int>(1,0) = 1;
-//
-//    mat[4][0].at<int>(1,1) = 1;
-////    std::cout<<AQuA::sub2ind(0,1,1,0,5,5,5)<<std::endl;
-//
-//    std::vector<std::vector<AQuA::Point_struct>> poi = AQuA::bw2Reg(mat);
-//    for (int i = 0; i < poi.size(); ++i) {
-//        for (int j = 0; j < poi[i].size(); ++j) {
-//            std::cout<<poi[i][j].t<<" "<<poi[i][j].k<<" "<<poi[i][j].i<<" "<<poi[i][j].j<<" ";
-//            std::cout<<"    ";
-//        }
-//        std::cout<<std::endl;
-//    }
-//    std::cout<< poi[1][0].t<< poi[1][0].k<< poi[1][0].i<< poi[1][0].j<<std::endl;
-
+//    std::cout<<flag<<std::endl;
+//    std::cout<<"size of 8U: "<<sizeof (uchar)<<std::endl;
+//    std::cout<<"size of 8S: "<<sizeof (char)<<std::endl;
+//    std::cout<<"size of 32S: "<<sizeof (int)<<std::endl;
 
     return 0;
 }
