@@ -3,18 +3,18 @@
 //
 
 #include "data.h"
-
+using namespace std;
 
 namespace AQuA{
 
     /*
      * define data structure
      */
-    struct rawDataSize_struct rawDataSize;
+//    struct rawDataSize_struct rawDataSize;
     struct preSetting_struct preSetting;
     struct opts_struct opts;
 
-    std::vector<std::vector<cv::Mat>> loadData() {
+    vector<vector<cv::Mat>> loadData() {
         MATFile *pmatFile;
         mxArray *pMxArray;
         double *pdata;
@@ -24,42 +24,42 @@ namespace AQuA{
         int BitDepth = -1;
         float normalizedParameter;
 
-        std::cout<< "--------loading data--------"<<std::endl;
-//        std::cout<<'\r'<< 0 << "% "<<std::flush;
+        cout<< "--------loading data--------"<<endl;
+//        cout<<'\r'<< 0 << "% "<<flush;
 //        const char *filename = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
         pmatFile = matOpen(opts.fileName1, "r");
         if (pmatFile == nullptr) {
-            std::cout<< "--------error opening file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
         }
 
         pMxArray = matGetVariable(pmatFile, "synthetic");
         if (pMxArray == nullptr) {
-            std::cout<< "--------error reading variable from file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
         }
 
         pdata = mxGetPr(pMxArray);
         if (pdata == nullptr) {
-            std::cout<< "--------error reading data from variable-------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading data from variable-------"<<endl;
+            exit(-1);
         }
 
         const mwSize *dims = mxGetDimensions(pMxArray);
-        H = dims[0];
-        W = dims[1];
-        L = dims[2];
-        T = dims[3];
+        int H = dims[0];
+        int W = dims[1];
+        int L = dims[2];
+        int T = dims[3];
 //        T = 10;
-//        std::cout<<"original size: "<< std::endl;
-//        std::cout<<"height of image:"<< H << std::endl;
-//        std::cout<<"width of image:"<< W << std::endl;
-//        std::cout<<"length of image:"<< L << std::endl;
-//        std::cout<<"time frames of image:"<< T << std::endl;
+//        cout<<"original size: "<< endl;
+//        cout<<"height of image:"<< H << endl;
+//        cout<<"width of image:"<< W << endl;
+//        cout<<"length of image:"<< L << endl;
+//        cout<<"time frames of image:"<< T << endl;
 
-        std::vector<std::vector<cv::Mat>> frame(T);
+        vector<vector<cv::Mat>> frame(T);
         for (int t = 0; t < T; ++t) {
-//            std::cout<<'\r'<< 100*t/T/2 <<"% "<<std::flush;
+//            cout<<'\r'<< 100*t/T/2 <<"% "<<flush;
             for (int k = 0; k < L; ++k) {
                 frame[t].emplace_back(H- 2*bdCrop,W- 2*bdCrop,CV_32F);
 //#pragma omp parallel for collapse(2)
@@ -93,45 +93,45 @@ namespace AQuA{
 
         AQuA::opts.maxValueDat1 = mmax;
         AQuA::opts.minValueDat1 = mmin;
-//        std::cout<<"minValue: "<< opts.minValueDat1 << "  maxValue: "<<opts.maxValueDat1<<std::endl;
+//        cout<<"minValue: "<< opts.minValueDat1 << "  maxValue: "<<opts.maxValueDat1<<endl;
         normalizedParameter = static_cast<float>(mmax -mmin);
 
 //#pragma omp parallel for collapse(4)
         for (int t = 0; t < T; ++t) {
-//            std::cout<<'\r'<< 50+ (100*t/T/2) <<"%"<<std::flush;
+//            cout<<'\r'<< 50+ (100*t/T/2) <<"%"<<flush;
             for (int k = 0; k < L; ++k) {
                 for (int i = 0; i < H; ++i) {
                     for (int j = 0; j < W; ++j) {
                         frame[t][k].at<float>(i,j) = (frame[t][k].at<float>(i,j) - static_cast<float>(AQuA::opts.minValueDat1)) / normalizedParameter;
-//                    std::cout<< frame[t][k].at<float>(i,j)<< "  ";// display pixel value
+//                    cout<< frame[t][k].at<float>(i,j)<< "  ";// display pixel value
                     }//for(i)
                 }//for(j)
             }//for(k)
         }//for(t)
-//        std::cout << "\r" << 100 << "%" << std::flush<< std::endl;
+//        cout << "\r" << 100 << "%" << flush<< endl;
         AQuA::opts.sz[0] = H;
         AQuA::opts.sz[1] = W;
         AQuA::opts.sz[2] = L;
         AQuA::opts.sz[3] = T;
         AQuA::opts.BitDepth = BitDepth;
 
-//        std::cout<<"data: "<<std::endl;
+//        cout<<"data: "<<endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<< frame[0][0].at<float>(i,j)<< "  ";
+//                cout<< frame[0][0].at<float>(i,j)<< "  ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-    std::cout<<"after cropping: "<< std::endl;
-    std::cout<<"height of image:"<< H << std::endl;
-    std::cout<<"width of image:"<< W << std::endl;
-    std::cout<<"length of image:"<< L << std::endl;
-    std::cout<<"time frames of image:"<< T << std::endl;
-    std::cout<<"--------data loaded--------"<<std::endl;
+    cout<<"after cropping: "<< endl;
+    cout<<"height of image:"<< H << endl;
+    cout<<"width of image:"<< W << endl;
+    cout<<"length of image:"<< L << endl;
+    cout<<"time frames of image:"<< T << endl;
+    cout<<"--------data loaded--------"<<endl;
     opts.data1_org = frame;
 
 //    for (int t = 0; t < T; ++t) {
-//        std::vector<cv::Mat> dat(L);
+//        vector<cv::Mat> dat(L);
 //        for (int k = 0; k < L; ++k) {
 //            dat[t].emplace_back(frame[t][k].clone());
 //        }
@@ -142,72 +142,75 @@ namespace AQuA{
     }//loadData()
 
 
-    std::vector<std::vector<cv::Mat>> load4D(const char* fileName, const char* varName) {
+    vector<vector<cv::Mat>> load4D(const char* fileName, const char* varName) {
         MATFile *pmatFile;
         mxArray *pMxArray;
 
-        std::cout<< "--------loading data--------"<<std::endl;
+        cout<< "--------loading data--------"<<endl;
         pmatFile = matOpen(fileName, "r");
         if (pmatFile == nullptr) {
-            std::cout<< "--------error opening file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
         }
 
         pMxArray = matGetVariable(pmatFile, varName);
         if (pMxArray == nullptr) {
-            std::cout<< "--------error reading variable from file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
         }
 
         void* pdata = mxGetData(pMxArray);
         mxClassID classID = mxGetClassID(pMxArray);
 
         if (pdata == nullptr) {
-            std::cout<< "--------error reading data from variable-------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading data from variable-------"<<endl;
+            exit(-1);
         }
 
         const mwSize *dims = mxGetDimensions(pMxArray);
-        H = dims[0];
-        W = dims[1];
-        L = dims[2];
-        T = dims[3];
 
-        std::vector<std::vector<cv::Mat>> frame(T,std::vector<cv::Mat>(L));
-        frame.resize(T,std::vector<cv::Mat>(L));
+
+        vector<vector<cv::Mat>> frame(dims[3],vector<cv::Mat>(dims[2]));
 
         if (classID == mxSINGLE_CLASS){
-            for (int t = 0; t < T; ++t) {
-                for (int k = 0; k < L; ++k) {
-                    frame[t][k] = cv::Mat(H,W,CV_32F);
-                    for (int i = 0; i < H; ++i) {
-                        for (int j = 0; j < W; ++j){
-                            frame[t][k].at<float>(i,j) = static_cast<float*>(pdata)[sub2ind(i,j,k,t,H,W,L)];
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[t][k] = cv::Mat(dims[0],dims[1],CV_32F);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[t][k].at<float>(i,j) = static_cast<float*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
                         }//for(j)
                     }//for(i)
                 }//for(k)
             }//for(t)
         } else if(classID == mxDOUBLE_CLASS){
-            for (int t = 0; t < T; ++t) {
-                for (int k = 0; k < L; ++k) {
-                    frame[t][k] = cv::Mat(H,W,CV_32F);
-                    for (int i = 0; i < H; ++i) {
-                        for (int j = 0; j < W; ++j){
-                            frame[t][k].at<float>(i,j) = static_cast<double*>(pdata)[sub2ind(i,j,k,t,H,W,L)];
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[t][k] = cv::Mat(dims[0],dims[1],CV_32F);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[t][k].at<float>(i,j) = static_cast<double*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
                         }//for(j)
                     }//for(i)
                 }//for(k)
             }//for(t)
         } else{
-            std::cout << "Unhandled data type." << std::endl;
+            cout << "Unhandled data type." << endl;
         }
 
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<frame[0][0].at<float>(i,j)<<" ";
+//                cout<<frame[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
+
+        cout<<"height of image:"<< dims[0] << endl;
+        cout<<"width of image:"<< dims[1] << endl;
+        cout<<"length of image:"<< dims[2] << endl;
+        cout<<"time frames of image:"<< dims[3] << endl;
+        cout<<"--------data loaded--------"<<endl;
+
 
         //release MAT pointer
         if (pMxArray != nullptr) {
@@ -218,28 +221,232 @@ namespace AQuA{
             matClose(pmatFile);
         }
 
-        std::cout<<"height of image:"<< H << std::endl;
-        std::cout<<"width of image:"<< W << std::endl;
-        std::cout<<"length of image:"<< L << std::endl;
-        std::cout<<"time frames of image:"<< T << std::endl;
-        std::cout<<"--------data loaded--------"<<std::endl;
         return frame;
     }//load4D()
 
 
-    mxArray* cvDataToMxArray(const std::vector<std::vector<cv::Mat>>& data) {
+    vector<cv::Mat> load3D(const char* fileName, const char* varName) {
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        void* pdata = mxGetData(pMxArray);
+        mxClassID classID = mxGetClassID(pMxArray);
+
+        if (pdata == nullptr) {
+            cout<< "--------error reading data from variable-------"<<endl;
+            exit(-1);
+        }
+
+        const mwSize *dims = mxGetDimensions(pMxArray);
+
+        vector<cv::Mat> frame(dims[2]);
+
+        if (classID == mxSINGLE_CLASS){
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[k] = cv::Mat(dims[0],dims[1],CV_32F);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[k].at<float>(i,j) = static_cast<float*>(pdata)[sub2ind(i,j,k,dims[0],dims[1])];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+        } else if(classID == mxDOUBLE_CLASS){
+            for (int k = 0; k < dims[2]; ++k) {
+                frame[k] = cv::Mat(dims[0],dims[1],CV_32F);
+                for (int i = 0; i < dims[0]; ++i) {
+                    for (int j = 0; j < dims[1]; ++j){
+                        frame[k].at<float>(i,j) = static_cast<double*>(pdata)[sub2ind(i,j,k,dims[0],dims[1])];
+                    }//for(j)
+                }//for(i)
+            }//for(k)
+        } else{
+            cout << "Unhandled data type." << endl;
+        }
+
+        cout<<"height of image:"<< dims[0] << endl;
+        cout<<"width of image:"<< dims[1] << endl;
+        cout<<"length of image:"<< dims[2] << endl;
+        cout<<"--------data loaded--------"<<endl;
+
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+
+        return frame;
+    }//load4D()
+    
+    
+    cv::Mat load2D(const char* fileName, const char* varName) {
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        void* pdata = mxGetData(pMxArray);
+        mxClassID classID = mxGetClassID(pMxArray);
+
+        if (pdata == nullptr) {
+            cout<< "--------error reading data from variable-------"<<endl;
+            exit(-1);
+        }
+
+        const mwSize *dims = mxGetDimensions(pMxArray);
+
+        cv::Mat frame = cv::Mat(dims[0],dims[1],CV_32F);
+
+        if (classID == mxSINGLE_CLASS){
+            for (int i = 0; i < dims[0]; ++i) {
+                for (int j = 0; j < dims[1]; ++j){
+                    frame.at<float>(i,j) = static_cast<float*>(pdata)[i+j*dims[0]];
+                }//for(j)
+            }//for(i)
+        } else if(classID == mxDOUBLE_CLASS){
+            for (int i = 0; i < dims[0]; ++i) {
+                for (int j = 0; j < dims[1]; ++j){
+                    frame.at<float>(i,j) = static_cast<double*>(pdata)[i+j*dims[0]];
+                }//for(j)
+            }//for(i)
+        } else{
+            cout << "Unhandled data type." << endl;
+        }
+
+        cout<<"height of image:"<< dims[0] << endl;
+        cout<<"width of image:"<< dims[1] << endl;
+
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+
+
+        cout<<"--------data loaded--------"<<endl;
+        return frame;
+    }//load2D()
+
+
+    vector<vector<int>> loadCell(const char* fileName, const char* varName){
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        mwSize numCells = mxGetNumberOfElements(pMxArray);
+        mxArray* pCellElement = mxGetCell(pMxArray, 0);
+        mxClassID classID = mxGetClassID(pCellElement);//get data type in cell
+
+        vector<vector<int>> frame(numCells);
+
+        if (classID == mxSINGLE_CLASS){
+            for (mwIndex i = 0; i < numCells; i++) {
+                pCellElement = mxGetCell(pMxArray, i);
+                if (pCellElement != NULL) {
+                    mwSize numElements = mxGetNumberOfElements(pCellElement);
+                    float* pdata = static_cast<float*>(mxGetData(pCellElement));
+
+                    frame[i].resize(numElements);
+                    transform(pdata, pdata + numElements, frame[i].begin(), [](float val) { return static_cast<int>(val); });
+                }
+            }
+        } else if(classID == mxDOUBLE_CLASS){
+            for (mwIndex i = 0; i < numCells; i++) {
+                pCellElement = mxGetCell(pMxArray, i);
+                if (pCellElement != NULL) {
+                    mwSize numElements = mxGetNumberOfElements(pCellElement);
+                    double* pdata = static_cast<double*>(mxGetData(pCellElement));
+
+                    frame[i].resize(numElements);
+                    transform(pdata, pdata + numElements, frame[i].begin(), [](double val) { return static_cast<int>(val); });
+                }
+            }
+        } else{
+            cout << "Unhandled data type." << endl;
+        }
+        cout<<"number of cells:"<< numCells << endl;
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+
+        return frame;
+    }//loadCell()
+
+
+    mxArray* cvDataToMxArray(const cv::Mat& data) {
+        // Calculate the size of the 2D matrix
+        mwSize dims[2] = {static_cast<mwSize>(data.rows), static_cast<mwSize>(data.cols)};
+
+        // Create a 2D mxArray
+        mxArray* pMxArray = mxCreateNumericArray(2, dims, mxSINGLE_CLASS, mxREAL);
+
+        // Copy data from your vector to the mxArray
+        float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
+        memcpy(ptr, data.data, data.rows * data.cols * sizeof(float));
+
+        return pMxArray;
+    }
+
+
+    mxArray* cvDataToMxArray(const vector<vector<cv::Mat>>& data) {
         // Calculate the size of the 4D matrix
         mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
 
         // Create a 4D mxArray
-        mxArray* pMxArray = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+        mxArray* pMxArray = mxCreateNumericArray(4, dims, mxUINT8_CLASS, mxREAL);
 
         // Copy data from your vector to the mxArray
-        float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
+        uchar* ptr = reinterpret_cast<uchar*>(mxGetData(pMxArray));
         for (int t = 0; t < data.size(); ++t) {
             for (int k = 0; k < data[t].size(); ++k) {
                 const cv::Mat& mat = data[t][k];
-                std::memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(float));
+                memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(uchar));
                 ptr += mat.rows * mat.cols;
             }
         }
@@ -248,7 +455,7 @@ namespace AQuA{
     }
 
 
-    mxArray* cvDataToMxArray(const std::vector<cv::Mat>& data) {
+    mxArray* cvDataToMxArray(const vector<cv::Mat>& data) {
         // Calculate the size of the 3D matrix
         mwSize dims[3] = {static_cast<mwSize>(data[0].rows), static_cast<mwSize>(data[0].cols), static_cast<mwSize>(data.size())};
 
@@ -259,22 +466,22 @@ namespace AQuA{
         float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
             for (int k = 0; k < data.size(); ++k) {
                 const cv::Mat& mat = data[k];
-                std::memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(float));
+                memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(float));
                 ptr += mat.rows * mat.cols;
             }
         return pMxArray;
     }
 
 
-    void writeDataToMatFile(std::vector<std::vector<cv::Mat>>& data, const std::string& filename) {
-        std::cout<<"--------start writing--------"<<std::endl;
+    void writeDataToMatFile(cv::Mat& data, const string& filename) {
+        cout<<"--------start writing--------"<<endl;
         MATFile *pmatFile;
 
         // Open the mat file
         pmatFile = matOpen(filename.c_str(), "w");
         if (pmatFile == nullptr) {
-            std::cout << "--------error opening file--------" << std::endl;
-            std::exit(-1);
+            cout << "--------error opening file--------" << endl;
+            exit(-1);
         }
 
         // Convert your data to a mxArray
@@ -282,8 +489,8 @@ namespace AQuA{
 
         // Write the variable to the mat file
         if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
-            std::cout << "--------error writing variable to file--------" << std::endl;
-            std::exit(-1);
+            cout << "--------error writing variable to file--------" << endl;
+            exit(-1);
         }
 
         // Free the mxArray
@@ -293,19 +500,19 @@ namespace AQuA{
         if (pmatFile != nullptr) {
             matClose(pmatFile);
         }
-        std::cout<<"--------finish writing--------"<<std::endl;
+        cout<<"--------finish writing--------"<<endl;
     }
 
 
-    void writeDataToMatFile(std::vector<cv::Mat>& data, const std::string& filename) {
-        std::cout<<"--------start writing--------"<<std::endl;
+    void writeDataToMatFile(vector<vector<cv::Mat>>& data, const string& filename) {
+        cout<<"--------start writing--------"<<endl;
         MATFile *pmatFile;
 
         // Open the mat file
         pmatFile = matOpen(filename.c_str(), "w");
         if (pmatFile == nullptr) {
-            std::cout << "--------error opening file--------" << std::endl;
-            std::exit(-1);
+            cout << "--------error opening file--------" << endl;
+            exit(-1);
         }
 
         // Convert your data to a mxArray
@@ -313,8 +520,8 @@ namespace AQuA{
 
         // Write the variable to the mat file
         if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
-            std::cout << "--------error writing variable to file--------" << std::endl;
-            std::exit(-1);
+            cout << "--------error writing variable to file--------" << endl;
+            exit(-1);
         }
 
         // Free the mxArray
@@ -324,7 +531,38 @@ namespace AQuA{
         if (pmatFile != nullptr) {
             matClose(pmatFile);
         }
-        std::cout<<"--------finish writing--------"<<std::endl;
+        cout<<"--------finish writing--------"<<endl;
+    }
+
+
+    void writeDataToMatFile(vector<cv::Mat>& data, const string& filename) {
+        cout<<"--------start writing--------"<<endl;
+        MATFile *pmatFile;
+
+        // Open the mat file
+        pmatFile = matOpen(filename.c_str(), "w");
+        if (pmatFile == nullptr) {
+            cout << "--------error opening file--------" << endl;
+            exit(-1);
+        }
+
+        // Convert your data to a mxArray
+        mxArray* pMxArray = cvDataToMxArray(data);
+
+        // Write the variable to the mat file
+        if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
+            cout << "--------error writing variable to file--------" << endl;
+            exit(-1);
+        }
+
+        // Free the mxArray
+        mxDestroyArray(pMxArray);
+
+        // Close the mat file
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+        cout<<"--------finish writing--------"<<endl;
     }
 
 
@@ -404,7 +642,7 @@ namespace AQuA{
     }// create4dMatrix()
 
 
-    bool*** createEvtSpatialMask(){
+    bool*** createEvtSpatialMask(int H, int W, int L){
         bool*** evtSpatialMask;
         evtSpatialMask = new bool** [H];
         //#pragma omp parallel for
@@ -472,7 +710,7 @@ namespace AQuA{
         return i + j*h + k*h*w + t*h*w*l;
     }
 
-    Point_struct ind2sub(int ind, int h, int w){
+    Point_struct ind2sub(int ind, int h, int w){ // column first
         Point_struct ans;
         ans.k = ind / (h*w);
         ind -= ans.k * h * w;
@@ -481,7 +719,7 @@ namespace AQuA{
         return ans;
     }
 
-    Point_struct ind2sub(int ind, int h, int w, int l){
+    Point_struct ind2sub(int ind, int h, int w, int l){ // column first
         Point_struct ans;
         ans.t = ind / (h*w*l);
         ind -= ans.t * h * w * l;
@@ -503,7 +741,7 @@ namespace AQuA{
     void preSettingInit(){
         preSetting.registrateCorrect = preSetting.registrateCorrect_default;
         preSetting.bleachCorrect = preSetting.bleachCorrect_default;
-        std::cout<< "--------preSetting initialized--------"<<std::endl;
+        cout<< "--------preSetting initialized--------"<<endl;
     }// preSettingInit()
 
 
@@ -540,21 +778,21 @@ namespace AQuA{
         opts.minSpaScale = 3;
         opts.TPatch = 20;
 
-        std::cout<< "--------opts initialized--------"<<std::endl;
+        cout<< "--------opts initialized--------"<<endl;
     }// optsInit()
 
 
-    void rawDataSizeInit(){
-        rawDataSize={0};
-        std::cout<< "--------rawDataSize initialized--------"<<std::endl;
-    }
+//    void rawDataSizeInit(){
+//        rawDataSize={0};
+//        cout<< "--------rawDataSize initialized--------"<<endl;
+//    }
 
 
     void Init(){
         preSettingInit();
         optsInit();
-        rawDataSizeInit();
-        std::cout<<std::endl;
+//        rawDataSizeInit();
+        cout<<endl;
     }
 
 //    /*

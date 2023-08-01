@@ -33,11 +33,12 @@ include_directories(${Boost_INCLUDE_DIRS})
 
 add_executable(${PROJECT_NAME}
                     src/data/data.h src/data/data.cpp
-                    src/phaseRun/phaseRun.h src/getappdata.h src/feaRun.h src/evtRun.h src/actRun/actRun.h
-                    src/flow/flow.h src/preProcessRun/preProcessRun.h src/flow/flow.h src/flow/flow.cpp
+                     src/getappdata.h src/feaRun.h src/evtRun.h
+                    src/flow/flow.h  src/flow/flow.h src/flow/flow.cpp
                     src/draft1.cpp src/draft.h
-                    src/preProcessRun/baselineRemoveAndNoiseEstimation.cpp src/preProcessRun/regCrossCorrelation.cpp src/preProcessRun/preProcessRun.cpp
-                    src/actRun/actRun.cpp src/phaseRun/phaseRun.cpp)
+
+                    src/phaseRun/phaseRun.cpp src/phaseRun/phaseRun.h
+                    src/actRun/actRun.cpp src/actRun/actRun.h)
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${FFTW_LIBS} ${MAT_LIBRARY} ${MX_LIBRARY} ${Boost_LIBRARIES})
 

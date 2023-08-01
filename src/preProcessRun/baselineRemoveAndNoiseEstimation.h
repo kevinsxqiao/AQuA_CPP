@@ -10,17 +10,16 @@
 
 namespace AQuA{
 
-    bool*** createEvtSpatialMask();
-    std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg, int dist=0);
-    std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn);
-    std::vector<cv::Mat> truncated_kept_var(const std::vector<cv::Mat>& quantiles);
-    std::vector<std::vector<cv::Mat>> baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data);
+    vector<cv::Mat> fit_F0_var(const vector<cv::Mat>& F0ProOrg, const vector<cv::Mat>& varMapOrg, int dist=0);
+    vector<vector<cv::Mat>> movmean(const vector<vector<cv::Mat>>& dataIn);
+    vector<cv::Mat> truncated_kept_var(const vector<cv::Mat>& quantiles);
+    vector<vector<cv::Mat>> baselineLinearEstimate(vector<vector<cv::Mat>>& data);
     void correctBoundaryStd();
     float obtainBias();
-    void noiseEstimationFunction(const std::vector<std::vector<cv::Mat>>& dataOrg, const std::vector<std::vector<cv::Mat>>& dataSmo,
-                                 const std::vector<cv::Mat>& F0Pro, bool*** evtSpatialMask, std::vector<cv::Mat>& stdMapOrg, std::vector<cv::Mat>& stdMapSmo,
-                                 std::vector<cv::Mat>& tempVarOrg,   std::vector<cv::Mat>& correctPars);
-    std::vector<std::vector<cv::Mat>> baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& dataOrg, bool*** evtSpatialMask);
+    void noiseEstimationFunction(const vector<vector<cv::Mat>>& dataOrg, const vector<vector<cv::Mat>>& dataSmo,
+                                 const vector<cv::Mat>& F0Pro, bool*** evtSpatialMask, vector<cv::Mat>& stdMapOrg, vector<cv::Mat>& stdMapSmo,
+                                 vector<cv::Mat>& tempVarOrg,   vector<cv::Mat>& correctPars);
+    vector<vector<cv::Mat>> baselineRemoveAndNoiseEstimation(vector<vector<cv::Mat>>& dataOrg, bool*** evtSpatialMask);
 
 
 }// namespace

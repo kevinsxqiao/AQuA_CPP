@@ -6,19 +6,19 @@
 namespace AQuA{
 
     /*
-     * std::vector<std::vector<std::vector<int>>> regions;
+     * vector<vector<vector<int>>> regions;
      * the innermost Point_struct is 4d point location = {t,k,i,j};
      * the outer vector contains different points
      * the outermost vector contains different regions
      */
-    std::vector<std::vector<Point_struct>> bwconncomp4D(std::vector<std::vector<cv::Mat>>& BW){
-        std::vector<std::vector<cv::Mat>> visited(BW.size(),std::vector<cv::Mat>(BW[0].size()));
+    vector<vector<int>> bwconncomp4D(const vector<vector<cv::Mat>>& BW){
+        vector<vector<cv::Mat>> visited(BW.size(),vector<cv::Mat>(BW[0].size()));
         for (int t = 0; t < BW.size(); ++t) {
             for (int k = 0; k < BW[0].size(); ++k) {
-                visited[t][k] = cv::Mat::zeros(BW[0][0].rows, BW[0][0].cols, CV_32S);
+                visited[t][k] = cv::Mat::zeros(BW[0][0].rows, BW[0][0].cols, CV_8U);
             }
         }
-        std::vector<std::vector<Point_struct>> regions;
+        vector<vector<int>> regions;
         int dx[3] = {-1, 0, 1};
         int dy[3] = {-1, 0, 1};
         int dz[3] = {-1, 0, 1};
@@ -27,15 +27,19 @@ namespace AQuA{
             for (int k = 0; k < BW[0].size(); ++k) {
                 for (int i = 0; i < BW[0][0].rows; ++i) {
                     for (int j = 0; j < BW[0][0].cols; ++j) {
-                        if ((BW[t][k].at<int>(i,j) == 1) && (visited[t][k].at<int>(i,j) != 1)){
-                            std::vector<Point_struct> component;
-                            Point_struct point;
-                            point = {t,k,i,j};
-                            std::queue<Point_struct> queue;
-                            queue.push(point);
-                            visited[t][k].at<int>(i,j) = 1;
+                        if ((BW[t][k].at<uchar>(i,j) == 1) && (visited[t][k].at<uchar>(i,j) != 1)){
+                            vector<int> component;
+                            queue<int> queue;
+                            queue.push(sub2ind(i,j,k,t,BW[0][0].rows,BW[0][0].cols,BW[0].size()));
+//                            vector<Point_struct> component;
+//                            Point_struct point;
+//                            point = {t,k,i,j};
+//                            queue<Point_struct> queue;
+//                            queue.push(point);
+                            visited[t][k].at<uchar>(i,j) = 1;
                             while (!queue.empty()){
-                                Point_struct current;
+                                int current;
+//                                Point_struct current;
                                 current = queue.front();
                                 queue.pop();
                                 component.push_back(current);
@@ -43,19 +47,19 @@ namespace AQuA{
                                     for (int dki = 0; dki < 3; ++dki) {
                                         for (int dxi = 0; dxi < 3; ++dxi) {
                                             for (int dyi = 0; dyi < 3; ++dyi) {
-                                                int nt = current.t + dt[dti];
-                                                int nz = current.k + dz[dki];
-                                                int nx = current.i + dx[dxi];
-                                                int ny = current.j + dy[dyi];
+                                                int nt = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).t + dt[dti];
+                                                int nz = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).k + dz[dki];
+                                                int nx = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).i + dx[dxi];
+                                                int ny = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).j + dy[dyi];
 
                                                 if ((nx >= 0) && (nx < BW[0][0].rows) && (ny >= 0) && (ny < BW[0][0].cols) && (nz >= 0) &&
                                                 (nz < BW[0].size()) && (nt >= 0) && (nt < BW.size()) &&
-                                                (BW[nt][nz].at<int>(nx,ny)==1) && (visited[nt][nz].at<int>(nx,ny)!=1)) {
-
-                                                        Point_struct curr;
-                                                        curr = {nt,nz,nx,ny};
+                                                (BW[nt][nz].at<uchar>(nx,ny)==1) && (visited[nt][nz].at<uchar>(nx,ny)!=1)) {
+                                                        int curr;
+//                                                        Point_struct curr;
+                                                        curr = sub2ind(nt,nz,nx,ny,BW[0][0].rows,BW[0][0].cols,BW[0].size());
                                                         queue.push(curr);
-                                                        visited[nt][nz].at<int>(nx,ny) = 1;
+                                                        visited[nt][nz].at<uchar>(nx,ny) = 1;
                                                 }//if
                                             }//for(dyi)
                                         }
@@ -68,12 +72,12 @@ namespace AQuA{
                 }
             }
         }//for(t)
-//        std::cout<<"connected regions: "<<regions.size()<<std::endl;
+//        cout<<"connected regions: "<<regions.size()<<endl;
         return regions;
     }//bwconncomp4D
 
 
-    std::vector<std::vector<Point_struct>> bw2Reg(std::vector<std::vector<cv::Mat>>& BW){
+    vector<vector<int>> bw2Reg(const vector<vector<cv::Mat>>& BW){
 //        if (opts.spaMergeDist>0){
 //            if (BW[0].size() == 1){
 //
@@ -94,11 +98,16 @@ namespace AQuA{
     }
 
 
-    std::vector<std::vector<Point_struct>> acDetect(std::vector<std::vector<cv::Mat>>& dF1, bool*** evtSpatialMask) {
+    vector<vector<Point_struct>> acDetect(vector<vector<cv::Mat>>& dF1, bool*** evtSpatialMask) {
 //        if (ch == 1){
 //
 //        }
-        std::vector<float> thrs;
+        int H = dF1[0][0].rows;
+        int W = dF1[0][0].cols;
+        int L = dF1[0].size();
+        int T = dF1.size();
+
+        vector<float> thrs;
         if ((opts.thrARScl > opts.maxdF1) || (opts.maxSize >= H * W * L) && (opts.circularityThr == 0)) {
             //no advanced filter setting, single threshold
             thrs.push_back(opts.thrARScl);
@@ -122,8 +131,8 @@ namespace AQuA{
         }//for(i)
 
         //valid region
-        std::vector<std::vector<cv::Mat>> activeMap(T, std::vector<cv::Mat>(L));
-        std::vector<std::vector<cv::Mat>> selectMap(T, std::vector<cv::Mat>(L));
+        vector<vector<cv::Mat>> activeMap(T, vector<cv::Mat>(L));
+        vector<vector<cv::Mat>> selectMap(T, vector<cv::Mat>(L));
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {
                 activeMap[t][k] = cv::Mat::zeros(H,W,CV_32S);
@@ -131,7 +140,7 @@ namespace AQuA{
             }
         }
         int nReg = 0;
-        std::vector<std::vector<Point_struct>> arLst;
+        vector<vector<Point_struct>> arLst;
         for (int k_thr = 0; k_thr < thrs.size(); ++k_thr) {
             float thr = thrs[k_thr];
             for (int t = 0; t < T; ++t) {
@@ -147,14 +156,14 @@ namespace AQuA{
                     }
                 }
             }//for(t)
-            std::vector<std::vector<Point_struct>> curRegions;
+            vector<vector<Point_struct>> curRegions;
             curRegions = bw2Reg(selectMap);
-            std::vector<bool> valid(curRegions.size(), false);
+            vector<bool> valid(curRegions.size(), false);
             for (int i_cur = 0; i_cur < curRegions.size(); ++i_cur) {
-                std::vector<int> ih;
-                std::vector<int> iw;
-                std::vector<int> il;
-                std::vector<int> it;
+                vector<int> ih;
+                vector<int> iw;
+                vector<int> il;
+                vector<int> it;
                 for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
                     ih.push_back(curRegions[i_cur][i_ite].i);
                     iw.push_back(curRegions[i_cur][i_ite].j);
@@ -167,14 +176,14 @@ namespace AQuA{
 //                        if (curRegions[i_cur][i_ite])
 //                    }
 //                }
-                int ih_min = *std::min_element(ih.begin(),ih.end());
-                int H0 = *std::max_element(ih.begin(),ih.end()) - ih_min + 1;
-                int iw_min = *std::min_element(iw.begin(),iw.end());
-                int W0 = *std::max_element(iw.begin(),iw.end()) - iw_min + 1;
-                int il_min = *std::min_element(il.begin(),il.end());
-                int L0 = *std::max_element(il.begin(),il.end()) - il_min + 1;
-                int it_min = *std::min_element(it.begin(),it.end());
-                int T0 = *std::max_element(it.begin(),it.end()) - it_min + 1;
+                int ih_min = *min_element(ih.begin(),ih.end());
+                int H0 = *max_element(ih.begin(),ih.end()) - ih_min + 1;
+                int iw_min = *min_element(iw.begin(),iw.end());
+                int W0 = *max_element(iw.begin(),iw.end()) - iw_min + 1;
+                int il_min = *min_element(il.begin(),il.end());
+                int L0 = *max_element(il.begin(),il.end()) - il_min + 1;
+                int it_min = *min_element(it.begin(),it.end());
+                int T0 = *max_element(it.begin(),it.end()) - it_min + 1;
                 for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {
                     ih[i_ite] = ih[i_ite] - ih_min;
                     iw[i_ite] = iw[i_ite] - iw_min;
@@ -226,7 +235,7 @@ namespace AQuA{
             for (int i_cur = 0; i_cur < curRegions.size(); ++i_cur) {// different regions
                 if (valid[i_cur]){
                     ++valid_count;
-                    std::vector<Point_struct> region_result;
+                    vector<Point_struct> region_result;
                     for (int i_ite = 0; i_ite < curRegions[i_cur].size(); ++i_ite) {// different points in a region
                         int tt = curRegions[i_cur][i_ite].t;
                         int kk = curRegions[i_cur][i_ite].k;
@@ -245,7 +254,7 @@ namespace AQuA{
             }//for(i_cur)
             nReg += valid_count;
         }//for(k_thr)
-//        std::cout<<"number of regions detected: "<<arLst.size()<<std::endl;
+//        cout<<"number of regions detected: "<<arLst.size()<<endl;
         opts.arLst1 = arLst;
         return arLst;
     }//acDetect()
@@ -256,12 +265,13 @@ namespace AQuA{
      * active region detection and update overlay map
      */
     void actRun(){
-        std::cout<< "--------start active region detecting--------"<<std::endl;
-        bool*** evtSpatialMask = createEvtSpatialMask();
-//        std::vector<std::vector<cv::Mat>> dF1 = load4DData_clean("C:/Users/Kevin Qiao/Desktop/AQuA_data/dF_real.mat","dF");
+        cout<< "--------start active region detecting--------"<<endl;
+
+        bool*** evtSpatialMask = createEvtSpatialMask(opts.data1_org[0][0].rows,opts.data1_org[0][0].cols,opts.data1_org[0].size());
+//        vector<vector<cv::Mat>> dF1 = load4DData_clean("C:/Users/Kevin Qiao/Desktop/AQuA_data/dF_real.mat","dF");
         //foreground and seed detection
         acDetect(opts.dF1, evtSpatialMask);
-        release3dMatrix_bool(evtSpatialMask,H,W);
+        release3dMatrix_bool(evtSpatialMask,opts.data1_org[0][0].rows,opts.data1_org[0][0].cols);
     }
 
 }
