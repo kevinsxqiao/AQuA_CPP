@@ -13,6 +13,7 @@ namespace AQuA{
      */
     vector<vector<int>> bwconncomp4D(const vector<vector<cv::Mat>>& BW){
         vector<vector<cv::Mat>> visited(BW.size(),vector<cv::Mat>(BW[0].size()));
+        #pragma omp parallel for collapse(2)
         for (int t = 0; t < BW.size(); ++t) {
             for (int k = 0; k < BW[0].size(); ++k) {
                 visited[t][k] = cv::Mat::zeros(BW[0][0].rows, BW[0][0].cols, CV_8U);
@@ -43,21 +44,22 @@ namespace AQuA{
                                 current = queue.front();
                                 queue.pop();
                                 component.push_back(current);
+                                Point_struct cur = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size());
                                 for (int dti = 0; dti < 3; ++dti) {
                                     for (int dki = 0; dki < 3; ++dki) {
                                         for (int dxi = 0; dxi < 3; ++dxi) {
                                             for (int dyi = 0; dyi < 3; ++dyi) {
-                                                int nt = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).t + dt[dti];
-                                                int nz = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).k + dz[dki];
-                                                int nx = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).i + dx[dxi];
-                                                int ny = ind2sub(current,BW[0][0].rows,BW[0][0].cols,BW[0].size()).j + dy[dyi];
+                                                int nt = cur.t + dt[dti];
+                                                int nz = cur.k + dz[dki];
+                                                int nx = cur.i + dx[dxi];
+                                                int ny = cur.j + dy[dyi];
 
                                                 if ((nx >= 0) && (nx < BW[0][0].rows) && (ny >= 0) && (ny < BW[0][0].cols) && (nz >= 0) &&
                                                 (nz < BW[0].size()) && (nt >= 0) && (nt < BW.size()) &&
                                                 (BW[nt][nz].at<uchar>(nx,ny)==1) && (visited[nt][nz].at<uchar>(nx,ny)!=1)) {
                                                         int curr;
 //                                                        Point_struct curr;
-                                                        curr = sub2ind(nt,nz,nx,ny,BW[0][0].rows,BW[0][0].cols,BW[0].size());
+                                                        curr = sub2ind(nx,ny,nz,nt,BW[0][0].rows,BW[0][0].cols,BW[0].size());
                                                         queue.push(curr);
                                                         visited[nt][nz].at<uchar>(nx,ny) = 1;
                                                 }//if
@@ -157,7 +159,7 @@ namespace AQuA{
                 }
             }//for(t)
             vector<vector<Point_struct>> curRegions;
-            curRegions = bw2Reg(selectMap);
+//            curRegions = bw2Reg(selectMap);
             vector<bool> valid(curRegions.size(), false);
             for (int i_cur = 0; i_cur < curRegions.size(); ++i_cur) {
                 vector<int> ih;

@@ -436,23 +436,29 @@ namespace AQuA{
 
     mxArray* cvDataToMxArray(const vector<vector<cv::Mat>>& data) {
         // Calculate the size of the 4D matrix
-        mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
+        mwSize dims[4] = {static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0][0].rows),
+                          static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
 
         // Create a 4D mxArray
         mxArray* pMxArray = mxCreateNumericArray(4, dims, mxUINT8_CLASS, mxREAL);
 
         // Copy data from your vector to the mxArray
-        uchar* ptr = reinterpret_cast<uchar*>(mxGetData(pMxArray));
+        uchar* ptr = reinterpret_cast<uchar*>(mxGetUint8s(pMxArray));
         for (int t = 0; t < data.size(); ++t) {
             for (int k = 0; k < data[t].size(); ++k) {
                 const cv::Mat& mat = data[t][k];
-                memcpy(ptr, mat.data, mat.rows * mat.cols * sizeof(uchar));
-                ptr += mat.rows * mat.cols;
+                for (int i = 0; i < mat.cols; ++i) {
+                    for (int j = 0; j < mat.rows; ++j) {
+                        *ptr = mat.at<uchar>(j, i);
+                        ++ptr;
+                    }
+                }
             }
         }
 
         return pMxArray;
     }
+
 
 
     mxArray* cvDataToMxArray(const vector<cv::Mat>& data) {

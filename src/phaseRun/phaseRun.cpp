@@ -30,35 +30,53 @@ namespace AQuA{
         return dst;
     }//myResize()
 
-/*
-    Score_struct getSeedScore_DS4(vector<Point_struct> pix, vector<vector<cv::Mat>> datVec, int H0, int W0, int t_scl){
+
+    Score_struct getSeedScore_DS4(const vector<int>& pix, const vector<vector<cv::Mat>>& datVec, int H, int W, int L, int T, float t_scl){
         Score_struct result;
         //down sample
+        vector<ushort> ih;
+        vector<ushort> iw;
+        vector<ushort> il;
+        vector<ushort> it;
+        for (int ii_ite = 0; ii_ite < pix.size(); ++ii_ite) {
+            ih.emplace_back(ind2sub(pix[ii_ite],H,W,L).i);
+            iw.emplace_back(ind2sub(pix[ii_ite],H,W,L).j);
+            il.emplace_back(ind2sub(pix[ii_ite],H,W,L).k);
+            it.emplace_back(ind2sub(pix[ii_ite],H,W,L).t);
+        }
+
         for (int i = 0; i < pix.size(); ++i) {
-            pix[i].t = pix[i].t/t_scl;
+            it[i] = floor(it[i]/t_scl);
         }
         int T0 = floor(T/t_scl);
+
         cv::Mat select = cv::Mat::zeros(pix.size(),1,CV_8U);
         for (int i = 0; i < pix.size(); ++i) {
-            if (pix[i].t <= T0){
-                select.at<uint>(i,0) = 1;
-            }
-        }
-        unordered_set<int> fgPix;
-        unordered_map<int,int> a_counts;
-        for (int i = 0; i < pix.size(); ++i) {
-            if (select.at<uint>(i,0) == 1){
-                int ind = sub2ind(pix[i].i,pix[i].j,pix[i].k,pix[i].t,H0,W0,L);
-                a_counts[ind]++;
-            }
-        }
-        for (const auto& pair: a_counts) {
-            if (pair.second > (t_scl/2)){
-                fgPix.insert(pair.first);
+            if (it[i] < T0){
+                select.at<uchar>(i,0) = 1;
             }
         }
 
-        if (fgPix.size() ==0){
+        vector<int> pix0;
+        for (int i = 0; i < ih.size(); ++i) {
+                if (select.at<uchar>(i,0) == 1) {
+                    pix0.emplace_back(sub2ind(ih[i],iw[i],il[i],it[i],H,W,L));
+                }
+        }
+
+        unordered_map<int,int> a_counts;
+        for (const int& num : pix0) {
+            ++a_counts[num];
+        }
+        std::vector<int> fgPix;
+        for (const auto& pair : a_counts) {
+            if (pair.second > t_scl / 2) {
+                fgPix.emplace_back(pair.first);
+            }
+        }
+        sort(fgPix.begin(), fgPix.end());
+
+        if (fgPix.empty()){
             result.z_score1 = 0;
             result.z_score2 = 0;
             result.t_score1 = 0;
@@ -67,26 +85,29 @@ namespace AQuA{
         }
 
         //find neighbor
-        vector<int> ih;
-        vector<int> iw;
-        vector<int> il;
-        vector<int> it;
-        for (auto const& fg:fgPix) {
-            int h = ind2sub(fg,H0,W0,L).i;
-            int w = ind2sub(fg,H0,W0,L).j;
-            int k = ind2sub(fg,H0,W0,L).k;
-            int t = ind2sub(fg,H0,W0,L).t;
-            ih.emplace_back(h);
-            iw.emplace_back(w);
-            il.emplace_back(k);
-            it.emplace_back(t);
+        ih.clear();
+        iw.clear();
+        il.clear();
+        it.clear();
+        for (int i = 0; i < fgPix.size(); ++i) {
+            ih.emplace_back(ind2sub(fgPix[i],H,W,L).i);
+            iw.emplace_back(ind2sub(fgPix[i],H,W,L).j);
+            il.emplace_back(ind2sub(fgPix[i],H,W,L).k);
+            it.emplace_back(ind2sub(fgPix[i],H,W,L).t);
         }
+
         vector<int> ihwOrg;
-        unordered_set<int> ihw;
+        unordered_set<int> ihw_temp;
+        vector<int> ihw;
         for (int i = 0; i < ih.size(); ++i) {
-            ihwOrg.emplace_back(sub2ind(ih[i],iw[i],il[i],H0,W0));
-            ihw.insert(ihwOrg[i]);
+            ihwOrg.emplace_back(sub2ind(ih[i],iw[i],il[i],H,W));
+            ihw_temp.insert(ihwOrg[i]);
         }
+        for (const auto& i:ihw_temp) {
+            ihw.emplace_back(i);
+        }
+        sort(ihw.begin(), ihw.end());
+
         vector<int> sz;
         vector<vector<float>> fgAll(ihw.size());
         vector<vector<float>> bgL(ihw.size());
@@ -94,23 +115,26 @@ namespace AQuA{
         vector<vector<float>> nanVec(ihw.size());
         int cnt = 0;
         int cnt2 = 0;
-        int count = 0;
         vector<float> noise;
         vector<int> degreeOfFreedoms;
-        for (const auto& i:ihw) {
+
+        for (int ii_ihw = 0; ii_ihw < ihw.size(); ++ii_ihw) {
             vector<int> curIt;
-            for (int ii = 0; ii < ihwOrg.size(); ++ii) {
-                if (i == ihwOrg[ii]){
-                    curIt.emplace_back(it[ii]);
+            for (int ii_ite = 0; ii_ite < ihwOrg.size(); ++ii_ite) {
+                auto ite = find(ihwOrg.begin(), ihwOrg.end(),ihw[ii_ihw]);
+                if (ite != ihw.end()){
+                    int index = distance(ihw.begin(),ite);
+                    curIt.emplace_back(it[index]);
                 }
-            }//for(ii)
+            }//for(ii_ite)
+
             //get normalized down sampled curve
             cv::Mat curve0 = cv::Mat(T,1,CV_32F);
-            int h_ihw = ind2sub(i,H0,W0).i;
-            int w_ihw = ind2sub(i,H0,W0).j;
-            int k_ihw = ind2sub(i,H0,W0).k;
+            int h_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).i;
+            int w_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).j;
+            int k_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).k;
             for (int t = 0; t < T; ++t) {
-                curve0.at<float>(t,0) = datVec[t][k_ihw].at<float>(h_ihw,w_ihw);
+                curve0.at<float>(t,0) = datVec[t][k_datVec].at<float>(h_datVec,w_datVec);
             }
             cv::Mat curve = myResize(curve0,t_scl,t_scl);
             cv::multiply(curve,sqrt(t_scl),curve);
@@ -126,14 +150,14 @@ namespace AQuA{
             for (int tt = t1+1; tt <= min(T0, t1 + dur); ++tt) {
                 t_Right.emplace_back(tt);
             }
-            for (const auto& ite:curIt) {
-                fgAll[count].emplace_back(curve.at<float>(ite,0));
+            for (int ite = 0;ite<curIt.size();++ite) {
+                fgAll[ii_ihw].emplace_back(curve.at<float>(ite,0));
             }
-            for (const auto& ite:t_Left) {
-                bgL[count].emplace_back(curve.at<float>(ite,0));
+            for (int ite = 0;ite<t_Left.size();++ite) {
+                bgL[ii_ihw].emplace_back(curve.at<float>(ite,0));
             }
-            for (const auto& ite:t_Right) {
-                bgR[count].emplace_back(curve.at<float>(ite,0));
+            for (int ite = 0;ite<t_Right.size();++ite) {
+                bgR[ii_ihw].emplace_back(curve.at<float>(ite,0));
             }
             vector<int> diff;
             vector<int> t0_t1;
@@ -142,8 +166,8 @@ namespace AQuA{
             }
             set_difference(t0_t1.begin(),t0_t1.end(),curIt.begin(),curIt.end(),
                                 inserter(diff,diff.begin()));
-            for (const auto& ite:diff) {
-                nanVec[count].emplace_back(curve.at<float>(ite,0));
+            for (int ite = 0;ite<diff.size();++ite) {
+                nanVec[ii_ihw].emplace_back(curve.at<float>(ite,0));
             }
 
             //jump one point
@@ -153,7 +177,7 @@ namespace AQuA{
                 for (auto& ite: t_Left) {
                     ite -= 1;
                 }
-                t0 = max(1,*min_element(t_Left.begin(),t_Left.end())*t_scl);
+                t0 = max(static_cast<float>(1),*min_element(t_Left.begin(),t_Left.end())*t_scl);
                 t1 = *max_element(t_Left.begin(),t_Left.end())*t_scl;
                 for (int tt = t0;tt <= t1;++tt) {
                     difL.emplace_back(pow((curve0.at<float>(tt,0)-curve0.at<float>(tt-1,0)),2));
@@ -165,12 +189,13 @@ namespace AQuA{
                 }
                 cnt2 = cnt2 + t1 -t0 + 2;
             }//if(!t_left.empty())
+
             if (!t_Right.empty()){
                 for (auto& ite: t_Right) {
                     ite += 1;
                 }
                 t0 = *min_element(t_Right.begin(),t_Right.end())*t_scl;
-                t1 = min(*max_element(t_Right.begin(),t_Right.end())*t_scl, T-2);
+                t1 = min(static_cast<float>(T-2), *max_element(t_Right.begin(),t_Right.end())*t_scl);
                 for (int tt = t0;tt <= t1;++tt) {
                     difR.emplace_back(pow((curve0.at<float>(tt,0)-curve0.at<float>(tt+1,0)),2));
                 }
@@ -180,19 +205,21 @@ namespace AQuA{
                     }
                 }
                 cnt2 = cnt2 + t1 -t0 + 2;
-            }//if(!t_left.empty())
+            }//if(!t_Right.empty())
+
             noise.insert(noise.end(),difL.begin(),difL.end());
             noise.insert(noise.end(),difR.begin(),difR.end());
             degreeOfFreedoms.emplace_back(difL.size());
             degreeOfFreedoms.emplace_back(difR.size());
-            count++;
-        }//for(ihw)
+            cout<<1;
+
+        }//for(ii_ihw)
 
 
 
 
     }//getSeedScore_DS4
-    */
+
 
 
     vector<vector<vector<cv::Mat>>> normalizeAndResize(const vector<vector<cv::Mat>>& dataOrg){
@@ -207,6 +234,7 @@ namespace AQuA{
         //reScl dFOrg
         for (int ii = 0; ii < scaleRatios.size(); ++ii) {
             float scaleRatio = scaleRatios[ii];
+            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
 //                    cv::resize(dataOrg[t][k],datDS[t][k],cv::Size(),1/scaleRatio,1/scaleRatio, cv::INTER_AREA);
@@ -216,6 +244,7 @@ namespace AQuA{
 
             //consider the possible noise correlation, need to re-estimate noise
             vector<cv::Mat> curVarMap(L);
+            #pragma omp parallel for
             for (int k = 0; k < L; ++k) {
                 curVarMap[k] = cv::Mat(cv::Mat(datDS[0][0].rows,datDS[0][0].cols,CV_32F));
                 cv::Mat sum = cv::Mat::zeros(datDS[0][0].rows,datDS[0][0].cols,CV_32F);
@@ -241,6 +270,7 @@ namespace AQuA{
             vector<cv::Mat> var1(L);
             vector<cv::Mat> var2(L);
             vector<cv::Mat> curStdMap(L);
+            #pragma omp parallel for
             for (int k = 0; k < L; ++k) {
                 var1[k] = myResize(opts.tempVarOrg1[k],scaleRatio,scaleRatio);
 
@@ -261,6 +291,7 @@ namespace AQuA{
                 }
             }//for(k)
 
+            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
                     datResize[ii][t][k] = datDS[t][k];  //zScoreMap scaling
@@ -305,6 +336,7 @@ namespace AQuA{
 
         //assign saturation part can always be selected when checking seed
         if (opts.maxValueDat1 == pow(2, opts.BitDepth) - 1){
+            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
                     cv::Mat mask = (dataOrg[t][k]==1);
@@ -315,6 +347,7 @@ namespace AQuA{
 
         vector<int> regSz(arLst.size());
         vector<vector<cv::Mat>> activeMap(T,vector<cv::Mat>(L));
+        #pragma omp parallel for collapse(2)
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {
                 activeMap[t][k] = cv::Mat::zeros(H,W,CV_16U);
@@ -339,40 +372,44 @@ namespace AQuA{
 
         //down sampled data
         vector<vector<vector<cv::Mat>>> validMaps(scaleRatios.size(),vector<vector<cv::Mat>>(T,vector<cv::Mat>(L))); //treat as boolean
+        /*
+         * datResize is flattened in MATLAB, remain 4D matrix in C++
+         */
         vector<vector<vector<cv::Mat>>> datResize = normalizeAndResize(dataOrg); //normalized data to do significance test
         vector<vector<vector<cv::Mat>>> dFResize(scaleRatios.size(),vector<vector<cv::Mat>>(T,vector<cv::Mat>(L))); //down sampled data to do selection
         vector<float> H0s(scaleRatios.size(), 0);
         vector<float> W0s(scaleRatios.size(), 0);
-        for (int ii = 0; ii < scaleRatios.size(); ++ii) {
-//            datResize[ii] = reshape
+        for (int j = 0; j < scaleRatios.size(); ++j) {
+//            datResize[j] = reshape
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
 //                    cv::Mat temp_dF;
 //                    cv::Mat temp_validMaps;
-//                    cv::resize(dF[t][k], temp_dF, cv::Size(), 1 / scaleRatios[ii], 1 / scaleRatios[ii], cv::INTER_AREA);
-//                    cv::resize(activeMap[t][k], temp_validMaps, cv::Size(), 1 / scaleRatios[ii], 1 / scaleRatios[ii], cv::INTER_AREA);
-//                    temp_dF = myResize(dF[t][k], scaleRatios[ii], scaleRatios[ii]);
-//                    temp_validMaps = myResize(activeMap[t][k],scaleRatios[ii],scaleRatios[ii]);
-                    dFResize[ii][t][k] = myResize(dF[t][k], scaleRatios[ii], scaleRatios[ii]);
-                    validMaps[ii][t][k] = myResize(activeMap[t][k],scaleRatios[ii],scaleRatios[ii]);
+//                    cv::resize(dF[t][k], temp_dF, cv::Size(), 1 / scaleRatios[j], 1 / scaleRatios[j], cv::INTER_AREA);
+//                    cv::resize(activeMap[t][k], temp_validMaps, cv::Size(), 1 / scaleRatios[j], 1 / scaleRatios[j], cv::INTER_AREA);
+//                    temp_dF = myResize(dF[t][k], scaleRatios[j], scaleRatios[j]);
+//                    temp_validMaps = myResize(activeMap[t][k],scaleRatios[j],scaleRatios[j]);
+                    dFResize[j][t][k] = myResize(dF[t][k], scaleRatios[j], scaleRatios[j]);
+                    validMaps[j][t][k] = myResize(activeMap[t][k],scaleRatios[j],scaleRatios[j]);
                 }//for(k)
             }//for(t)
-            H0s[ii] = ceil(H/scaleRatios[ii]);
-            W0s[ii] = ceil(W/scaleRatios[ii]);
-        }//for(ii)
+            H0s[j] = ceil(H/scaleRatios[j]);
+            W0s[j] = ceil(W/scaleRatios[j]);
+        }//for(j)
 
         //seed map
         vector<vector<cv::Mat>> zscoreMap(T,vector<cv::Mat>(L));
+        #pragma omp parallel for collapse(2)
         for (int t = 0; t < dF.size(); ++t) {
             for (int k = 0; k < dF[0].size(); ++k) {
                 zscoreMap[t][k] = cv::Mat::zeros(dF[0][0].rows,dF[0][0].cols, CV_32F);
             }
         }//for(t)
 
-        for (int ii = 0; ii < Thrs.size(); ++ii) { // threshold
+        for (int ii = 0; ii < Thrs.size(); ++ii) { // threshold --k
             float curThr = Thrs[ii];
 
-            for (int ii_ds = 0; ii_ds < scaleRatios.size(); ++ii_ds) { // down sample rate
+            for (int ii_ds = 0; ii_ds < scaleRatios.size(); ++ii_ds) { // down sample rate --j
                 float H0 = H0s[ii_ds];
                 float W0 = W0s[ii_ds];
                 float scaleRatio = scaleRatios[ii_ds];
@@ -385,12 +422,18 @@ namespace AQuA{
                 }//for(ind)
 
                 vector<vector<cv::Mat>> selectMap(dFResize[ii_ds].size(),vector<cv::Mat>(dFResize[ii_ds][0].size()));
+                #pragma omp parallel for collapse(2)
                 for (int t = 0; t < dFResize[ii_ds].size(); ++t) {
-
                     for (int k = 0; k < dFResize[ii_ds][0].size(); ++k) {
                         selectMap[t][k] = cv::Mat::zeros(dFResize[ii_ds][0][0].rows, dFResize[ii_ds][0][0].cols, CV_8U);
                         cv::Mat mask = ((dFResize[ii_ds][t][k]>curThr) & (validMaps[ii_ds][t][k]!=0));
                         selectMap[t][k].setTo(1,mask);
+//                        cv::Mat nonZero;
+//                        cv::findNonZero(selectMap[t][k],nonZero);
+//                        for (int i = 0; i < nonZero.total(); ++i) {
+//                            cout<<sub2ind(nonZero.at<cv::Point>(i).x,nonZero.at<cv::Point>(i).y,k,t,
+//                                          selectMap[0][0].rows,selectMap[0][0].cols,dFResize[ii_ds][0].size())<<" ";
+//                        }
 //                        if (cv::countNonZero(selectMap[t][k])>0){
 //                            cout<<"error"<< endl;
 //                        }
@@ -408,28 +451,39 @@ namespace AQuA{
 //                writeDataToMatFile(selectMap, "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/sel.mat");
                 vector<vector<int>> curRegions = bw2Reg(selectMap);
                 // rough filter -- for acceleration
-                for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) {
-                    if (curRegions[ii_cur].size() <= (opts.minSize / pow(scaleRatio,2) * opts.minDur / 3)){
-                        curRegions.erase(curRegions.begin() + ii_cur);
-                    }
-                }
+//                for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) {
+//                    if (curRegions[ii_cur].size() <= (opts.minSize / pow(scaleRatio,2) * opts.minDur / 3)){
+//                        curRegions.erase(curRegions.begin() + ii_cur);
+//                        --ii_cur;
+//                    }
+//                }
+                curRegions.erase(remove_if(curRegions.begin(), curRegions.end(),
+                    [&](const auto& region) {
+                        return region.size() <= (opts.minSize / pow(scaleRatio, 2) * opts.minDur / 3);
+                    }), curRegions.end()); //move all the wanted elements to the front, and iterator points at next pos of the element wanted, then delete
 
-                for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) {
+
+                for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) { //--i
                     unordered_set<int> ihw;
-                    vector<int> ih;
-                    vector<int> iw;
-                    vector<int> il;
-                    vector<int> it;
+                    vector<int> pix;
+                    vector<ushort> ih;
+                    vector<ushort> iw;
+                    vector<ushort> il;
+                    vector<ushort> it;
                     for (int ii_ite = 0; ii_ite < curRegions[ii_cur].size(); ++ii_ite) {
-                        int pix = curRegions[ii_cur][ii_ite];
+                        pix.emplace_back(curRegions[ii_cur][ii_ite]);
+                    }
+                    sort(pix.begin(), pix.end());
 
-                        ih.emplace_back(ind2sub(pix,H0,W0,L).i);
-                        iw.emplace_back(ind2sub(pix,H0,W0,L).j);
-                        il.emplace_back(ind2sub(pix,H0,W0,L).k);
-                        it.emplace_back(ind2sub(pix,H0,W0,L).t);
+                    for (int ii_ite = 0; ii_ite < pix.size(); ++ii_ite) {
+                        Point_struct pix_temp = ind2sub(pix[ii_ite],H0,W0,L);
+                        ih.emplace_back(pix_temp.i);
+                        iw.emplace_back(pix_temp.j);
+                        il.emplace_back(pix_temp.k);
+                        it.emplace_back(pix_temp.t);
                         ihw.insert(sub2ind(ih[ii_ite],iw[ii_ite],il[ii_ite],H0,W0));
                     }
-
+                    //CONTINUE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     int dur = *max_element(it.begin(),it.end()) - *min_element(it.begin(), it.end());
                     int arLabel_hs = ih[0] * scaleRatio;
                     int arLabel_he = min(static_cast<float>(H),ih[0]*scaleRatio + 1);
@@ -437,9 +491,9 @@ namespace AQuA{
                     int arLabel_we = min(static_cast<float>(W),iw[0]*scaleRatio + 1);
                     vector<int> arLabel;
                     for (int i = arLabel_hs; i <= arLabel_he; ++i) {
-                        for (int j = arLabel_ws; j < arLabel_we; ++j) {
+                        for (int j = arLabel_ws; j <= arLabel_we; ++j) {
                             if (activeMap[it[0]][il[0]].at<ushort>(i, j) != 0) {
-                                arLabel.emplace_back(static_cast<int>(activeMap[it[0]][il[0]].at<ushort>(i, j)));
+                                arLabel.emplace_back(activeMap[it[0]][il[0]].at<ushort>(i, j));
                             }
                         }
                     }
@@ -471,49 +525,49 @@ namespace AQuA{
                         }
                     }//for(col)
 
+//                    cv::Mat mask = ((ihOrg < H) & (iwOrg < W));
+                    select.setTo(1,((ihOrg < H) & (iwOrg < W)));
+//                    for (int i = 0; i < ih.size(); ++i) {
+//                        for (int j = 0; j < scaleRatio * scaleRatio; ++j) {
+//                            if ((ihOrg.at<float>(i,j) <= H) && (iwOrg.at<float>(i,j) <= W)){
+//                                select.at<uint>(i,j) = 1;
+//                            }
+//                        }
+//                    }
+
+                    vector<int> pixOrg;
                     for (int i = 0; i < ih.size(); ++i) {
                         for (int j = 0; j < scaleRatio * scaleRatio; ++j) {
-                            if ((ihOrg.at<float>(i,j) <= H) && (iwOrg.at<float>(i,j) <= W)){
-                                select.at<uint>(i,j) = 1;
+                            if (select.at<uchar>(i,j) == 1) {
+                                pixOrg.emplace_back(sub2ind(ihOrg.at<ushort>(i,j),iwOrg.at<ushort>(i,j),ilOrg.at<ushort>(i,j),
+                                                            itOrg.at<ushort>(i,j),H,W,L));
                             }
                         }
                     }
-                    vector<Point_struct> pixOrg;
-                    for (int i = 0; i < ih.size(); ++i) {
-                        for (int j = 0; j < scaleRatio * scaleRatio; ++j) {
-                            if (select.at<uint>(i,j) == 1) {
-                                Point_struct temp;
-                                temp.i = ihOrg.at<float>(i,j);
-                                temp.j = iwOrg.at<float>(i,j);
-                                temp.k = ilOrg.at<float>(i,j);
-                                temp.t = itOrg.at<float>(i,j);
-                                pixOrg.emplace_back(temp);
-                            }
-                        }
-                    }
-                    bool find_flag = false;
+
+                    bool notempty = false;
                     for (int num = 0; num < pixOrg.size(); ++num) {
-                        int i = pixOrg[num].i;
-                        int j = pixOrg[num].j;
-                        int k = pixOrg[num].k;
-                        int t = pixOrg[num].t;
-                        if (zscoreMap[t][k].at<float>(i,j)>0){
-                            find_flag = true;
+                        if (zscoreMap[ind2sub(pixOrg[num],H,W,L).t][ind2sub(pixOrg[num],H,W,L).k]
+                            .at<float>(ind2sub(pixOrg[num],H,W,L).i,ind2sub(pixOrg[num],H,W,L).j)>0) {
+                            notempty = true;
                             break;
                         }
                     }
-                    if ((pixOrg.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val]*opts.seedSzRatio)) && find_flag){
+
+                    if ((pixOrg.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val]*opts.seedSzRatio)) && notempty){
                         continue;
                     }
 
                     //calculate significance
-                    float t_scl =  max(static_cast<double>(1), round(dur/opts.TPatch));
+                    float t_scl = max(1.0, round(static_cast<double>(dur)/opts.TPatch));
+                    getSeedScore_DS4(pix,datResize[ii_ds],H0,W0,L,T,t_scl);
 
 
 
-                }//for(ii_cur)
-            }//for(ii_ds) --scaleRatios.size()
-        }//for(ii) --Thrs.size()
+
+                }//for(ii_cur) --curRegions --i
+            }//for(ii_ds) --scaleRatios --j
+        }//for(ii) --Thrs --k
         
 
 
