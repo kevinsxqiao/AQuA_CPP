@@ -34,10 +34,10 @@ namespace AQuA{
     Score_struct getSeedScore_DS4(const vector<int>& pix, const vector<vector<cv::Mat>>& datVec, int H, int W, int L, int T, float t_scl){
         Score_struct result;
         //down sample
-        vector<ushort> ih;
-        vector<ushort> iw;
-        vector<ushort> il;
-        vector<ushort> it;
+        vector<int> ih;
+        vector<int> iw;
+        vector<int> il;
+        vector<int> it;
         for (int ii_ite = 0; ii_ite < pix.size(); ++ii_ite) {
             ih.emplace_back(ind2sub(pix[ii_ite],H,W,L).i);
             iw.emplace_back(ind2sub(pix[ii_ite],H,W,L).j);
@@ -50,18 +50,18 @@ namespace AQuA{
         }
         int T0 = floor(T/t_scl);
 
-        cv::Mat select = cv::Mat::zeros(pix.size(),1,CV_8U);
+        cv::Mat select = cv::Mat::ones(pix.size(),1,CV_8U);
         for (int i = 0; i < pix.size(); ++i) {
-            if (it[i] < T0){
-                select.at<uchar>(i,0) = 1;
+            if (it[i] >= T0){
+                select.at<uchar>(i,0) = 0;
             }
         }
 
         vector<int> pix0;
         for (int i = 0; i < ih.size(); ++i) {
-                if (select.at<uchar>(i,0) == 1) {
-                    pix0.emplace_back(sub2ind(ih[i],iw[i],il[i],it[i],H,W,L));
-                }
+            if (select.at<uchar>(i,0) == 1) {
+                pix0.emplace_back(sub2ind(ih[i],iw[i],il[i],it[i],H,W,L));
+            }
         }
 
         unordered_map<int,int> a_counts;
@@ -98,14 +98,12 @@ namespace AQuA{
 
         vector<int> ihwOrg;
         unordered_set<int> ihw_temp;
-        vector<int> ihw;
+
         for (int i = 0; i < ih.size(); ++i) {
             ihwOrg.emplace_back(sub2ind(ih[i],iw[i],il[i],H,W));
             ihw_temp.insert(ihwOrg[i]);
         }
-        for (const auto& i:ihw_temp) {
-            ihw.emplace_back(i);
-        }
+        vector<int> ihw(ihw_temp.begin(), ihw_temp.end());
         sort(ihw.begin(), ihw.end());
 
         vector<int> sz;
@@ -118,21 +116,21 @@ namespace AQuA{
         vector<float> noise;
         vector<int> degreeOfFreedoms;
 
-        for (int ii_ihw = 0; ii_ihw < ihw.size(); ++ii_ihw) {
+        for (int ii_ihw = 0; ii_ihw < ihw.size(); ++ii_ihw) { // --i
             vector<int> curIt;
-            for (int ii_ite = 0; ii_ite < ihwOrg.size(); ++ii_ite) {
-                auto ite = find(ihwOrg.begin(), ihwOrg.end(),ihw[ii_ihw]);
-                if (ite != ihw.end()){
-                    int index = distance(ihw.begin(),ite);
-                    curIt.emplace_back(it[index]);
-                }
-            }//for(ii_ite)
+            vector<int>::iterator iter = ihwOrg.begin();
+            while ((iter = find(iter, ihwOrg.end(), ihw[ii_ihw])) != ihwOrg.end()) {
+                curIt.push_back(it[distance(ihwOrg.begin(), iter)]);
+                ++iter;
+            }
+
 
             //get normalized down sampled curve
             cv::Mat curve0 = cv::Mat(T,1,CV_32F);
             int h_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).i;
             int w_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).j;
             int k_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).k;
+            #pragma omp parallel for
             for (int t = 0; t < T; ++t) {
                 curve0.at<float>(t,0) = datVec[t][k_datVec].at<float>(h_datVec,w_datVec);
             }
@@ -151,13 +149,13 @@ namespace AQuA{
                 t_Right.emplace_back(tt);
             }
             for (int ite = 0;ite<curIt.size();++ite) {
-                fgAll[ii_ihw].emplace_back(curve.at<float>(ite,0));
+                fgAll[ii_ihw].emplace_back(curve.at<float>(curIt[ite],0));
             }
             for (int ite = 0;ite<t_Left.size();++ite) {
-                bgL[ii_ihw].emplace_back(curve.at<float>(ite,0));
+                bgL[ii_ihw].emplace_back(curve.at<float>(t_Left[ite],0));
             }
             for (int ite = 0;ite<t_Right.size();++ite) {
-                bgR[ii_ihw].emplace_back(curve.at<float>(ite,0));
+                bgR[ii_ihw].emplace_back(curve.at<float>(t_Right[ite],0));
             }
             vector<int> diff;
             vector<int> t0_t1;
@@ -167,7 +165,7 @@ namespace AQuA{
             set_difference(t0_t1.begin(),t0_t1.end(),curIt.begin(),curIt.end(),
                                 inserter(diff,diff.begin()));
             for (int ite = 0;ite<diff.size();++ite) {
-                nanVec[ii_ihw].emplace_back(curve.at<float>(ite,0));
+                nanVec[ii_ihw].emplace_back(curve.at<float>(diff[ite],0));
             }
 
             //jump one point
@@ -211,11 +209,10 @@ namespace AQuA{
             noise.insert(noise.end(),difR.begin(),difR.end());
             degreeOfFreedoms.emplace_back(difL.size());
             degreeOfFreedoms.emplace_back(difR.size());
-            cout<<1;
 
         }//for(ii_ihw)
 
-
+        cout<<1;
 
 
     }//getSeedScore_DS4
@@ -464,12 +461,12 @@ namespace AQuA{
 
 
                 for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) { //--i
-                    unordered_set<int> ihw;
+                    unordered_set<int> ihw_temp;
                     vector<int> pix;
-                    vector<ushort> ih;
-                    vector<ushort> iw;
-                    vector<ushort> il;
-                    vector<ushort> it;
+                    vector<int> ih;
+                    vector<int> iw;
+                    vector<int> il;
+                    vector<int> it;
                     for (int ii_ite = 0; ii_ite < curRegions[ii_cur].size(); ++ii_ite) {
                         pix.emplace_back(curRegions[ii_cur][ii_ite]);
                     }
@@ -481,10 +478,11 @@ namespace AQuA{
                         iw.emplace_back(pix_temp.j);
                         il.emplace_back(pix_temp.k);
                         it.emplace_back(pix_temp.t);
-                        ihw.insert(sub2ind(ih[ii_ite],iw[ii_ite],il[ii_ite],H0,W0));
+                        ihw_temp.insert(sub2ind(ih[ii_ite],iw[ii_ite],il[ii_ite],H0,W0));
                     }
-                    //CONTINUE HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    int dur = *max_element(it.begin(),it.end()) - *min_element(it.begin(), it.end());
+                    vector<int> ihw(ihw_temp.begin(), ihw_temp.end());
+                    sort(ihw.begin(), ihw.end());
+                    int dur = *max_element(it.begin(),it.end()) - *min_element(it.begin(), it.end()) + 1;
                     int arLabel_hs = ih[0] * scaleRatio;
                     int arLabel_he = min(static_cast<float>(H),ih[0]*scaleRatio + 1);
                     int arLabel_ws = iw[0] * scaleRatio;
@@ -493,14 +491,14 @@ namespace AQuA{
                     for (int i = arLabel_hs; i <= arLabel_he; ++i) {
                         for (int j = arLabel_ws; j <= arLabel_we; ++j) {
                             if (activeMap[it[0]][il[0]].at<ushort>(i, j) != 0) {
-                                arLabel.emplace_back(activeMap[it[0]][il[0]].at<ushort>(i, j));
+                                arLabel.emplace_back(static_cast<int>(activeMap[it[0]][il[0]].at<ushort>(i, j)));
                             }
                         }
                     }
                     int arLabel_val = *min_element(arLabel.begin(), arLabel.end());
 
                     //filter according to size and duration, also check seed detected or not
-                    if (dur < opts.minDur || ihw.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val]*opts.seedSzRatio) /
+                    if (dur < opts.minDur || ihw.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val-1] * opts.seedSzRatio) /
                                                          pow(scaleRatio,2)){
                         continue;
                     }
@@ -516,10 +514,10 @@ namespace AQuA{
                         if (add == scaleRatio+1){
                             add = 1;
                         }
-
+                        #pragma omp parallel for
                         for (int row = 0; row < ih.size(); ++row) {
-                            ihOrg.at<ushort>(row,col) = ih[row]*scaleRatio + add;
-                            iwOrg.at<ushort>(row,col) = iw[row]*scaleRatio + add;
+                            ihOrg.at<ushort>(row,col) = ih[row]*scaleRatio - 1 + add;  // matlab: (ih[]-1)*scaleRatio
+                            iwOrg.at<ushort>(row,col) = iw[row]*scaleRatio - 1 + tmp[col];
                             ilOrg.at<ushort>(row,col) = il[row];
                             itOrg.at<ushort>(row,col) = it[row];
                         }
@@ -536,25 +534,25 @@ namespace AQuA{
 //                    }
 
                     vector<int> pixOrg;
-                    for (int i = 0; i < ih.size(); ++i) {
-                        for (int j = 0; j < scaleRatio * scaleRatio; ++j) {
+                    for (int j = 0; j < scaleRatio * scaleRatio; ++j) {
+                        for (int i = 0; i < ih.size(); ++i) {
                             if (select.at<uchar>(i,j) == 1) {
-                                pixOrg.emplace_back(sub2ind(ihOrg.at<ushort>(i,j),iwOrg.at<ushort>(i,j),ilOrg.at<ushort>(i,j),
-                                                            itOrg.at<ushort>(i,j),H,W,L));
+                                pixOrg.emplace_back(sub2ind(ihOrg.at<ushort>(i,j),iwOrg.at<ushort>(i,j),
+                                                            ilOrg.at<ushort>(i,j),itOrg.at<ushort>(i,j),H,W,L));
                             }
                         }
                     }
 
-                    bool notempty = false;
+                    bool notEmpty = false;
                     for (int num = 0; num < pixOrg.size(); ++num) {
-                        if (zscoreMap[ind2sub(pixOrg[num],H,W,L).t][ind2sub(pixOrg[num],H,W,L).k]
-                            .at<float>(ind2sub(pixOrg[num],H,W,L).i,ind2sub(pixOrg[num],H,W,L).j)>0) {
-                            notempty = true;
+                        Point_struct pix_temp = ind2sub(pixOrg[num],H,W,L);
+                        if (zscoreMap[pix_temp.t][pix_temp.k].at<float>(pix_temp.i,pix_temp.j)>0) {
+                            notEmpty = true;
                             break;
                         }
                     }
 
-                    if ((pixOrg.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val]*opts.seedSzRatio)) && notempty){
+                    if ((pixOrg.size()< max(static_cast<float>(opts.minSize), regSz[arLabel_val-1]*opts.seedSzRatio)) || notEmpty){
                         continue;
                     }
 

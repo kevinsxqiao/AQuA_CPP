@@ -12,26 +12,39 @@ int main(){
 //            cv::multiply(mat[i][j],2,mat[i][j]);
 //        }
 //    }
-    vector<vector<cv::Mat>> select(200,vector<cv::Mat>(50));
-    for (int i = 0; i < 200; ++i) {
-        for (int j = 0; j < 50; ++j) {
-            select[i][j] = cv::Mat::zeros(95,95,CV_8U);
-        }
-    }
-    select[101][2].at<uchar>(89,6) = 1;
-    select[101][1].at<uchar>(89,5) = 1;
-    vector<vector<int>> res = AQuA::bw2Reg(select);
-    for (const auto& out:res) {
-        for(const auto& in:out){
-            cout<<in<<" ";
-        }
-        cout<<endl;
-    }
-
-    cout<<endl;
-    cout<<"correct ones:"<<endl;
-    cout<<AQuA::sub2ind(89,5,1,101,95,95,50)<< endl;
-    cout<<AQuA::sub2ind(89,6,2,101,95,95,50)<< endl;
+    vector<int> test ={2,3,4,5,6,7,8};
+    auto ite = find(test.begin(), test.end(),3);
+    int index = distance(test.begin(),ite);
+    cout<<test[index]<<" ";
+//    vector<int> curIt;
+//    for (int ii_ite = 0; ii_ite < ihwOrg.size(); ++ii_ite) {
+//        auto ite = find(ihwOrg.begin(), ihwOrg.end(),ihw[ii_ihw]);
+//        if (ite != ihw.end()){
+//            int index = distance(ihw.begin(),ite);
+//            curIt.emplace_back(it[index]);
+//        }
+//    }//for(ii_ite)
+//    vector<vector<cv::Mat>> select(200,vector<cv::Mat>(50));
+//    for (int i = 0; i < 200; ++i) {
+//        for (int j = 0; j < 50; ++j) {
+//            select[i][j] = cv::Mat::zeros(95,95,CV_8U);
+//        }
+//    }
+//    select[101][2].at<uchar>(89,6) = 1;
+//    select[101][1].at<uchar>(89,5) = 1;
+//
+//    vector<vector<int>> res = AQuA::bw2Reg(select);
+//    for (const auto& out:res) {
+//        for(const auto& in:out){
+//            cout<<in<<" ";
+//        }
+//        cout<<endl;
+//    }
+//
+//    cout<<endl;
+//    cout<<"correct ones:"<<endl;
+//    cout<<AQuA::sub2ind(89,5,1,101,95,95,50)<< endl;
+//    cout<<AQuA::sub2ind(89,6,2,101,95,95,50)<< endl;
 
 
 //    cv::Mat mat = cv::Mat::zeros(5,5,CV_8U);
