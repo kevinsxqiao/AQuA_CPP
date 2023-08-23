@@ -8,15 +8,15 @@
 namespace AQuA{
 
 
-    std::vector<cv::Mat> fit_F0_var(const std::vector<cv::Mat>& F0ProOrg, const std::vector<cv::Mat>& varMapOrg, int dist) {
-        std::vector<cv::Mat> varMapOut (std::vector<cv::Mat>(L));
-        std::vector<cv::Mat> F0Pro (std::vector<cv::Mat>(L));
-        std::vector<cv::Mat> varMap (std::vector<cv::Mat>(L));
-//        std::vector<float> F0Pro;
-//        std::vector<float> varMap;
-//        std::vector<float> select1;
-        std::vector<cv::Mat> select1 (std::vector<cv::Mat>(L));
-        std::vector<cv::Mat> select2 (std::vector<cv::Mat>(L));
+    vector<cv::Mat> fit_F0_var(const vector<cv::Mat>& F0ProOrg, const vector<cv::Mat>& varMapOrg, int H, int W, int L, int T, int dist) {
+        vector<cv::Mat> varMapOut((vector<cv::Mat>(L)));
+        vector<cv::Mat> F0Pro ((vector<cv::Mat>(L)));
+        vector<cv::Mat> varMap ((vector<cv::Mat>(L)));
+//        vector<float> F0Pro;
+//        vector<float> varMap;
+//        vector<float> select1;
+        vector<cv::Mat> select1 ((vector<cv::Mat>(L)));
+        vector<cv::Mat> select2 ((vector<cv::Mat>(L)));
         
 //#pragma omp parallel for
         for (int k = 0; k < L; ++k) {
@@ -50,12 +50,12 @@ namespace AQuA{
 //                }
 //            }
 //        }
-//        std::cout<<"F0Pro: "<<std::endl;
+//        cout<<"F0Pro: "<<endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<F0Pro[0].at<float>(i,j)<<" ";
+//                cout<<F0Pro[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
 //        if isempty(F0Pro)
 //           % if no valid variance
@@ -80,19 +80,19 @@ namespace AQuA{
             }
         }
 //        if (dist == 1){
-//            std::cout<<"countV: "<<countV<<std::endl;
-//            std::cout<<"min max value:"<< minX<< " "<< maxX<<std::endl;
-//            std::cout<<"F0Pro: "<<std::endl;
+//            cout<<"countV: "<<countV<<endl;
+//            cout<<"min max value:"<< minX<< " "<< maxX<<endl;
+//            cout<<"F0Pro: "<<endl;
 //            for (int k = 0; k < 5; ++k) {
 //                for (int i = 0; i < 20; ++i) {
 //                    for (int j = 0; j < 20; ++j) {
-//                        std::cout<<F0Pro[0].at<float>(i,j)<<" ";
+//                        cout<<F0Pro[0].at<float>(i,j)<<" ";
 //                    }
-//                    std::cout<<std::endl;
+//                    cout<<endl;
 //                }
 //            }
 //        }
-        float delta = std::max(static_cast<float>(1e-5), (maxX - minX)/2000);
+        float delta = max(static_cast<float>(1e-5), (maxX - minX)/2000);
         cv::Mat x = cv::Mat::zeros(2000,1,CV_32F);
         cv::Mat y = cv::Mat::zeros(2000,1,CV_32F);
         cv::Mat valid = cv::Mat::zeros(2000,1,CV_32S);
@@ -137,8 +137,8 @@ namespace AQuA{
                 valid.at<int>(ii,0) = 1;
             }//if(flag)
         }//for(ii)
-        std::vector<float> x_new;
-        std::vector<float> y_new;
+        vector<float> x_new;
+        vector<float> y_new;
         for (int i = 0; i < 2000; ++i) {
             if (valid.at<int>(i,0) == 1){
                 x_new.push_back(x.at<float>(i,0));
@@ -155,16 +155,16 @@ namespace AQuA{
         }
         //graph construction --- the start point and end point, if pick the most extreme ones, too
         // unstable. Since source is denser, we could use more points.
-        int source = std::ceil(y_new.size() * 0.05);
-        int sink = std::max(static_cast<double>(1), std::floor(y_new.size() * 0.99));
+        int source = ceil(y_new.size() * 0.05);
+        int sink = max(static_cast<double>(1), floor(y_new.size() * 0.99));
         //first layer
-        std::vector<double> dist1(y_new.size(), std::numeric_limits<double>::infinity());
-        std::vector<int> preMap1(y_new.size(), 0);
+        vector<double> dist1(y_new.size(), numeric_limits<double>::infinity());
+        vector<int> preMap1(y_new.size(), 0);
 ////#pragma omp parallel for collapse(3)
         for (int j = 0; j < y_new.size(); ++j) {
-            double minCost = std::numeric_limits<double>::infinity();
+            double minCost = numeric_limits<double>::infinity();
             int preNode = j;
-            for (int i = 0; i < std::min(j - 1, source); ++i) {
+            for (int i = 0; i < min(j - 1, source); ++i) {
                 double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
                 double b = y_new[i] - a * x_new[i];
 //                % first term => first inclined segment
@@ -173,10 +173,10 @@ namespace AQuA{
                 double cost1 = 0;
                 double cost2 = 0;
                 for (int k = i; k < j; ++k) {
-                    cost1 += std::abs(y_new[k] - a*x_new[k]+b);
+                    cost1 += abs(y_new[k] - a*x_new[k]+b);
                 }
                 for (int k = 0; k < i; ++k) {
-                    cost2 += std::abs(y_new[k] - y_new[i]);
+                    cost2 += abs(y_new[k] - y_new[i]);
                 }
                 cost = cost1 + cost2;
                 if (cost < minCost){
@@ -188,18 +188,18 @@ namespace AQuA{
             }//for(i)
         }//for(j)
         //second layer
-        std::vector<double> dist2(y_new.size(), std::numeric_limits<double>::infinity());
-        std::vector<int> preMap2(y_new.size(), 0);
+        vector<double> dist2(y_new.size(), numeric_limits<double>::infinity());
+        vector<int> preMap2(y_new.size(), 0);
 ////#pragma omp parallel for collapse(3)
         for (int j = 0; j < y_new.size(); ++j) {
-            double minCost = std::numeric_limits<double>::infinity();
+            double minCost = numeric_limits<double>::infinity();
             int preNode = j;
             for (int i = 0; i < j-1; ++i) {
                 double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
                 double b = y_new[i] - a * x_new[i];
                 double cost = 0;
                 for (int k = i; k < j; ++k) {
-                    cost += std::abs(y_new[k] - a*x_new[k]+b);
+                    cost += abs(y_new[k] - a*x_new[k]+b);
                 }
                 if (dist1[i] + cost < minCost){
                     minCost = dist1[i] + cost;
@@ -210,11 +210,11 @@ namespace AQuA{
             }//for(i)
         }//for(j)
         //third layer
-        std::vector<double> dist3(y_new.size(), std::numeric_limits<double>::infinity());
-        std::vector<int> preMap3(y_new.size(), 0);
+        vector<double> dist3(y_new.size(), numeric_limits<double>::infinity());
+        vector<int> preMap3(y_new.size(), 0);
 ////#pragma omp parallel for collapse(3)
         for (int j = sink-1; j < y_new.size(); ++j) {
-            double minCost = std::numeric_limits<double>::infinity();
+            double minCost = numeric_limits<double>::infinity();
             int preNode = j;
             for (int i = 0; i < j-1; ++i) {
                 double a = (y_new[j] - y_new[i]) / (x_new[j] - x_new[i]);
@@ -223,10 +223,10 @@ namespace AQuA{
                 double cost1 = 0;
                 double cost2 = 0;
                 for (int k = i; k < j; ++k) {
-                    cost1 += std::abs(y_new[k] - a*x_new[k]+b);
+                    cost1 += abs(y_new[k] - a*x_new[k]+b);
                 }
                 for (int k = j; k < y_new.size(); ++k) {
-                    cost2 += std::abs(y_new[k] - y_new[j]);
+                    cost2 += abs(y_new[k] - y_new[j]);
                 }
                 cost = cost1 + cost2;
                 if (dist2[i] + cost < minCost){
@@ -238,7 +238,7 @@ namespace AQuA{
             }//for(i)
         }//for(j)
         //sink
-        int node3 = std::min_element(dist3.begin(), dist3.end()) - dist3.begin();
+        int node3 = min_element(dist3.begin(), dist3.end()) - dist3.begin();
         double x3 = x_new[node3];
         double y3 = y_new[node3];
         //end of 2nd segment
@@ -330,7 +330,7 @@ namespace AQuA{
         for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
-                    if (std::isnan(varMapOut[k].at<float>(i,j))){
+                    if (isnan(varMapOut[k].at<float>(i,j))){
                         varMapOut[k].at<float>(i,j) = static_cast<float>(y0);
                     }
                 }
@@ -342,14 +342,18 @@ namespace AQuA{
     }//fit_F0-var
 
 
-    std::vector<std::vector<cv::Mat>> movmean(const std::vector<std::vector<cv::Mat>>& dataIn) {
-        std::vector<std::vector<cv::Mat>> dataOut(T, std::vector<cv::Mat>(L));
+    vector<vector<cv::Mat>> movmean(const vector<vector<cv::Mat>>& dataIn) {
+        int H = dataIn[0][0].rows;
+        int W = dataIn[0][0].cols;
+        int L = dataIn[0].size();
+        int T = dataIn.size();
+        vector<vector<cv::Mat>> dataOut(T, vector<cv::Mat>(L));
         int halfWin = opts.movAvgWin/2;
 //#pragma omp parallel for collapse(3)
         for (int k = 0; k < L; ++k) {
             for (int t = 0; t < T; ++t) {
-                int start = std::max(0, t - halfWin);
-                int end = std::min(T - 1, t + halfWin);
+                int start = max(0, t - halfWin);
+                int end = min(T - 1, t + halfWin);
                 int count = 0;
                 cv::Mat sum = cv::Mat::zeros(dataIn[0][0].rows, dataIn[0][0].cols, CV_32F);
                 for (int i = start; i <= end; ++i) {
@@ -363,8 +367,11 @@ namespace AQuA{
     }
 
 
-    std::vector<cv::Mat> truncated_kept_var(const std::vector<cv::Mat>& quantiles){
-        std::vector<cv::Mat> pars(L);
+    vector<cv::Mat> truncated_kept_var(const vector<cv::Mat>& quantiles){
+        int H = quantiles[0].rows;
+        int W = quantiles[0].cols;
+        int L = quantiles.size();
+        vector<cv::Mat> pars(L);
         boost::math::normal_distribution<float> normal_dist;
 //#pragma omp parallel for collapse(3)
         for (int k = 0; k < L; ++k) {
@@ -389,9 +396,28 @@ namespace AQuA{
         return pars;
     }//truncated_kept_var()
 
+    float truncated_kept_var(float quantile) {
+        boost::math::normal_distribution<float> normal_dist;
 
-    std::vector<std::vector<cv::Mat>> baselineLinearEstimate(std::vector<std::vector<cv::Mat>>& data){
-        std::vector<std::vector<cv::Mat>> datMA(T, std::vector<cv::Mat>(L));
+        if (quantile == 0.0f) {
+            return 2.0f;
+        }
+        else {
+            float a = boost::math::quantile(normal_dist, quantile);
+            float phi_a = boost::math::pdf(normal_dist, a);
+            float mu = a * quantile + phi_a;
+            float second_order = a * a * quantile + 1 - quantile + a * phi_a;
+            return (second_order - mu * mu) * 2;
+        }
+    }
+
+
+    vector<vector<cv::Mat>> baselineLinearEstimate(vector<vector<cv::Mat>>& data){
+        int H = data[0][0].rows;
+        int W = data[0][0].cols;
+        int L = data[0].size();
+        int T = data.size();
+        vector<vector<cv::Mat>> datMA(T, vector<cv::Mat>(L));
         datMA = movmean(data);
 //        for (int t = 0; t < T; t++) {
 //            for (int k = 0; k < L; k++) {
@@ -410,17 +436,17 @@ namespace AQuA{
                 }
             }
         }
-//        std::cout<<"datMA: "<< std::endl;
+//        cout<<"datMA: "<< endl;
 ////        for (int k = 0; k < 2; ++k) {
 //            for (int i = 0; i < 7; ++i) {
 //                for (int j = 0; j < 7; ++j) {
-//                    std::cout<<datMA[0][0].at<float>(i,j)<<" ";
+//                    cout<<datMA[0][0].at<float>(i,j)<<" ";
 //                }
-//                std::cout<<std::endl;
+//                cout<<endl;
 //            }
 //        }
 
-        int step = static_cast<int>(std::round(0.5 * opts.cut));
+        int step = static_cast<int>(round(0.5 * opts.cut));
         float maxV = 0;
         double maxVal = 0;
         for (int t = 0; t < T; ++t) {
@@ -431,13 +457,13 @@ namespace AQuA{
                 }
             }
         }
-        int nSegment = static_cast<int>(std::max(1.0, std::ceil(T/step)-1));
-//        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L, cv::Mat::ones(H, W, CV_32S)));
-        std::vector<std::vector<cv::Mat>> minPosition(nSegment, std::vector<cv::Mat>(L));
+        int nSegment = static_cast<int>(max(1.0, ceil(T/step)-1));
+//        vector<vector<cv::Mat>> minPosition(nSegment, vector<cv::Mat>(L, cv::Mat::ones(H, W, CV_32S)));
+        vector<vector<cv::Mat>> minPosition(nSegment, vector<cv::Mat>(L));
 ////#pragma omp parallel for collapse(2)
         for (int kk = 0; kk < nSegment; ++kk) {
             int t0 = kk * step;
-            int t1 = std::min(T, t0 + opts.cut);
+            int t1 = min(T, t0 + opts.cut);
             for (int k = 0; k < L; ++k) {
                 minPosition[kk][k] = cv::Mat::ones(H, W, CV_32S);
                 for (int i = 0; i < H; ++i) {
@@ -462,24 +488,24 @@ namespace AQuA{
         }//for(kk)
 
 //        for (int k = 0; k < 10; ++k) {
-//            std::cout<<k<<" :"<< minPosition[0][k].at<int>(1,1)<<"  "<< std::endl;
+//            cout<<k<<" :"<< minPosition[0][k].at<int>(1,1)<<"  "<< endl;
 //        }
-//        std::cout<<"minPosition"<<std::endl;
-//        std::cout<<minPosition[0][0].at<int>(1,1)<<" : ";
-//        std::cout<<datMA[minPosition[0][0].at<int>(1,1)][0].at<float>(1,1)<<"   ";
-//        std::cout<<std::endl;
-//        std::cout<<"datMA[t]"<<std::endl;
+//        cout<<"minPosition"<<endl;
+//        cout<<minPosition[0][0].at<int>(1,1)<<" : ";
+//        cout<<datMA[minPosition[0][0].at<int>(1,1)][0].at<float>(1,1)<<"   ";
+//        cout<<endl;
+//        cout<<"datMA[t]"<<endl;
 //        for (int t = 0; t < 200; ++t) {
-//            std::cout<<t<<" :"<< datMA[t][0].at<float>(1,2)<<"  ";
+//            cout<<t<<" :"<< datMA[t][0].at<float>(1,2)<<"  ";
 //        }
-//        std::cout<<"minPosition"<<std::endl;
+//        cout<<"minPosition"<<endl;
 //        for (int i = 1; i < 20; ++i) {
-//            std::cout<<minPosition[0][0].at<int>(i,1)<<"  ";
+//            cout<<minPosition[0][0].at<int>(i,1)<<"  ";
 //        }
-//        std::cout<<std::endl;
+//        cout<<endl;
 
 
-        std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L));
+        vector<vector<cv::Mat>> F0(T, vector<cv::Mat>(L));
 //#pragma omp parallel for collapse(2)
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {
@@ -489,14 +515,14 @@ namespace AQuA{
         for (int k = 0; k < L; ++k) {
             for (int i = 0; i < H; ++i) {
                 for (int j = 0; j < W; ++j) {
-                    std::vector<int> curP;
-                    std::vector<float> value;
+                    vector<int> curP;
+                    vector<float> value;
                     for (int kk = 0; kk < nSegment; ++kk) {
                         curP.push_back(minPosition[kk][k].at<int>(i,j));
                     }
                     if (nSegment > 1){//try unsorted_set
-                        std::sort(curP.begin(),curP.end());
-                        auto it = std::unique(curP.begin(),curP.end());
+                        sort(curP.begin(),curP.end());
+                        auto it = unique(curP.begin(),curP.end());
                         curP.erase(it, curP.end());
                     }
                     for (int tt = 0; tt < curP.size(); ++tt) {
@@ -554,16 +580,16 @@ namespace AQuA{
             }
         }
 
-//        std::cout<<"F0: "<< std::endl;
-//        std::cout<<"height of image:"<< F0[0][0].rows << std::endl;
-//        std::cout<<"width of image:"<< F0[0][0].cols << std::endl;
-//        std::cout<<"length of image:"<< F0[0].size() << std::endl;
-//        std::cout<<"time frames of image:"<< F0.size() << std::endl;
+//        cout<<"F0: "<< endl;
+//        cout<<"height of image:"<< F0[0][0].rows << endl;
+//        cout<<"width of image:"<< F0[0][0].cols << endl;
+//        cout<<"length of image:"<< F0[0].size() << endl;
+//        cout<<"time frames of image:"<< F0.size() << endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<F0[0][0].at<float>(i,j)<<" ";
+//                cout<<F0[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
 
         return F0;
@@ -572,9 +598,9 @@ namespace AQuA{
 
     void correctBoundaryStd(){
         //gaussian filter
-        int dist = std::ceil(2 * opts.smoXY);
-        std::vector<cv::Mat> filter0(dist*2+1);
-        std::vector<cv::Mat> filter(dist*2+1);
+        int dist = ceil(2 * opts.smoXY);
+        vector<cv::Mat> filter0(dist*2+1);
+        vector<cv::Mat> filter(dist*2+1);
 //#pragma omp parallel for
         for (int k = 0; k < dist * 2 + 1; ++k) {
             filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
@@ -587,7 +613,7 @@ namespace AQuA{
             cv::pow(filter0[k], 2, filter[k]);
         }
 
-        std::vector<cv::Mat> correctMap(dist*2+1);
+        vector<cv::Mat> correctMap(dist*2+1);
 //#pragma omp parallel for
         for (int k = 0; k < dist * 2 + 1; ++k) {
             correctMap[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
@@ -596,7 +622,7 @@ namespace AQuA{
 //        for (int k = dist; k < 2*dist+1; ++k) {
 //            for (int i = dist; i < 2*dist+1; ++i) {
 //                for (int j = dist; j < 2*dist+1; ++j) {
-//                    std::vector<cv::Mat> filter1(dist*2+1);
+//                    vector<cv::Mat> filter1(dist*2+1);
 //                    for (int kk = 0; kk < dist * 2 + 1; ++kk) {
 //                        filter1[k] = filter0[k];
 //                    }//for(kk)
@@ -619,44 +645,44 @@ namespace AQuA{
         double *cuts;
         double *windowSizes;
 
-//        std::cout<< "--------loading cfg F0_biasMatrix--------"<<std::endl;
+//        cout<< "--------loading cfg F0_biasMatrix--------"<<endl;
         const char *filename = "../cfg/F0_biasMatrix.mat";
         pmatFile = matOpen(filename, "r");
         if (pmatFile == nullptr) {
-            std::cout<< "--------error opening cfg--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error opening cfg--------"<<endl;
+            exit(-1);
         }
 
         pMxbiasMatrix = matGetVariable(pmatFile, "biasMatrix");
         if (pMxbiasMatrix == nullptr) {
-            std::cout<< "--------error reading variable \"biasMatrix\" from file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading variable \"biasMatrix\" from file--------"<<endl;
+            exit(-1);
         }
         pMxcuts = matGetVariable(pmatFile, "cuts");
         if (pMxcuts == nullptr) {
-            std::cout<< "--------error reading variable \"cuts\" from file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading variable \"cuts\" from file--------"<<endl;
+            exit(-1);
         }
         pMxwindowSizes = matGetVariable(pmatFile, "windowSizes");
         if (pMxwindowSizes == nullptr) {
-            std::cout<< "--------error reading variable \"windowSizes\" from file--------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading variable \"windowSizes\" from file--------"<<endl;
+            exit(-1);
         }
 
         biasMatrix = mxGetPr(pMxbiasMatrix);
         if (biasMatrix == nullptr) {
-            std::cout<< "--------error reading data from variable \"biasMatrix\"-------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading data from variable \"biasMatrix\"-------"<<endl;
+            exit(-1);
         }
         cuts = mxGetPr(pMxcuts);
         if (cuts == nullptr) {
-            std::cout<< "--------error reading data from variable \"cuts\"-------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading data from variable \"cuts\"-------"<<endl;
+            exit(-1);
         }
         windowSizes = mxGetPr(pMxwindowSizes);
         if (windowSizes == nullptr) {
-            std::cout<< "--------error reading data from variable \"windowSizes\"-------"<<std::endl;
-            std::exit(-1);
+            cout<< "--------error reading data from variable \"windowSizes\"-------"<<endl;
+            exit(-1);
         }
 
         const mwSize *dims_biasMatrix = mxGetDimensions(pMxbiasMatrix);
@@ -665,7 +691,7 @@ namespace AQuA{
 
         float bias=0;
 //        H = dims[0];
-//        std::cout<<"original size: "<< std::endl;
+//        cout<<"original size: "<< endl;
 //        frame[t][k].at<float>(i,j) = static_cast<float>(pdata[j_src*H + i_src + k*H*W + t*H*W*L]);
         if (opts.movAvgWin > opts.cut){
             bias = 0;
@@ -702,10 +728,10 @@ namespace AQuA{
         float bias0=0, bias1=0;
 //#pragma omp parallel for
         for (int i = idx0; i <= idx1 ; ++i) {
-            if (!std::isnan(biasMatrix[i + idy0 * dims_biasMatrix[0]])){
+            if (!isnan(biasMatrix[i + idy0 * dims_biasMatrix[0]])){
                 bias0 += static_cast<float>(biasMatrix[i + idy0 * dims_biasMatrix[0]]);
             }
-            if (!std::isnan(biasMatrix[i + idy1 * dims_biasMatrix[0]])){
+            if (!isnan(biasMatrix[i + idy1 * dims_biasMatrix[0]])){
                 bias1 += static_cast<float>(biasMatrix[i + idy1 * dims_biasMatrix[0]]);
             }
         }
@@ -714,7 +740,7 @@ namespace AQuA{
         int cut0 = static_cast<int>(cuts[idy0]);
         int cut1 = static_cast<int>(cuts[idy0+1]);
 
-        if (std::isnan(bias0)){
+        if (isnan(bias0)){
             bias = bias1;
         } else{
             bias = bias0 + (bias1 - bias0) / (cut1 - cut0) * (opts.cut - cut0);
@@ -724,16 +750,20 @@ namespace AQuA{
     }//obtainBias()
 
 
-    void noiseEstimationFunction(const std::vector<std::vector<cv::Mat>>& dataOrg, const std::vector<std::vector<cv::Mat>>& dataSmo,
-                                 const std::vector<cv::Mat>& F0Pro, bool*** evtSpatialMask, std::vector<cv::Mat>& stdMapOrg, std::vector<cv::Mat>& stdMapSmo,
-                                 std::vector<cv::Mat>& tempVarOrg,   std::vector<cv::Mat>& correctPars){
+    void noiseEstimationFunction(const vector<vector<cv::Mat>>& dataOrg, const vector<vector<cv::Mat>>& dataSmo,
+                                 const vector<cv::Mat>& F0Pro, bool*** evtSpatialMask, vector<cv::Mat>& stdMapOrg, vector<cv::Mat>& stdMapSmo,
+                                 vector<cv::Mat>& tempVarOrg,   vector<cv::Mat>& correctPars){
         /*
          * return "stdMapOrg,stdMapSmo,tempVarOrg,correctPars"
          * variance map
          * calculate the variance of raw data
          */
+        int H = dataOrg[0][0].rows;
+        int W = dataOrg[0][0].cols;
+        int L = dataOrg[0].size();
+        int T = dataOrg.size();
         bool correctNoise = true;
-        std::vector<cv::Mat> tempMap(L);
+        vector<cv::Mat> tempMap(L);
 //#pragma omp parallel for collapse(3)
         for (int k = 0; k < L; ++k) {
             tempMap[k] = cv::Mat(H,W,CV_32F);
@@ -749,18 +779,18 @@ namespace AQuA{
             }
             tempVarOrg[k] = tempMap[k] / 2;
         }//for(k)
-//        std::cout<<"tempMap: "<< std::endl;
+//        cout<<"tempMap: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<tempMap[0].at<float>(i,j)<<" ";
+//                cout<<tempMap[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-        std::vector<cv::Mat> varMapOrg(L);
+        vector<cv::Mat> varMapOrg(L);
         if (correctNoise){
-            std::vector<cv::Mat> countInValid(L);
-            std::vector<cv::Mat> totalSamples(L);
-            std::vector<cv::Mat> ratio(L);
+            vector<cv::Mat> countInValid(L);
+            vector<cv::Mat> totalSamples(L);
+            vector<cv::Mat> ratio(L);
 //#pragma omp parallel for collapse(3)
             for (int k = 0; k < L; ++k) {
                 countInValid[k] = cv::Mat(H,W,CV_32F);
@@ -807,29 +837,29 @@ namespace AQuA{
                 }
             }
         }
-//        std::cout<<"F0Pro: "<< std::endl;
+//        cout<<"F0Pro: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<F0Pro[0].at<float>(i,j)<<" ";
+//                cout<<F0Pro[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"varMapOrg: "<< std::endl;
+//        cout<<"varMapOrg: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<varMapOrg[0].at<float>(i,j)<<" ";
+//                cout<<varMapOrg[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-        std::vector<cv::Mat> varMapOut = fit_F0_var(F0Pro, varMapOrg);
-//        std::cout<<"varMapOut: "<< std::endl;
+        vector<cv::Mat> varMapOut = fit_F0_var(F0Pro, varMapOrg, H, W, L, T);
+//        cout<<"varMapOut: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<varMapOut[0].at<float>(i,j)<<" ";
+//                cout<<varMapOut[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-        std::vector<cv::Mat> varMapSmo(L);
+        vector<cv::Mat> varMapSmo(L);
 //#pragma omp parallel for
         for (int k = 0; k < L; ++k) {
             cv::sqrt(varMapOut[k],stdMapOrg[k]);
@@ -842,17 +872,17 @@ namespace AQuA{
                 varMapSmo[k] = varMapOrg[k];
             }
         }
-//        std::cout<<"stdMapOrg: "<< std::endl;
+//        cout<<"stdMapOrg: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<stdMapOrg[0].at<float>(i,j)<<" ";
+//                cout<<stdMapOrg[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
         //gaussian filter
-        int dist = std::ceil(2 * opts.smoXY);
-        std::vector<cv::Mat> filter0(dist*2+1);
-        std::vector<cv::Mat> filter(dist*2+1);
+        int dist = ceil(2 * opts.smoXY);
+        vector<cv::Mat> filter0(dist*2+1);
+        vector<cv::Mat> filter(dist*2+1);
 //#pragma omp parallel for
         for (int k = 0; k < dist * 2 + 1; ++k) {
             filter0[k] = cv::Mat::zeros(dist*2+1, dist*2+1, CV_32F);
@@ -877,12 +907,12 @@ namespace AQuA{
                 }
             }
         }//for(k)
-//        std::cout<<"varMapSmo: "<< std::endl;
+//        cout<<"varMapSmo: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<varMapSmo[0].at<float>(i,j)<<" ";
+//                cout<<varMapSmo[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
         //correct the variance according to truncated model
         if (correctNoise){
@@ -909,7 +939,7 @@ namespace AQuA{
         }
         //correct the variance in the boundary(caused by smoothing operation)
 //        correctMap2 = correctBoundaryStd();
-//        std::vector<cv::Mat> correctMap2(L);
+//        vector<cv::Mat> correctMap2(L);
 //        for (int k = 0; k < L; ++k) {
 //            correctMap2[k] = cv::Mat::zeros(H,W,CV_32S);
 //            for (int i = dist; i < H-dist; ++i) {
@@ -929,15 +959,15 @@ namespace AQuA{
 //        }
 //        writeDataToMatFile(F0Pro,"C:/Users/Kevin Qiao/Desktop/AQuA_data/F0pro.mat");
 //        writeDataToMatFile(varMapSmo,"C:/Users/Kevin Qiao/Desktop/AQuA_data/varMapSmo.mat");
-//        std::cout<<"finish";
-//        std::cout<<"varMapSmo: "<< std::endl;
+//        cout<<"finish";
+//        cout<<"varMapSmo: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<varMapSmo[0].at<float>(i,j)<<" ";
+//                cout<<varMapSmo[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-        varMapOut = fit_F0_var(F0Pro, varMapSmo, dist);
+        varMapOut = fit_F0_var(F0Pro, varMapSmo, H, W, L, T, dist);
 //#pragma omp parallel for
         for (int k = 0; k < L; ++k) {
             cv::sqrt(varMapOut[k],stdMapSmo[k]);
@@ -946,13 +976,17 @@ namespace AQuA{
     }//noiseEstimationFunction()
 
 
-    std::vector<std::vector<cv::Mat>> baselineRemoveAndNoiseEstimation(std::vector<std::vector<cv::Mat>>& dataOrg, bool*** evtSpatialMask){
+    vector<vector<cv::Mat>> baselineRemoveAndNoiseEstimation(vector<vector<cv::Mat>>& dataOrg, bool*** evtSpatialMask){
         /*
          * smooth the data
          */
-        std::cout<< "--------start baselineRemoveAndNoiseEstimation--------"<<std::endl;
+        int H = dataOrg[0][0].rows;
+        int W = dataOrg[0][0].cols;
+        int L = dataOrg[0].size();
+        int T = dataOrg.size();
+        cout<< "--------start baselineRemoveAndNoiseEstimation--------"<<endl;
         int ksize = 2 * ceil(2 * opts.smoXY) + 1;
-        std::vector<std::vector<cv::Mat>> dataSmo(T, std::vector<cv::Mat>(L));
+        vector<vector<cv::Mat>> dataSmo(T, vector<cv::Mat>(L));
         if (opts.smoXY > 0 ){
 //#pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
@@ -975,22 +1009,22 @@ namespace AQuA{
             }//for(t)
         }//if(smoXY>0)
 
-//        std::cout<<"dataSmo: "<< std::endl;
+//        cout<<"dataSmo: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<dataSmo[0][0].at<float>(i,j)<<" ";
+//                cout<<dataSmo[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
 
 
         /*
          * linear estimation of F0
          */
-        opts.cut = std::min(opts.cut, T);
+        opts.cut = min(opts.cut, T);
         //remove baseline
-        std::vector<std::vector<cv::Mat>> F0(T, std::vector<cv::Mat>(L));
-        std::vector<cv::Mat> F0Pro(L);
+        vector<vector<cv::Mat>> F0(T, vector<cv::Mat>(L));
+        vector<cv::Mat> F0Pro(L);
 //#pragma omp parallel for
         for (int k = 0; k < L; ++k) {
             F0Pro[k] = cv::Mat(H,W,CV_32F);
@@ -1010,56 +1044,56 @@ namespace AQuA{
         }
 
         //noise estimation
-        std::vector<cv::Mat> stdMapOrg(L);
-        std::vector<cv::Mat> stdMapGau(L);
-        std::vector<cv::Mat> tempVarOrg(L);
-        std::vector<cv::Mat> correctPars(L);
+        vector<cv::Mat> stdMapOrg(L);
+        vector<cv::Mat> stdMapGau(L);
+        vector<cv::Mat> tempVarOrg(L);
+        vector<cv::Mat> correctPars(L);
         noiseEstimationFunction(dataOrg, dataSmo, F0Pro, evtSpatialMask, stdMapOrg, stdMapGau, tempVarOrg, correctPars);
-//        std::cout<<"stdMapOrg: "<< std::endl;
+//        cout<<"stdMapOrg: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<stdMapOrg[0].at<float>(i,j)<<" ";
+//                cout<<stdMapOrg[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"stdMapGau: "<< std::endl;
+//        cout<<"stdMapGau: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<stdMapGau[0].at<float>(i,j)<<" ";
+//                cout<<stdMapGau[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"tempVarOrg: "<< std::endl;
+//        cout<<"tempVarOrg: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<tempVarOrg[0].at<float>(i,j)<<" ";
+//                cout<<tempVarOrg[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"correctPars: "<< std::endl;
+//        cout<<"correctPars: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<correctPars[0].at<float>(i,j)<<" ";
+//                cout<<correctPars[0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"F0: "<< std::endl;
+//        cout<<"F0: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<F0[0][0].at<float>(i,j)<<" ";
+//                cout<<F0[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
-//        std::cout<<"dataSmo: "<< std::endl;
+//        cout<<"dataSmo: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<dataSmo[0][0].at<float>(i,j)<<" ";
+//                cout<<dataSmo[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
         float bias = obtainBias();
-//        std::cout<<"bias: "<< bias<<std::endl;
-        std::vector<std::vector<cv::Mat>> dF(T, std::vector<cv::Mat>(L));
+//        cout<<"bias: "<< bias<<endl;
+        vector<vector<cv::Mat>> dF(T, vector<cv::Mat>(L));
         // correct bias during noise estimation. Bias does not impact noise
         // normalization - zScoreMap
 //#pragma omp parallel for collapse(2)
@@ -1071,12 +1105,12 @@ namespace AQuA{
                 cv::divide(dF[t][k], stdMapGau[k], dF[t][k]);
             }
         }
-//        std::cout<<"dF: "<< std::endl;
+//        cout<<"dF: "<< endl;
 //        for (int i = 0; i < 7; ++i) {
 //            for (int j = 0; j < 7; ++j) {
-//                std::cout<<dF[0][0].at<float>(i,j)<<" ";
+//                cout<<dF[0][0].at<float>(i,j)<<" ";
 //            }
-//            std::cout<<std::endl;
+//            cout<<endl;
 //        }
 
         //if (ch==1)
@@ -1090,8 +1124,8 @@ namespace AQuA{
 //            opts.tempVarOrg1.push_back(tempVarOrg[k].clone());
 //            opts.correctPars1.push_back(correctPars[k].clone());
 //        }
-//        std::cout<< opts.stdMapOrg1.size()<<std::endl;
-//        std::cout<< opts.stdMapOrg1[0].size()<<std::endl;
+//        cout<< opts.stdMapOrg1.size()<<endl;
+//        cout<< opts.stdMapOrg1[0].size()<<endl;
 
         //for visualize
         double maxVal = 0;

@@ -7,6 +7,7 @@
 
 #include "../data/data.h"
 #include "../actRun/actRun.h"
+#include "../preProcessRun/baselineRemoveAndNoiseEstimation.h"
 
 namespace AQuA{
     void phaseRun();

@@ -31,6 +31,11 @@ namespace AQuA{
     }//myResize()
 
 
+    void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg){
+
+    }
+
+
     Score_struct getSeedScore_DS4(const vector<int>& pix, const vector<vector<cv::Mat>>& datVec, int H, int W, int L, int T, float t_scl){
         Score_struct result;
         //down sample
@@ -210,9 +215,82 @@ namespace AQuA{
             degreeOfFreedoms.emplace_back(difL.size());
             degreeOfFreedoms.emplace_back(difR.size());
 
-        }//for(ii_ihw)
+        }//for(ii_ihw)  --i
 
-        // CONTINUE HERE!!!!!!!!!!!!!!!!!
+        //LAST CORRECT!!!!!!!!!!!!!!!!!!!!
+
+        vector<float> fg0;
+        vector<float> bkL;
+        vector<float> bkR;
+        for (int i = 0; i < fgAll.size(); ++i) {
+            for (int j = 0; j < fgAll[i].size(); ++j) {
+                if (!isnan(fgAll[i][j])){
+                    fg0.emplace_back(fgAll[i][j]);
+                }
+                if (!isnan(bgL[i][j])){
+                    bkL.emplace_back(bgL[i][j]);
+                }
+                if (!isnan(bgR[i][j])){
+                    bkR.emplace_back(bgR[i][j]);
+                }
+            }
+        }
+        int n1 = bkL.size();
+        int n2 = bkR.size();
+
+        if ((n1+n2<=2) || (n1<=1) || (n2<=1) || (noise.size()<=2)){
+            result.z_score1 = 0;
+            result.z_score2 = 0;
+            result.t_score1 = 0;
+            result.t_score2 = 0;
+            return result;
+        }
+
+        float correctPar = truncated_kept_var(cnt/cnt2);
+        float noise_sum = 0;
+        for (int i = 0; i < noise.size(); ++i) {
+            noise_sum += noise[0];
+        }
+        float sigma0 = sqrt(noise_sum/noise.size()/correctPar)/ sqrt(t_scl);
+
+        vector<float> mus_Left(ihw.size());
+        vector<float> L_left(ihw.size());
+        vector<float> mus_Right(ihw.size());
+        vector<float> L_right(ihw.size());
+        for (int i = 0; i < ihw.size(); ++i) {
+            mus_Left[i] = 0;
+            mus_Right[i] = 0;
+            L_left[i] = -INFINITY;
+            L_right[i] = -INFINITY;
+        }
+
+        for (int i = 0; i < ihw.size(); ++i) {  // for i = 1:numel(ihw)
+            vector<float> fg;
+            vector<float> bg1;
+            vector<float> bg2;
+            vector<float> nanV;
+            for (int ii = 0; ii < fgAll[i].size(); ++ii) { // access each element in fgAll[i]  ---ii
+                fg.emplace_back(fgAll[i][ii]/sigma0);
+                bg1.emplace_back(bgL[i][ii]/sigma0);
+                bg2.emplace_back(bgR[i][ii]/sigma0);
+                nanV.emplace_back(nanVec[i][ii]/sigma0);
+            }
+            if (!bg1.empty()){
+                float LL;
+                if (fg.size()==1){
+                    LL = fg[0] - bg1[0];
+                } else{
+                    float fg_sum = 0;
+                    float bg1_sum = 0;
+                    for (int j = 0; j < fg.size(); ++j) {
+                        fg_sum += fg[j];
+                        bg1_sum += bg1[j];
+                    }
+                    LL = fg_sum/fg.size() - bg1_sum/fg.size();
+                } //else
+            }// if (!bg1.empty())
+        }// for i = 1:numel(ihw)
+
 
         cout<<1;
 

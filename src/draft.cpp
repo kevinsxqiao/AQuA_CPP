@@ -3,6 +3,13 @@
 #include "preProcessRun/preProcessRun.h"
 #include "data/data.h"
 #include "phaseRun/phaseRun.h"
+void func(){
+    static vector<float> a;
+    if (!a.empty()){
+        cout<<1;
+    }
+    a.emplace_back(5);
+}
 
 int main(){
 //    vector<vector<cv::Mat>> mat(500,vector<cv::Mat>(500));
@@ -12,10 +19,13 @@ int main(){
 //            cv::multiply(mat[i][j],2,mat[i][j]);
 //        }
 //    }
-    vector<int> test ={2,3,4,5,6,7,8};
-    auto ite = find(test.begin(), test.end(),3);
-    int index = distance(test.begin(),ite);
-    cout<<test[index]<<" ";
+//    vector<int> test ={2,3,4,5,6,7,8};
+//    auto ite = find(test.begin(), test.end(),3);
+//    int index = distance(test.begin(),ite);
+//    cout<<test[index]<<" ";
+    for (int i = 0; i < 5; ++i) {
+        func();
+    }
 //    vector<int> curIt;
 //    for (int ii_ite = 0; ii_ite < ihwOrg.size(); ++ii_ite) {
 //        auto ite = find(ihwOrg.begin(), ihwOrg.end(),ihw[ii_ihw]);

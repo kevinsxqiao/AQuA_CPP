@@ -6,7 +6,7 @@
 
 namespace AQuA{
 
-    void preProcessRun(std::vector<std::vector<cv::Mat>>& data1){
+    void preProcessRun(vector<vector<cv::Mat>>& data1){
         if(isDefault() || !opts.alreadyPreprocess || !opts.alreadyBleachCorrect){ // judge whether this step is already done, since this is time-consuming
             /*
              * image registration
@@ -47,33 +47,36 @@ namespace AQuA{
 //                evtSpatialMask[i][j] = true;
 //            }
 //        }
-
-        bool*** evtSpatialMask = createEvtSpatialMask();
+        int H = data1[0][0].rows;
+        int W = data1[0][0].cols;
+        int L = data1[0].size();
+        int T = data1.size();
+        bool*** evtSpatialMask = createEvtSpatialMask(H,W,L);
 
         /*
          * F0 bias calculation
          */
-        opts.movAvgWin = std::min(opts.movAvgWin, 100);
-        opts.cut = std::min(opts.cut, 10000);
+        opts.movAvgWin = min(opts.movAvgWin, 100);
+        opts.cut = min(opts.cut, 10000);
 
         /*
          * smooth + noise estimation + remove background
          */
-        std::vector<std::vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
+        vector<vector<cv::Mat>> dF1 = baselineRemoveAndNoiseEstimation(data1, evtSpatialMask);
 //        writeDataToMatFile(dF1,"C:/Users/Kevin Qiao/Desktop/AQuA_data/dF1.mat");
-//        auto start = std::chrono::high_resolution_clock::now();
+//        auto start = chrono::high_resolution_clock::now();
         opts.dF1 = dF1;
 //        for (int t = 0; t < T; ++t) {
-//            std::vector<cv::Mat> frame;
+//            vector<cv::Mat> frame;
 //            for (int k = 0; k < L; ++k) {
 //                frame.push_back(dF1[t][k].clone());
 //            }
 //            opts.dF1.push_back(frame);
 //        }
 
-//        auto end = std::chrono::high_resolution_clock::now();
-//        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-//        std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
+//        auto end = chrono::high_resolution_clock::now();
+//        auto duration = chrono::duration_cast<chrono::milliseconds>(end - start).count();
+//        cout << "used time: " << duration/1000 << " seconds" << endl;
 
         release3dMatrix_bool(evtSpatialMask,H,W);
 

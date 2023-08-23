@@ -10,9 +10,10 @@
 
 namespace AQuA{
 
-    vector<cv::Mat> fit_F0_var(const vector<cv::Mat>& F0ProOrg, const vector<cv::Mat>& varMapOrg, int dist=0);
+    vector<cv::Mat> fit_F0_var(const vector<cv::Mat>& F0ProOrg, const vector<cv::Mat>& varMapOrg, int H, int W, int L, int T, int dist=0);
     vector<vector<cv::Mat>> movmean(const vector<vector<cv::Mat>>& dataIn);
     vector<cv::Mat> truncated_kept_var(const vector<cv::Mat>& quantiles);
+    float truncated_kept_var(float quantile);
     vector<vector<cv::Mat>> baselineLinearEstimate(vector<vector<cv::Mat>>& data);
     void correctBoundaryStd();
     float obtainBias();
