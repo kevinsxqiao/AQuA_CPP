@@ -291,7 +291,7 @@ namespace AQuA{
         }
 
         return frame;
-    }//load4D()
+    }//load3D()
     
     
     cv::Mat load2D(const char* fileName, const char* varName) {
@@ -357,7 +357,7 @@ namespace AQuA{
     }//load2D()
 
 
-    vector<vector<int>> loadCell(const char* fileName, const char* varName){
+    vector<vector<int>> loadCell_int(const char* fileName, const char* varName){
         MATFile *pmatFile;
         mxArray *pMxArray;
 
@@ -414,9 +414,107 @@ namespace AQuA{
         if (pmatFile != nullptr) {
             matClose(pmatFile);
         }
-
+        cout<<"data loaded"<< endl;
         return frame;
-    }//loadCell()
+    }//loadCell_int()
+
+
+    vector<vector<double>> loadCell_double(const char* fileName, const char* varName){
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        mwSize numCells = mxGetNumberOfElements(pMxArray);
+        mxArray* pCellElement = mxGetCell(pMxArray, 0);
+//        mxClassID classID = mxGetClassID(pCellElement);//get data type in cell
+
+        vector<vector<double>> frame(numCells);
+        for (mwIndex i = 0; i < numCells; i++) {
+            pCellElement = mxGetCell(pMxArray, i);
+            if (pCellElement != NULL) {
+                mwSize numElements = mxGetNumberOfElements(pCellElement);
+                double* pdata = static_cast<double*>(mxGetData(pCellElement));
+
+                frame[i].resize(numElements);
+                transform(pdata, pdata + numElements, frame[i].begin(), [](double val) { return (val); });
+            }
+        }
+        cout<<"number of cells:"<< numCells << endl;
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+        cout<<"data loaded"<< endl;
+        return frame;
+    }//loadCell_double()
+
+
+    vector<cv::Mat> loadCell_matrix(const char* fileName, const char* varName){
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        mwSize numCells = mxGetNumberOfElements(pMxArray);
+        mxArray* pCellElement = nullptr;
+
+        vector<cv::Mat> matrix(numCells);
+
+        for (mwIndex k = 0; k < numCells; k++) {
+            pCellElement = mxGetCell(pMxArray, k);
+            if (pCellElement != nullptr) {
+                void *pdata = (mxGetData(pCellElement));
+//                mxClassID classID = mxGetClassID(pCellElement);
+                const mwSize *dims = mxGetDimensions(pCellElement);
+
+                matrix[k] = cv::Mat(dims[0], dims[1], CV_32F);
+//                std::memcpy(matrix[k].data, pdata, dims[0] * dims[1] * sizeof(float));
+                for (int i = 0; i < dims[0]; ++i) {
+                    for (int j = 0; j < dims[1]; ++j){
+                        matrix[k].at<float>(i,j) = static_cast<double*>(pdata)[i+j*dims[0]];
+                    }//for(j)
+                }//for(i)
+            }//if
+        }//for(k)
+        cout<<"number of cells:"<< numCells << endl;
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+        cout<<"data loaded"<< endl;
+        return matrix;
+    }//loadCell_matrix()
 
 
     mxArray* cvDataToMxArray(const cv::Mat& data) {

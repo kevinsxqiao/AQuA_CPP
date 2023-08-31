@@ -31,8 +31,93 @@ namespace AQuA{
     }//myResize()
 
 
-    void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg){
+    void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg, const vector<float>& nanVec, float& mu, float& sigma){
+        static vector<vector<double>> mus;
+        static vector<cv::Mat> covMatrixs;
 
+        if(fg.empty() && bg.empty()){
+            mu = NAN;
+            sigma = NAN;
+            return;
+        }
+
+        int M = fg.size();
+        int N = bg.size();
+        int nanLen = nanVec.size();
+        int n = M + N + nanLen;
+
+        float** all = new float* [n];
+        for (int i = 0; i < n; ++i) {
+            all[i] = new float [2];    //all[i][0] = all; all[i][1] = label;
+        }
+
+        for (int i = 0; i < N; ++i) {
+            all[i][0] = bg[i];
+            all[i][1] = -1;
+        }
+        for (int i = N, j=0; i < M+N; ++i,++j) {
+            all[i][0] = fg[j];
+            all[i][1] = 1;
+        }
+        for (int i = M+N, j=0; i < n; ++i,++j) {
+            all[i][0] = nanVec[j];
+            all[i][1] = 0;
+        }
+
+        auto compareFunc = [](const float* a, const float* b) {
+            return a[0] < b[0];
+        };
+        sort(all,all+n, compareFunc);
+
+        if (mus.empty() || covMatrixs.empty()){
+            mus = loadCell_double("../cfg/Order_mus_sigmas.mat","mus");
+            covMatrixs = loadCell_matrix("../cfg/Order_mus_sigmas.mat","covMatrixs");
+        }
+
+        vector<double> muVec = mus[n-1];
+        vector<int> ind1;
+        vector<int> indm1;
+        vector<int> ind0;
+        for (int i = 0; i < muVec.size(); ++i) {
+            if (all[i][1] == 1){
+                ind1.emplace_back(i);
+            }
+            if (all[i][1] == -1){
+                indm1.emplace_back(i);
+            }
+            if (all[i][1] == 0){
+                ind0.emplace_back(i);
+            }
+        }
+        double tempSum1 = 0;
+        double tempSum2 = 0;
+        int cnt1 = 0;
+        int cnt2 = 0;
+        for (int inx: ind1) {
+            tempSum1+=muVec[inx];
+            ++cnt1;
+        }
+        for (int inx: indm1) {
+            tempSum2+=muVec[inx];
+            ++cnt2;
+        }
+        mu = tempSum1/cnt1 - tempSum2/cnt2;
+        cv::Mat covMatrix = covMatrixs[n-1];
+        for (int inx: ind0) {
+            covMatrix.row(inx) = 0;
+            covMatrix.col(inx) = 0;
+        }
+        for (int inx: ind1) {
+            cv::divide(covMatrix.row(inx),M,covMatrix.row(inx));
+            cv::divide(covMatrix.col(inx),M,covMatrix.col(inx));
+        }
+        for (int inx: indm1) {
+            cv::divide(covMatrix.row(inx),-N,covMatrix.row(inx));
+            cv::divide(covMatrix.col(inx),-N,covMatrix.col(inx));
+        }
+
+        sigma = sqrt(static_cast<float>(cv::sum(covMatrix)[0]));
+        return;
     }
 
 
@@ -217,7 +302,7 @@ namespace AQuA{
 
         }//for(ii_ihw)  --i
 
-        //LAST CORRECT!!!!!!!!!!!!!!!!!!!!
+
 
         vector<float> fg0;
         vector<float> bkL;
@@ -269,12 +354,23 @@ namespace AQuA{
             vector<float> bg1;
             vector<float> bg2;
             vector<float> nanV;
+            float mu;
+            float sigma;
             for (int ii = 0; ii < fgAll[i].size(); ++ii) { // access each element in fgAll[i]  ---ii
-                fg.emplace_back(fgAll[i][ii]/sigma0);
-                bg1.emplace_back(bgL[i][ii]/sigma0);
-                bg2.emplace_back(bgR[i][ii]/sigma0);
-                nanV.emplace_back(nanVec[i][ii]/sigma0);
+                if (!fgAll[i].empty()){
+                    fg.emplace_back(fgAll[i][ii]/sigma0);
+                }
+                if (!bgL[i].empty()){
+                    bg1.emplace_back(bgL[i][ii]/sigma0);
+                }
+                if (!bgR[i].empty()){
+                    bg2.emplace_back(bgR[i][ii]/sigma0);
+                }
+                if (!nanVec[i].empty()){
+                    nanV.emplace_back(nanVec[i][ii]/sigma0);
+                }
             }
+            vector<float> bg_nanV (bg2.begin(), bg2.end());
             if (!bg1.empty()){
                 float LL;
                 if (fg.size()==1){
@@ -288,6 +384,9 @@ namespace AQuA{
                     }
                     LL = fg_sum/fg.size() - bg1_sum/fg.size();
                 } //else
+                bg_nanV.insert(bg_nanV.end(),nanV.begin(), nanV.end());
+                ordStatSmallSampleWith0s(fg,bg1,bg_nanV,mu,sigma);
+                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
             }// if (!bg1.empty())
         }// for i = 1:numel(ihw)
 
@@ -698,7 +797,7 @@ namespace AQuA{
 //            vector<vector<Point_struct>> arLst1 = opts.arLst1;
             vector<vector<cv::Mat>> dataOrg1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "datOrg1");
             vector<vector<cv::Mat>> dF1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "dF1");
-            vector<vector<int>> arLst1 = AQuA::loadCell("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "arLst1");
+            vector<vector<int>> arLst1 = AQuA::loadCell_int("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "arLst1");
             AQuA::opts.tempVarOrg1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "tempVar");
             AQuA::opts.correctPars1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "correctPars");
             seDetection(dF1,dataOrg1,arLst1);

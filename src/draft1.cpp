@@ -14,6 +14,7 @@ namespace AQuA {
 
 
 int main(){
+    std::cout << std::fixed << std::setprecision(4);
     AQuA::Init();
     auto start = std::chrono::high_resolution_clock::now();
 //    std::vector<std::vector<cv::Mat>> dataOrg = AQuA::loadData();

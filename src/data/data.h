@@ -49,7 +49,9 @@ namespace AQuA{
     vector<vector<cv::Mat>> load4D(const char* fileName, const char* varName);
     cv::Mat load2D(const char* fileName, const char* varName);
     vector<cv::Mat> load3D(const char* fileName, const char* varName);
-    vector<vector<int>> loadCell(const char* fileName, const char* varName);
+    vector<vector<int>> loadCell_int(const char* fileName, const char* varName);
+    vector<vector<double>> loadCell_double(const char* fileName, const char* varName);
+    vector<cv::Mat> loadCell_matrix(const char* fileName, const char* varName);
     float*** create3dMatrix_float(int h, int w, int l);
     bool*** createEvtSpatialMask(int H, int W, int L);
     int*** create3dMatrix_int(int h, int w, int l);
