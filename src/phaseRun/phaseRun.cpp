@@ -370,9 +370,9 @@ namespace AQuA{
                     nanV.emplace_back(nanVec[i][ii]/sigma0);
                 }
             }
-            vector<float> bg_nanV (bg2.begin(), bg2.end());
             if (!bg1.empty()){
                 float LL;
+                vector<float> bg_nanV (bg2.begin(), bg2.end());
                 if (fg.size()==1){
                     LL = fg[0] - bg1[0];
                 } else{
@@ -386,8 +386,30 @@ namespace AQuA{
                 } //else
                 bg_nanV.insert(bg_nanV.end(),nanV.begin(), nanV.end());
                 ordStatSmallSampleWith0s(fg,bg1,bg_nanV,mu,sigma);
-                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+//                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+                mus_Left[i] = mu/sigma;
+                L_left[i] = LL/sigma;
             }// if (!bg1.empty())
+            if (!bg2.empty()){
+                float LL;
+                vector<float> bg_nanV (bg1.begin(), bg1.end());
+                if (fg.size()==1){
+                    LL = fg[0] - bg2[0];
+                } else{
+                    float fg_sum = 0;
+                    float bg2_sum = 0;
+                    for (int j = 0; j < fg.size(); ++j) {
+                        fg_sum += fg[j];
+                        bg2_sum += bg2[j];
+                    }
+                    LL = fg_sum/fg.size() - bg2_sum/fg.size();
+                } //else
+                bg_nanV.insert(bg_nanV.end(),nanV.begin(), nanV.end());
+                ordStatSmallSampleWith0s(fg,bg2,bg_nanV,mu,sigma);
+                mus_Right[i] = mu/sigma;
+                L_right[i] = LL/sigma;
+            }// if (!bg2.empty())
+
         }// for i = 1:numel(ihw)
 
 
