@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <boost/math/distributions/normal.hpp>
+#include <boost/math/distributions/non_central_t.hpp>
 #include <omp.h>
 #include <fftw3.h>
 #include <mat.h>
@@ -17,6 +18,7 @@
 #include <matrix.h>
 #include <cstdlib>
 #include <unordered_set>
+#include <fstream>
 
 using namespace std;
 
@@ -69,6 +71,8 @@ namespace AQuA{
     int sub2ind(int i, int j, int k,int t, int h, int w, int l);
     Point_struct ind2sub(int ind, int h, int w);
     Point_struct ind2sub(int ind, int h, int w, int l);
+    void save_vector(const vector<double>& vec, const string& file_path);
+    vector<double> load_vector(const string& file_path);
 
 
 

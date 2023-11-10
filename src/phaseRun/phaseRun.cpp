@@ -31,7 +31,7 @@ namespace AQuA{
     }//myResize()
 
 
-    void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg, const vector<float>& nanVec, float& mu, float& sigma){
+    void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg, const vector<float>& nanVec, double& mu, double& sigma){
         static vector<vector<double>> mus;
         static vector<cv::Mat> covMatrixs;
 
@@ -102,18 +102,18 @@ namespace AQuA{
             ++cnt2;
         }
         mu = tempSum1/cnt1 - tempSum2/cnt2;
-        cv::Mat covMatrix = covMatrixs[n-1];
+        cv::Mat covMatrix = covMatrixs[n-1].clone();
         for (int inx: ind0) {
             covMatrix.row(inx) = 0;
             covMatrix.col(inx) = 0;
         }
         for (int inx: ind1) {
-            cv::divide(covMatrix.row(inx),M,covMatrix.row(inx));
-            cv::divide(covMatrix.col(inx),M,covMatrix.col(inx));
+            cv::divide(covMatrix.row(inx),static_cast<float>(M),covMatrix.row(inx));
+            cv::divide(covMatrix.col(inx),static_cast<float>(M),covMatrix.col(inx));
         }
         for (int inx: indm1) {
-            cv::divide(covMatrix.row(inx),-N,covMatrix.row(inx));
-            cv::divide(covMatrix.col(inx),-N,covMatrix.col(inx));
+            cv::divide(covMatrix.row(inx),static_cast<float>(-N),covMatrix.row(inx));
+            cv::divide(covMatrix.col(inx),static_cast<float>(-N),covMatrix.col(inx));
         }
 
         sigma = sqrt(static_cast<float>(cv::sum(covMatrix)[0]));
@@ -334,14 +334,14 @@ namespace AQuA{
         float correctPar = truncated_kept_var(cnt/cnt2);
         float noise_sum = 0;
         for (int i = 0; i < noise.size(); ++i) {
-            noise_sum += noise[0];
+            noise_sum += noise[i];
         }
         float sigma0 = sqrt(noise_sum/noise.size()/correctPar)/ sqrt(t_scl);
 
-        vector<float> mus_Left(ihw.size());
-        vector<float> L_left(ihw.size());
-        vector<float> mus_Right(ihw.size());
-        vector<float> L_right(ihw.size());
+        vector<double> mus_Left(ihw.size());
+        vector<double> L_left(ihw.size());
+        vector<double> mus_Right(ihw.size());
+        vector<double> L_right(ihw.size());
         for (int i = 0; i < ihw.size(); ++i) {
             mus_Left[i] = 0;
             mus_Right[i] = 0;
@@ -354,22 +354,39 @@ namespace AQuA{
             vector<float> bg1;
             vector<float> bg2;
             vector<float> nanV;
-            float mu;
-            float sigma;
-            for (int ii = 0; ii < fgAll[i].size(); ++ii) { // access each element in fgAll[i]  ---ii
-                if (!fgAll[i].empty()){
+            double mu;
+            double sigma;
+            if (!fgAll[i].empty()){
+                for (int ii = 0; ii < fgAll[i].size(); ++ii) {
                     fg.emplace_back(fgAll[i][ii]/sigma0);
-                }
-                if (!bgL[i].empty()){
                     bg1.emplace_back(bgL[i][ii]/sigma0);
-                }
-                if (!bgR[i].empty()){
                     bg2.emplace_back(bgR[i][ii]/sigma0);
                 }
-                if (!nanVec[i].empty()){
+            }
+            if (!nanVec[i].empty()){
+                for (int ii = 0; ii < nanVec[i].size(); ++ii) {
                     nanV.emplace_back(nanVec[i][ii]/sigma0);
                 }
             }
+//            for (int ii = 0; ii < fgAll[i].size(); ++ii) { // access each element in fgAll[i]  ---ii
+//                if (!fgAll[i].empty()){
+//                    fg.emplace_back(fgAll[i][ii]/sigma0);
+//                }
+//                if (!bgL[i].empty()){
+//                    bg1.emplace_back(bgL[i][ii]/sigma0);
+//                }
+//                if (!bgR[i].empty()){
+//                    bg2.emplace_back(bgR[i][ii]/sigma0);
+//                }
+//                if (!nanVec[i].empty()){
+//                    nanV.emplace_back(nanVec[i][ii]/sigma0);
+//                }
+//            }
+//            if (!nanVec[i].empty()){
+//                for (int ii = 0; ii < nanVec.size(); ++ii) {
+//                    nanV.emplace_back(nanVec[i][ii]/sigma0);
+//                }
+//            }
             if (!bg1.empty()){
                 float LL;
                 vector<float> bg_nanV (bg2.begin(), bg2.end());
@@ -385,8 +402,8 @@ namespace AQuA{
                     LL = fg_sum/fg.size() - bg1_sum/fg.size();
                 } //else
                 bg_nanV.insert(bg_nanV.end(),nanV.begin(), nanV.end());
+//                cout<< i <<endl;
                 ordStatSmallSampleWith0s(fg,bg1,bg_nanV,mu,sigma);
-//                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
                 mus_Left[i] = mu/sigma;
                 L_left[i] = LL/sigma;
             }// if (!bg1.empty())
@@ -411,11 +428,100 @@ namespace AQuA{
             }// if (!bg2.empty())
 
         }// for i = 1:numel(ihw)
+        float degreeOfFreedom_sum = 0;
+        for (auto i: degreeOfFreedoms) {
+            degreeOfFreedom_sum += i;
+        }
+        float degreeOfFreedom_val = 2 * pow(degreeOfFreedom_sum,2) / (3 * degreeOfFreedom_sum - degreeOfFreedoms.size());
+//        save_vector(L_left,"C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\L_left.bin");
+//        save_vector(L_right,"C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\L_right.bin");
+//        save_vector(mus_Left,"C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\mus_Left.bin");
+//        save_vector(mus_Right,"C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\mus_Right.bin");
+        vector<double>z_Left(L_left.size());
+        vector<double>z_Right(L_right.size());
+        //  #### non-central cdf is different from the one in matlab
+        boost::math::normal_distribution<double> norm;
+        for (int i = 0; i < L_left.size(); ++i) {
+//        std::cout << "Iteration " << i << ": degreeOfFreedom_val=" << round(degreeOfFreedom_val) << ", mus_Left[i]=" << mus_Left[i] << std::endl;
+            boost::math::non_central_t_distribution<double> nct(round(degreeOfFreedom_val), mus_Left[i]);
+            double upperCDF = 1.0 - boost::math::cdf(nct, L_left[i]);
+            if (upperCDF > 0.999999999999) {
+                upperCDF = 0.999999999999;
+            } else if (upperCDF < 0.000000000001) {
+                upperCDF = 0.000000000001;
+            }
+//        cout<<"upperCDF:"<<upperCDF<<endl;
+            z_Left[i] = -boost::math::quantile(norm, upperCDF);
+        }
+        for (int i = 0; i < L_right.size(); ++i) {
+            boost::math::non_central_t_distribution<double> nct(round(degreeOfFreedom_val), mus_Right[i]);
+            double upperCDF = 1.0 - boost::math::cdf(nct, L_right[i]);
+            if (upperCDF > 0.999999999999) {
+                upperCDF = 0.999999999999;
+            } else if (upperCDF < 0.000000000001) {
+                upperCDF = 0.000000000001;
+            }
+            z_Right[i] = -boost::math::quantile(norm, upperCDF);
+        }
 
+        float sz_sum = 0;
+        for (int i = 0; i < sz.size(); ++i) {
+            result.z_score1 += sqrt(sz[i])*z_Left[i];
+            result.z_score2 += sqrt(sz[i])*z_Right[i];
+            sz_sum += sz[i];
+        }
+        result.z_score1 /= sqrt(sz_sum);
+        result.z_score2 /= sqrt(sz_sum);
 
-        cout<<1;
+        result.t_score1 = 0;
+        for (int i = 0; i < fg0.size(); ++i) {
+            fg0[i] /= sigma0;
+            bkL[i] /= sigma0;
+            bkR[i] /= sigma0;
+        }
+        if (!bkL.empty()){
+            float fg0_sum = 0;
+            float bkL_sum = 0;
+            for (int i = 0; i < fg0.size(); ++i) {
+                fg0_sum += fg0[i];
+                bkL_sum += bkL[i];
+            }
+            result.t_score1 = (fg0_sum/fg0.size() - bkL_sum/fg0.size()) / sqrt(1.0/fg0.size()+1.0/bkL.size());
+        }
 
+        result.t_score2 = 0;
+        if (!bkR.empty()){
+            float fg0_sum = 0;
+            float bkR_sum = 0;
+            for (int i = 0; i < fg0.size(); ++i) {
+                fg0_sum += fg0[i];
+                bkR_sum += bkR[i];
+            }
+            result.t_score2 = (fg0_sum/fg0.size() - bkR_sum/fg0.size()) / sqrt(1.0/fg0.size()+1.0/bkR.size());
+        }
 
+        if (noise.size()<100){
+            double dof = static_cast<double>(noise.size()) - 1.0;
+            boost::math::students_t_distribution<double> student_t(dof);
+            double upperCDF1 = 1.0 - boost::math::cdf(student_t, result.t_score1);
+            double upperCDF2 = 1.0 - boost::math::cdf(student_t, result.t_score2);
+            if (upperCDF1 > 0.999999999999) {
+                upperCDF1 = 0.999999999999;
+            } else if (upperCDF1 < 0.000000000001) {
+                upperCDF1 = 0.000000000001;
+            }
+            if (upperCDF2 > 0.999999999999) {
+                upperCDF2 = 0.999999999999;
+            } else if (upperCDF2 < 0.000000000001) {
+                upperCDF2 = 0.000000000001;
+            }
+            boost::math::normal_distribution<double> norm_noise;
+            result.t_score1 = -boost::math::quantile(norm_noise, upperCDF1);
+            result.t_score2 = -boost::math::quantile(norm_noise, upperCDF2);
+        }
+
+//        cout<<"result: "<<result.z_score1<<" "<<result.z_score2;
+        return result;
     }//getSeedScore_DS4
 
 
@@ -432,7 +538,7 @@ namespace AQuA{
         //reScl dFOrg
         for (int ii = 0; ii < scaleRatios.size(); ++ii) {
             float scaleRatio = scaleRatios[ii];
-            #pragma omp parallel for collapse(2)
+//            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
 //                    cv::resize(dataOrg[t][k],datDS[t][k],cv::Size(),1/scaleRatio,1/scaleRatio, cv::INTER_AREA);
@@ -442,7 +548,7 @@ namespace AQuA{
 
             //consider the possible noise correlation, need to re-estimate noise
             vector<cv::Mat> curVarMap(L);
-            #pragma omp parallel for
+//            #pragma omp parallel for
             for (int k = 0; k < L; ++k) {
                 curVarMap[k] = cv::Mat(cv::Mat(datDS[0][0].rows,datDS[0][0].cols,CV_32F));
                 cv::Mat sum = cv::Mat::zeros(datDS[0][0].rows,datDS[0][0].cols,CV_32F);
@@ -468,7 +574,7 @@ namespace AQuA{
             vector<cv::Mat> var1(L);
             vector<cv::Mat> var2(L);
             vector<cv::Mat> curStdMap(L);
-            #pragma omp parallel for
+//            #pragma omp parallel for
             for (int k = 0; k < L; ++k) {
                 var1[k] = myResize(opts.tempVarOrg1[k],scaleRatio,scaleRatio);
 
@@ -489,7 +595,7 @@ namespace AQuA{
                 }
             }//for(k)
 
-            #pragma omp parallel for collapse(2)
+//            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
                     datResize[ii][t][k] = datDS[t][k];  //zScoreMap scaling
@@ -516,6 +622,7 @@ namespace AQuA{
 //        }
         return datResize;
     }//normalizeAndResize()
+    //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
 
 
     void seedDetect2_DS_accelerate(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg,
@@ -534,7 +641,7 @@ namespace AQuA{
 
         //assign saturation part can always be selected when checking seed
         if (opts.maxValueDat1 == pow(2, opts.BitDepth) - 1){
-            #pragma omp parallel for collapse(2)
+//            #pragma omp parallel for collapse(2)
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
                     cv::Mat mask = (dataOrg[t][k]==1);
@@ -545,7 +652,7 @@ namespace AQuA{
 
         vector<int> regSz(arLst.size());
         vector<vector<cv::Mat>> activeMap(T,vector<cv::Mat>(L));
-        #pragma omp parallel for collapse(2)
+//        #pragma omp parallel for collapse(2)
         for (int t = 0; t < T; ++t) {
             for (int k = 0; k < L; ++k) {
                 activeMap[t][k] = cv::Mat::zeros(H,W,CV_16U);
@@ -597,7 +704,7 @@ namespace AQuA{
 
         //seed map
         vector<vector<cv::Mat>> zscoreMap(T,vector<cv::Mat>(L));
-        #pragma omp parallel for collapse(2)
+//        #pragma omp parallel for collapse(2)
         for (int t = 0; t < dF.size(); ++t) {
             for (int k = 0; k < dF[0].size(); ++k) {
                 zscoreMap[t][k] = cv::Mat::zeros(dF[0][0].rows,dF[0][0].cols, CV_32F);
@@ -620,7 +727,7 @@ namespace AQuA{
                 }//for(ind)
 
                 vector<vector<cv::Mat>> selectMap(dFResize[ii_ds].size(),vector<cv::Mat>(dFResize[ii_ds][0].size()));
-                #pragma omp parallel for collapse(2)
+//                #pragma omp parallel for collapse(2)
                 for (int t = 0; t < dFResize[ii_ds].size(); ++t) {
                     for (int k = 0; k < dFResize[ii_ds][0].size(); ++k) {
                         selectMap[t][k] = cv::Mat::zeros(dFResize[ii_ds][0][0].rows, dFResize[ii_ds][0][0].cols, CV_8U);
@@ -715,7 +822,7 @@ namespace AQuA{
                         if (add == scaleRatio+1){
                             add = 1;
                         }
-                        #pragma omp parallel for
+//                        #pragma omp parallel for
                         for (int row = 0; row < ih.size(); ++row) {
                             ihOrg.at<ushort>(row,col) = ih[row]*scaleRatio - 1 + add;  // matlab: (ih[]-1)*scaleRatio
                             iwOrg.at<ushort>(row,col) = iw[row]*scaleRatio - 1 + tmp[col];

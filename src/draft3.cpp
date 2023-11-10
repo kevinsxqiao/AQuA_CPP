@@ -9,37 +9,38 @@
 
 
 
+
 int main(){
-    omp_set_num_threads(12);
-    auto start = std::chrono::high_resolution_clock::now();
-    AQuA::Init();
-    std::vector<std::vector<cv::Mat>> dataOrg = AQuA::loadData();
-    std::cout<< "0,0"<<std::endl;
-    for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 7; ++j) {
-            std::cout<< dataOrg[0][0].at<float>(i,j)<<"  ";
-        }
-        std::cout<<std::endl;
+    vector<double> L_left = AQuA::load_vector("C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\L_left.bin");
+    vector<double> L_right = AQuA::load_vector("C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\L_right.bin");
+    vector<double> mus_Left = AQuA::load_vector("C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\mus_Left.bin");
+    vector<double> mus_Right = AQuA::load_vector("C:\\Users\\Kevin Qiao\\Desktop\\AQuA_data\\test\\mus_Right.bin");
+    double degreeOfFreedom_val = 710.0;
+    vector<double>z_Left(L_left.size());
+    vector<double>z_Right(L_right.size());
+    //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+    boost::math::normal_distribution<double> norm;
+    for (int i = 0; i < L_left.size(); ++i) {
+//        std::cout << "Iteration " << i << ": degreeOfFreedom_val=" << round(degreeOfFreedom_val) << ", mus_Left[i]=" << mus_Left[i] << std::endl;
+        boost::math::non_central_t_distribution<double> nct(round(degreeOfFreedom_val), mus_Left[i]);
+        double upperCDF = 1.0 - boost::math::cdf(nct, L_left[i]);
+            if (upperCDF > 0.999999999999) {
+                upperCDF = 0.999999999999;
+            } else if (upperCDF < 0.000000000001) {
+                upperCDF = 0.000000000001;
+            }
+//        cout<<"upperCDF:"<<upperCDF<<endl;
+        z_Left[i] = -boost::math::quantile(norm, upperCDF);
     }
-    std::cout<<std::endl;
-    std::cout<< "0,1"<<std::endl;
-    for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 7; ++j) {
-            std::cout<< dataOrg[0][1].at<float>(i,j)<<"  ";
+    for (int i = 0; i < L_right.size(); ++i) {
+        boost::math::non_central_t_distribution<double> nct(round(degreeOfFreedom_val), mus_Right[i]);
+        double upperCDF = 1.0 - boost::math::cdf(nct, L_right[i]);
+        if (upperCDF > 0.999999999999) {
+            upperCDF = 0.999999999999;
+        } else if (upperCDF < 0.000000000001) {
+            upperCDF = 0.000000000001;
         }
-        std::cout<<std::endl;
+        z_Right[i] = -boost::math::quantile(norm, upperCDF);
     }
-    std::cout<<std::endl;
-    std::cout<< "1,1"<<std::endl;
-    for (int i = 0; i < 7; ++i) {
-        for (int j = 0; j < 7; ++j) {
-            std::cout<< dataOrg[1][1].at<float>(i,j)<<"  ";
-        }
-        std::cout<<std::endl;
-    }
-    std::cout<<std::endl;
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "used time: " << duration/1000 << " seconds" << std::endl;
     return 0;
 }

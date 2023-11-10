@@ -3,6 +3,11 @@
 //
 
 #include "data.h"
+
+class path;
+
+class path;
+
 using namespace std;
 
 namespace AQuA{
@@ -13,6 +18,74 @@ namespace AQuA{
 //    struct rawDataSize_struct rawDataSize;
     struct preSetting_struct preSetting;
     struct opts_struct opts;
+
+
+
+    //    judge if registration and bleach have been executed; ---- true = no ; false = both executed
+    bool isDefault() {
+        return (preSetting.registrateCorrect == preSetting.registrateCorrect_default
+                && preSetting.bleachCorrect == preSetting.bleachCorrect_default);
+    }// isDefault()
+
+
+    void preSettingInit(){
+        preSetting.registrateCorrect = preSetting.registrateCorrect_default;
+        preSetting.bleachCorrect = preSetting.bleachCorrect_default;
+        cout<< "--------preSetting initialized--------"<<endl;
+    }// preSettingInit()
+
+
+    void optsInit(){
+        opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
+        opts.alreadyPreprocess = false;
+        opts.alreadyBleachCorrect = false;
+        opts.movAvgWin = 25;
+        opts.cut = 200;
+        opts.smoXY = 0.5;
+        opts.BitDepth = -1;
+        opts.regMaskGap = 5;
+        opts.singleChannel = true;
+        opts.registrateCorrect = 0;
+        opts.bleachCorrect = 0;
+        opts.medSmo = 1;
+        opts.cut = 200;
+        opts.maxdF1 = 1;
+        opts.thrARScl = 3;
+        opts.minSize = 20;
+        opts.maxSize = INFINITY;
+        opts.minDur = 5;
+        opts.circularityThr = 0;
+        opts.spaMergeDist = 0;
+        opts.compress = 0;
+        opts.needTemp = true;
+        opts.step = 0.5;
+        opts.sigThr = 3.5;
+        opts.maxDelay = 0.6;
+        opts.seedSzRatio = 3.5;
+        opts.needRefine = false;
+        opts.needGrow = false;
+        opts.maxSpaScale = 7;
+        opts.minSpaScale = 3;
+        opts.TPatch = 20;
+
+        cout<< "--------opts initialized--------"<<endl;
+    }// optsInit()
+
+
+//    void rawDataSizeInit(){
+//        rawDataSize={0};
+//        cout<< "--------rawDataSize initialized--------"<<endl;
+//    }
+
+
+    void Init(){
+        preSettingInit();
+        optsInit();
+//        rawDataSizeInit();
+        cout<<endl;
+    }
+
+
 
     vector<vector<cv::Mat>> loadData() {
         MATFile *pmatFile;
@@ -835,80 +908,38 @@ namespace AQuA{
     }
 
 
-//    judge if registration and bleach have been executed; ---- true = no ; false = both executed
-    bool isDefault() {
-        return (preSetting.registrateCorrect == preSetting.registrateCorrect_default
-                && preSetting.bleachCorrect == preSetting.bleachCorrect_default);
-    }// isDefault()
-
-
-    void preSettingInit(){
-        preSetting.registrateCorrect = preSetting.registrateCorrect_default;
-        preSetting.bleachCorrect = preSetting.bleachCorrect_default;
-        cout<< "--------preSetting initialized--------"<<endl;
-    }// preSettingInit()
-
-
-    void optsInit(){
-        opts.fileName1 = "C:/Users/Kevin Qiao/Desktop/AQuA_data/Test_global_local_3D.mat";
-        opts.alreadyPreprocess = false;
-        opts.alreadyBleachCorrect = false;
-        opts.movAvgWin = 25;
-        opts.cut = 200;
-        opts.smoXY = 0.5;
-        opts.BitDepth = -1;
-        opts.regMaskGap = 5;
-        opts.singleChannel = true;
-        opts.registrateCorrect = 0;
-        opts.bleachCorrect = 0;
-        opts.medSmo = 1;
-        opts.cut = 200;
-        opts.maxdF1 = 1;
-        opts.thrARScl = 3;
-        opts.minSize = 20;
-        opts.maxSize = INFINITY;
-        opts.minDur = 5;
-        opts.circularityThr = 0;
-        opts.spaMergeDist = 0;
-        opts.compress = 0;
-        opts.needTemp = true;
-        opts.step = 0.5;
-        opts.sigThr = 3.5;
-        opts.maxDelay = 0.6;
-        opts.seedSzRatio = 3.5;
-        opts.needRefine = false;
-        opts.needGrow = false;
-        opts.maxSpaScale = 7;
-        opts.minSpaScale = 3;
-        opts.TPatch = 20;
-
-        cout<< "--------opts initialized--------"<<endl;
-    }// optsInit()
-
-
-//    void rawDataSizeInit(){
-//        rawDataSize={0};
-//        cout<< "--------rawDataSize initialized--------"<<endl;
-//    }
-
-
-    void Init(){
-        preSettingInit();
-        optsInit();
-//        rawDataSizeInit();
-        cout<<endl;
+    void save_vector(const vector<double>& vec, const string& file_path) {
+        ofstream output_file(file_path, ios::binary);
+        if (!output_file.is_open()) {
+            throw runtime_error("Unable to open file for writing: " + file_path);
+        }
+        
+        size_t size = vec.size();
+        output_file.write(reinterpret_cast<const char*>(&size), sizeof(size));
+        
+        output_file.write(reinterpret_cast<const char*>(vec.data()), size * sizeof(double));
+        output_file.close();
+        cout<<"vector saved"<< endl;
     }
 
-//    /*
-//     * crop the 2d image from each direction by 'bdCrop'
-//     */
-//    void crop(cv::Mat& image, int bdCrop){
-////    cv::Rect roi = cv::Rect(bdCrop,bdCrop,W-2*bdCrop,H-2*bdCrop);
-////    image.adjustROI(-roi.y, image.rows - (roi.y+roi.height), -roi.x, image.cols- (roi.x+roi.width));
-//        image.adjustROI(-bdCrop, -bdCrop, -bdCrop, -bdCrop);
-//    }
-//
-//
+
+    
+    vector<double> load_vector(const string& file_path) {
+        ifstream input_file(file_path, ios::binary);
+        if (!input_file.is_open()) {
+            throw runtime_error("Unable to open file for reading: " + file_path);
+        }
+        
+        size_t size;
+        input_file.read(reinterpret_cast<char*>(&size), sizeof(size));
+        
+        vector<double> vec(size);
+        input_file.read(reinterpret_cast<char*>(vec.data()), size * sizeof(double));
+        input_file.close();
+        cout<<"vector loaded"<< endl;
+        return vec;
+    }
+    
 
 
 

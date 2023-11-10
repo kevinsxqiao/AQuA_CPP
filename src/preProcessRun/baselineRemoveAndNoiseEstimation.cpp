@@ -921,7 +921,7 @@ namespace AQuA{
                 cv::Mat temp1 = cv::Mat(H,W,CV_32F);
                 cv::Mat temp2 = cv::Mat(H,W,CV_32F);
                 cv::filter2D(tempMap[k]/correctPars[k], temp1, -1, filter[dist]);
-                cv::filter2D(varMapOrg[k], temp2, -1, filter[dist]);
+                cv::filter2D(tempVarOrg[k], temp2, -1, filter[dist]);
                 cv::divide(temp1, temp2, temp1);
                 cv::multiply(varMapSmo[k], temp1, varMapSmo[k]);
 //                varMapSmo[k] = varMapSmo[k] * temp1 / temp2;

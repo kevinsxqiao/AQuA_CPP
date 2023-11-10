@@ -1,67 +1,33 @@
-vector<cv::Mat> load3D(const char* fileName, const char* varName) {
-    MATFile *pmatFile;
-    mxArray *pMxArray;
+#include <iostream>
+#include <vector>
+#include <opencv2/opencv.hpp>
+#include <boost/math/distributions/non_central_t.hpp>
+#include <boost/math/distributions/normal.hpp>
 
-    cout<< "--------loading data--------"<<endl;
-    pmatFile = matOpen(fileName, "r");
-    if (pmatFile == nullptr) {
-        cout<< "--------error opening file--------"<<endl;
-        exit(-1);
+int main() {
+    // 示例数据
+    std::vector<double> L_left = {...}; // 你的输入数据
+    std::vector<double> degreeOfFreedom = {...}; // 假设每个元素都有一个对应的自由度
+    std::vector<double> mus_Left = {...}; // 你的输入数据
+
+    int n = L_left.size(); // 假设所有数组都有相同的大小
+    std::vector<double> z_Left(n);
+
+    boost::math::normal_distribution<> norm;
+
+    for (int i = 0; i < n; ++i) {
+        // 计算非中心t分布的CDF的上尾值
+        boost::math::non_central_t_distribution<> nct(round(degreeOfFreedom[i]), mus_Left[i]);
+        double upperCDF = 1.0 - boost::math::cdf(nct, L_left[i]);
+
+        // 计算正态分布的逆CDF
+        z_Left[i] = boost::math::quantile(norm, upperCDF);
     }
 
-    pMxArray = matGetVariable(pmatFile, varName);
-    if (pMxArray == nullptr) {
-        cout<< "--------error reading variable from file--------"<<endl;
-        exit(-1);
+    // 输出z_Left的值
+    for (double z : z_Left) {
+        std::cout << z << std::endl;
     }
 
-    void* pdata = mxGetData(pMxArray);
-    mxClassID classID = mxGetClassID(pMxArray);
-
-    if (pdata == nullptr) {
-        cout<< "--------error reading data from variable-------"<<endl;
-        exit(-1);
-    }
-
-    const mwSize *dims = mxGetDimensions(pMxArray);
-
-    vector<cv::Mat> frame(dims[2]);
-
-    if (classID == mxSINGLE_CLASS){
-        for (int k = 0; k < dims[2]; ++k) {
-            frame[k] = cv::Mat(dims[0],dims[1],CV_32F);
-            for (int i = 0; i < dims[0]; ++i) {
-                for (int j = 0; j < dims[1]; ++j){
-                    frame[k].at<float>(i,j) = static_cast<float*>(pdata)[sub2ind(i,j,k,dims[0],dims[1])];
-                }//for(j)
-            }//for(i)
-        }//for(k)
-    } else if(classID == mxDOUBLE_CLASS){
-        for (int k = 0; k < dims[2]; ++k) {
-            frame[k] = cv::Mat(dims[0],dims[1],CV_32F);
-            for (int i = 0; i < dims[0]; ++i) {
-                for (int j = 0; j < dims[1]; ++j){
-                    frame[k].at<float>(i,j) = static_cast<double*>(pdata)[sub2ind(i,j,k,dims[0],dims[1])];
-                }//for(j)
-            }//for(i)
-        }//for(k)
-    } else{
-        cout << "Unhandled data type." << endl;
-    }
-
-    cout<<"height of image:"<< dims[0] << endl;
-    cout<<"width of image:"<< dims[1] << endl;
-    cout<<"length of image:"<< dims[2] << endl;
-    cout<<"--------data loaded--------"<<endl;
-
-    //release MAT pointer
-    if (pMxArray != nullptr) {
-        mxDestroyArray(pMxArray);
-    }
-
-    if (pmatFile != nullptr) {
-        matClose(pmatFile);
-    }
-
-    return frame;
-}//load4D()
+    return 0;
+}
