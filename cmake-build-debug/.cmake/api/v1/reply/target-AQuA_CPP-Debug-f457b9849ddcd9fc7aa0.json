@@ -200,12 +200,12 @@
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\microsoft\\libmat.lib\"",
+				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\mingw64\\libmat.lib\"",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\microsoft\\libmx.lib\"",
+				"fragment" : "\"C:\\Program Files\\MATLAB\\R2022b\\extern\\lib\\win64\\mingw64\\libmx.lib\"",
 				"role" : "libraries"
 			},
 			{
