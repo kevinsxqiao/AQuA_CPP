@@ -622,7 +622,6 @@ namespace AQuA{
 //        }
         return datResize;
     }//normalizeAndResize()
-    //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
 
 
     void seedDetect2_DS_accelerate(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg,
@@ -677,15 +676,15 @@ namespace AQuA{
 
         //down sampled data
         vector<vector<vector<cv::Mat>>> validMaps(scaleRatios.size(),vector<vector<cv::Mat>>(T,vector<cv::Mat>(L))); //treat as boolean
-        /*
-         * datResize is flattened in MATLAB, remain 4D matrix in C++
-         */
+
         vector<vector<vector<cv::Mat>>> datResize = normalizeAndResize(dataOrg); //normalized data to do significance test
         vector<vector<vector<cv::Mat>>> dFResize(scaleRatios.size(),vector<vector<cv::Mat>>(T,vector<cv::Mat>(L))); //down sampled data to do selection
         vector<float> H0s(scaleRatios.size(), 0);
         vector<float> W0s(scaleRatios.size(), 0);
         for (int j = 0; j < scaleRatios.size(); ++j) {
 //            datResize[j] = reshape
+//            int datResize_rows = datResize[j][0].size() * datResize[j][0][0].cols * datResize[j][0][0].rows;
+//            cv::Mat datResize_2d = cv::Mat(datResize_rows,T,datResize[0][0][0].type());
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
 //                    cv::Mat temp_dF;
@@ -866,8 +865,27 @@ namespace AQuA{
 
                     //calculate significance
                     float t_scl = max(1.0, round(static_cast<double>(dur)/opts.TPatch));
-                    getSeedScore_DS4(pix,datResize[ii_ds],H0,W0,L,T,t_scl);
-
+                    Score_struct result = getSeedScore_DS4(pix,datResize[ii_ds],H0,W0,L,T,t_scl);
+                    float res_tMin = min(result.t_score1, result.t_score2);
+                    float res_zMin = min(result.z_score1, result.z_score2);
+                    if (min(res_tMin, res_zMin) > opts.sigThr){
+                        // check seed curve significance
+                        cv::Mat curve_pre = cv::Mat(1, T, CV_32F);
+                        for (int ii_t = 0; ii_t < T; ++ii_t) {
+                            float sum_temp = 0;
+                            for (auto ii_ihw:ihw) {
+                                Point_struct point_ihw = ind2sub(ii_ihw, H0, W0);
+                                int point_h = point_ihw.i;
+                                int point_w = point_ihw.j;
+                                int point_l = point_ihw.k;
+                                sum_temp += datResize[ii_ds][ii_t][point_l].at<float>(point_h, point_w);
+                            }
+                            curve_pre.at<float>(0,ii_t) = sum_temp / ihw.size();
+                        } // get curve
+                        cv::Mat curve = myResize(curve_pre, t_scl, 1);
+                        //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+                        cout<<1;
+                    }
 
 
 
