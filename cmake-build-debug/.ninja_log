@@ -1,6 +1,6 @@
 # ninja log v5
 59	6693	7212850579709995	CMakeFiles/AQuA_CPP.dir/src/actRun/actRun.cpp.obj	cb5026c44d821bff
-2	802	7214476379497982	build.ninja	8593899cfb5cf8b8
+2	802	7215314584109475	build.ninja	8593899cfb5cf8b8
 4985	7889	7214475922311931	AQuA_CPP.exe	bacea20d579d3ea1
 24	4589	7214418433819137	CMakeFiles/AQuA_CPP.dir/src/draft1.cpp.obj	213c37670361cabf
 41	5650	7212850569266000	CMakeFiles/AQuA_CPP.dir/src/preProcessRun/regCrossCorrelation.cpp.obj	a93d50e9b2b5e1af
@@ -17,3 +17,17 @@
 19	4565	7103693462960179	CMakeFiles/AQuA_CPP.dir/src/main.cpp.obj	3af6724844b245e5
 37	7622	7214440884737657	CMakeFiles/AQuA_CPP.dir/src/phaseRun/phaseRun.cpp.obj	f809f58528ca574
 20	5269	7151255415605995	CMakeFiles/AQuA_CPP.dir/src/phaseRun/draft.cpp.obj	64e90467a00dfd4
+11	822	7215345793662785	CMakeFiles/AQuA_CPP.dir/src/flow/flow.cpp.obj	1af002a091aaf17a
+3	5516	7215345840595696	CMakeFiles/AQuA_CPP.dir/src/draft1.cpp.obj	213c37670361cabf
+52	5773	7215345843134224	CMakeFiles/AQuA_CPP.dir/src/preProcessRun/regCrossCorrelation.cpp.obj	a93d50e9b2b5e1af
+46	5913	7215345844523706	CMakeFiles/AQuA_CPP.dir/src/preProcessRun/preProcessRun.cpp.obj	8411ec0963cf8a4b
+64	6504	7215345850380079	CMakeFiles/AQuA_CPP.dir/src/actRun/actRun.cpp.obj	cb5026c44d821bff
+33	6542	7215345850789844	CMakeFiles/AQuA_CPP.dir/src/data/data.cpp.obj	42f97c492853c265
+41	6656	7215345851899195	CMakeFiles/AQuA_CPP.dir/src/preProcessRun/baselineRemoveAndNoiseEstimation.cpp.obj	6b0ac8c572eaa7de
+58	8747	7215345872717265	CMakeFiles/AQuA_CPP.dir/src/phaseRun/phaseRun.cpp.obj	f809f58528ca574
+8748	11374	7215345898980344	AQuA_CPP.exe	1276726a27372ba7
+28	4702	7217043809398402	CMakeFiles/AQuA_CPP.dir/src/draft1.cpp.obj	213c37670361cabf
+36	8651	7217043848676141	CMakeFiles/AQuA_CPP.dir/src/phaseRun/phaseRun.cpp.obj	f809f58528ca574
+8651	11887	7217043881141104	AQuA_CPP.exe	1276726a27372ba7
+22	8315	7217057390264882	CMakeFiles/AQuA_CPP.dir/src/phaseRun/phaseRun.cpp.obj	f809f58528ca574
+8316	11070	7217057417772190	AQuA_CPP.exe	1276726a27372ba7

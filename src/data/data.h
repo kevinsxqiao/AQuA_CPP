@@ -47,6 +47,7 @@ namespace AQuA{
 //    void rawDataSizeInit();
     void Init();
 //    void crop(cv::Mat& image, int bdCrop);
+    float medianFunc(float* array, int size);
     vector<vector<cv::Mat>> loadData();
     vector<vector<cv::Mat>> load4D(const char* fileName, const char* varName);
     cv::Mat load2D(const char* fileName, const char* varName);

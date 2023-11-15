@@ -121,6 +121,148 @@ namespace AQuA{
     }
 
 
+
+    bool curveSignificance3(cv::Mat curve, int t0, int t1, float sigThr){
+        bool isSigLeft = false;
+        bool isSigRight = false;
+        int T = curve.cols;
+
+//        relative local? Here just assume noise related to intensity
+//        maxV = max(curve(t0:t1));
+//        minV = min(curve(t0:t1));
+//        similar = curve<maxV*1.2 & curve>minV*0.8;
+//        noise_estimation = curve;
+//        noise_estimation(~similar) = nan;
+//        noise_estimation = (noise_estimation(2:end) - noise_estimation(1:end-1)).^2;
+//        noise_estimation = noise_estimation(~isnan(noise_estimation));
+//        if numel(noise_estimation)<100
+
+        float diff [T-1];
+        for (int t = 0; t < T-1; ++t) {
+            diff[t] = pow((curve.at<float>(0,t+1) - curve.at<float>(0,t)), 2);
+        }
+        //  sigma0 is different from matlab
+        float sigma0 = sqrt(medianFunc(diff,T-1) / 0.9099);
+//        else
+//        sigma0 = sqrt(median(noise_estimation)/0.9099);
+//        end
+        cv::divide(curve, sigma0, curve);
+        vector<float> curve0;
+        for (int t = t0; t <= t1; ++t) {
+            curve0.emplace_back(curve.at<float>(0,t));
+        }
+        float maxThr = *max_element(curve0.begin(), curve0.end());
+        float minThr = *min_element(curve0.begin(), curve0.end());
+        vector<float> thrs;
+        if (maxThr == minThr) {
+            thrs.emplace_back(maxThr);
+        } else {
+            float step = (maxThr - minThr) / 5;
+            for (float val = maxThr; val >= minThr ; val-= step) {
+                thrs.emplace_back(val);
+            }
+        }
+
+        for (int k = 0; k < thrs.size(); ++k) {
+            float curThr = thrs[k];
+            vector<int> find;
+            int ts,te,dur;
+            for (int i = 0; i < curve0.size(); ++i) {
+                if (curve0[i] >= curThr){
+                    find.emplace_back(i);
+                }
+            }
+            if (!find.empty()){
+                ts = find.front() + t0;
+                te = find.back() + t0;
+                dur = te - ts + 1;
+            }
+            vector<float> fg;
+            for (int i = ts; i <= te ; ++i) {
+                fg.emplace_back(curve.at<float>(0,i));
+            }
+            //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+            int t_Left_start = 0;
+            for (int i = ts-1; i >=0; --i) {
+                if (curThr <= curve.at<float>(0,i)){
+                    t_Left_start = i+1;
+                    break;
+                }
+            }
+//            if (t_Left_start.empty()){
+//                t_Left_start.emplace_back(0);
+//            }
+            t_Left_start = max(t_Left_start, ts-dur);
+            vector<float> bgL;
+            for (int i = t_Left_start; i <= ts-1; ++i) {
+                bgL.emplace_back(curve.at<float>(0,i));
+            }
+            int t_Right_end = T;
+            for (int i = te+1; i < T; ++i) {
+                if (curThr <= curve.at<float>(0,i)){
+                    t_Right_end = i- 1 + te;
+                    break;
+                }
+            }
+            t_Right_end = min(t_Right_end, te+dur);
+            vector<float> bgR;
+            for (int i = te+1; i <= t_Right_end; ++i) {
+                bgR.emplace_back(curve.at<float>(0,i));
+            }
+
+            if (bgL.empty()){
+                float sum_fg=0, sum_bgL=0;
+                for (auto i: fg) {
+                    sum_fg+= i;
+                }
+                for (auto i: bgL) {
+                    sum_bgL += i;
+                }
+                float fg_mean = sum_fg / fg.size();
+                float bgL_mean = sum_bgL / bgL.size();
+                float tScoreL = (fg_mean - bgL_mean) / sqrt(1.0 / fg.size() + 1.0 / bgL.size());
+                if (tScoreL >= sigThr){
+                    double mu, sigma;
+                    ordStatSmallSampleWith0s(fg,bgL,bgR,mu,sigma);
+                    float L = fg_mean - bgL_mean;
+                    float z_Left = (L - mu) / sigma;
+                    if (z_Left >= sigThr){
+                        isSigLeft = true;
+                    }
+                }//if (tScoreL >= sigThr)
+            }//if(bgL.empty())
+
+            if (bgR.empty()){
+                float sum_bgR=0, sum_fg=0;
+                for (auto i: fg) {
+                    sum_fg+= i;
+                }
+                for (auto i: bgR) {
+                    sum_bgR += i;
+                }
+                float fg_mean = sum_fg / fg.size();
+                float bgR_mean = sum_bgR / bgR.size();
+                float tScoreR = (fg_mean - bgR_mean) / sqrt(1.0 / fg.size() + 1.0 / bgR.size());
+                if (tScoreR >= sigThr){
+                    double mu, sigma;
+                    ordStatSmallSampleWith0s(fg,bgR,bgL,mu,sigma);
+                    float L = fg_mean - bgR_mean;
+                    float z_Right = (L - mu) / sigma;
+                    if (z_Right >= sigThr){
+                        isSigRight = true;
+                    }
+                }//if (tScoreL >= sigThr)
+            }//if(bgL.empty())
+
+        }//for k = 1:numel(thrs)
+
+        return isSigLeft & isSigRight;
+    } // curveSignificance3()
+
+
+
+
+
     Score_struct getSeedScore_DS4(const vector<int>& pix, const vector<vector<cv::Mat>>& datVec, int H, int W, int L, int T, float t_scl){
         Score_struct result;
         //down sample
@@ -883,8 +1025,9 @@ namespace AQuA{
                             curve_pre.at<float>(0,ii_t) = sum_temp / ihw.size();
                         } // get curve
                         cv::Mat curve = myResize(curve_pre, t_scl, 1);
-                        //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
-                        cout<<1;
+                        int it_min = max(1, static_cast<int>(floor(*min_element(it.begin(), it.end()) / t_scl)));
+                        int it_max = ceil(*max_element(it.begin(), it.end()) / t_scl);
+                        bool hasPeak = curveSignificance3(curve, it_min, it_max, opts.sigThr);
                     }
 
 

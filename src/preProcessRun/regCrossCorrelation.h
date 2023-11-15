@@ -13,7 +13,7 @@
 
 namespace AQuA{
 
-    float medianFunc(float* array, int size);
+//    float medianFunc(float* array, int size);
     float*** dft(float*** a_add, float*** b_add, int H_ext, int W_ext, int L_ext);
     float*** flip3dMatrix(float*** ref, float*** b_flip, int H, int W, int L);
     float*** calCC(float*** a, float*** b, float*** a_add, float*** b_add, float*** b_flip, int H, int W, int L);

@@ -86,6 +86,19 @@ namespace AQuA{
     }
 
 
+    float medianFunc(float* array, int size){
+        float median;
+        sort(array, array+size);
+        if(size % 2 == 0){
+            median = ( array[size/2] + array[size/2 - 1] ) / 2;
+        }
+        else{
+            median = array[size/ 2];
+        }
+//        cout<<"median value of reference frame: "<< median<<endl;
+        return median;
+    }//medianFunc()
+
 
     vector<vector<cv::Mat>> loadData() {
         MATFile *pmatFile;
