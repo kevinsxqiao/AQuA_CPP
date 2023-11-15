@@ -141,7 +141,7 @@ namespace AQuA{
         for (int t = 0; t < T-1; ++t) {
             diff[t] = pow((curve.at<float>(0,t+1) - curve.at<float>(0,t)), 2);
         }
-        //  sigma0 is different from matlab
+        //  sigma0 is different from matlab, pow(x,2) is different
         float sigma0 = sqrt(medianFunc(diff,T-1) / 0.9099);
 //        else
 //        sigma0 = sqrt(median(noise_estimation)/0.9099);
@@ -181,7 +181,6 @@ namespace AQuA{
             for (int i = ts; i <= te ; ++i) {
                 fg.emplace_back(curve.at<float>(0,i));
             }
-            //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
             int t_Left_start = 0;
             for (int i = ts-1; i >=0; --i) {
                 if (curThr <= curve.at<float>(0,i)){
@@ -210,7 +209,7 @@ namespace AQuA{
                 bgR.emplace_back(curve.at<float>(0,i));
             }
 
-            if (bgL.empty()){
+            if (!bgL.empty()){
                 float sum_fg=0, sum_bgL=0;
                 for (auto i: fg) {
                     sum_fg+= i;
@@ -232,7 +231,7 @@ namespace AQuA{
                 }//if (tScoreL >= sigThr)
             }//if(bgL.empty())
 
-            if (bgR.empty()){
+            if (!bgR.empty()){
                 float sum_bgR=0, sum_fg=0;
                 for (auto i: fg) {
                     sum_fg+= i;
@@ -1028,6 +1027,8 @@ namespace AQuA{
                         int it_min = max(1, static_cast<int>(floor(*min_element(it.begin(), it.end()) / t_scl)));
                         int it_max = ceil(*max_element(it.begin(), it.end()) / t_scl);
                         bool hasPeak = curveSignificance3(curve, it_min, it_max, opts.sigThr);
+                        //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+
                     }
 
 
