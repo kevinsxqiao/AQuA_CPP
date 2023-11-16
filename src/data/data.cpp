@@ -228,6 +228,77 @@ namespace AQuA{
     }//loadData()
 
 
+
+    vector<vector<cv::Mat>> load4D_8U(const char* fileName, const char* varName) {
+        MATFile *pmatFile;
+        mxArray *pMxArray;
+
+        cout<< "--------loading data--------"<<endl;
+        pmatFile = matOpen(fileName, "r");
+        if (pmatFile == nullptr) {
+            cout<< "--------error opening file--------"<<endl;
+            exit(-1);
+        }
+
+        pMxArray = matGetVariable(pmatFile, varName);
+        if (pMxArray == nullptr) {
+            cout<< "--------error reading variable from file--------"<<endl;
+            exit(-1);
+        }
+
+        void* pdata = mxGetData(pMxArray);
+        mxClassID classID = mxGetClassID(pMxArray);
+
+        if (pdata == nullptr) {
+            cout<< "--------error reading data from variable-------"<<endl;
+            exit(-1);
+        }
+
+        const mwSize *dims = mxGetDimensions(pMxArray);
+
+
+        vector<vector<cv::Mat>> frame(dims[3],vector<cv::Mat>(dims[2]));
+
+        for (int t = 0; t < dims[3]; ++t) {
+            for (int k = 0; k < dims[2]; ++k) {
+                frame[t][k] = cv::Mat(dims[0],dims[1],CV_8U);
+                for (int i = 0; i < dims[0]; ++i) {
+                    for (int j = 0; j < dims[1]; ++j){
+                        frame[t][k].at<uchar>(i,j) = static_cast<uchar*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
+                    }//for(j)
+                }//for(i)
+            }//for(k)
+        }//for(t)
+
+
+//        for (int i = 0; i < 7; ++i) {
+//            for (int j = 0; j < 7; ++j) {
+//                cout<<frame[0][0].at<float>(i,j)<<" ";
+//            }
+//            cout<<endl;
+//        }
+
+        cout<<"height of image:"<< dims[0] << endl;
+        cout<<"width of image:"<< dims[1] << endl;
+        cout<<"length of image:"<< dims[2] << endl;
+        cout<<"time frames of image:"<< dims[3] << endl;
+        cout<<"--------data loaded--------"<<endl;
+
+
+        //release MAT pointer
+        if (pMxArray != nullptr) {
+            mxDestroyArray(pMxArray);
+        }
+
+        if (pmatFile != nullptr) {
+            matClose(pmatFile);
+        }
+
+        return frame;
+    }//load4D_8U()
+
+
+
     vector<vector<cv::Mat>> load4D(const char* fileName, const char* varName) {
         MATFile *pmatFile;
         mxArray *pMxArray;
@@ -603,16 +674,17 @@ namespace AQuA{
     }//loadCell_matrix()
 
 
-    mxArray* cvDataToMxArray(const cv::Mat& data) {
+    mxArray* cvDataToMxArray(const cv::Mat& data) { //CV_32F
         // Calculate the size of the 2D matrix
+        cv::Mat data_transpose = data.t();
         mwSize dims[2] = {static_cast<mwSize>(data.rows), static_cast<mwSize>(data.cols)};
 
         // Create a 2D mxArray
         mxArray* pMxArray = mxCreateNumericArray(2, dims, mxSINGLE_CLASS, mxREAL);
 
-        // Copy data from your vector to the mxArray
+        // Copy data_transpose from your vector to the mxArray
         float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
-        memcpy(ptr, data.data, data.rows * data.cols * sizeof(float));
+        memcpy(ptr, data_transpose.data, data.rows * data.cols * sizeof(float));
 
         return pMxArray;
     }
@@ -620,28 +692,69 @@ namespace AQuA{
 
     mxArray* cvDataToMxArray(const vector<vector<cv::Mat>>& data) {
         // Calculate the size of the 4D matrix
-        mwSize dims[4] = {static_cast<mwSize>(data[0][0].cols), static_cast<mwSize>(data[0][0].rows),
+        mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols),
                           static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
 
         // Create a 4D mxArray
-        mxArray* pMxArray = mxCreateNumericArray(4, dims, mxUINT8_CLASS, mxREAL);
-
-        // Copy data from your vector to the mxArray
-        uchar* ptr = reinterpret_cast<uchar*>(mxGetUint8s(pMxArray));
-        for (int t = 0; t < data.size(); ++t) {
-            for (int k = 0; k < data[t].size(); ++k) {
-                const cv::Mat& mat = data[t][k];
-                for (int i = 0; i < mat.cols; ++i) {
-                    for (int j = 0; j < mat.rows; ++j) {
-                        *ptr = mat.at<uchar>(j, i);
-                        ++ptr;
+        mxArray* pMxArray;
+        if (data[0][0].type() == CV_32F){
+            pMxArray = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+            // Copy data from your vector to the mxArray
+            float* ptr = reinterpret_cast<float*>(mxGetData(pMxArray));
+            for (int t = 0; t < data.size(); ++t) {
+                for (int k = 0; k < data[t].size(); ++k) {
+                    const cv::Mat data_transpose = data[t][k].t();
+                    memcpy(ptr, data_transpose.data, dims[0] * dims[1] * sizeof(float));
+                    ptr+= dims[0] * dims[1];
+                }
+            }
+        }
+        if (data[0][0].type() == CV_8U){
+            pMxArray = mxCreateLogicalArray(4, dims);
+            // Copy data from your vector to the mxArray
+            mxLogical* ptr = mxGetLogicals(pMxArray);
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+//                    const cv::Mat data_transpose = data[t][k].t();
+                    for (int j = 0; j < dims[1]; ++j) {
+                        for (int i = 0; i < dims[0]; ++i) {
+                            *ptr++ = (data[t][k].at<uchar>(i, j)!=0);
+                        }
                     }
                 }
             }
         }
 
+
         return pMxArray;
     }
+
+
+
+//    mxArray* cvDataToMxArray(const vector<vector<cv::Mat>>& data) {
+//        // Calculate the size of the 4D matrix
+//        mwSize dims[4] = {static_cast<mwSize>(data[0][0].rows), static_cast<mwSize>(data[0][0].cols),
+//                          static_cast<mwSize>(data[0].size()), static_cast<mwSize>(data.size())};
+//
+//        // Create a 4D mxArray
+//        mxArray* pMxArray = mxCreateNumericArray(4, dims, mxSINGLE_CLASS, mxREAL);
+//
+//        // Copy data from your vector to the mxArray
+//        float* ptr = reinterpret_cast<float*>(mxGetSingles(pMxArray));
+//        for (int t = 0; t < data.size(); ++t) {
+//            for (int k = 0; k < data[t].size(); ++k) {
+//                const cv::Mat& mat = data[t][k];
+//                for (int j = 0; j < mat.cols; ++j) {
+//                    for (int i = 0; i < mat.rows; ++i) {
+//                        *ptr = mat.at<float>(i, j);
+//                        ++ptr;
+//                    }
+//                }
+//            }
+//        }
+//
+//        return pMxArray;
+//    }
 
 
 
@@ -663,7 +776,8 @@ namespace AQuA{
     }
 
 
-    void writeDataToMatFile(cv::Mat& data, const string& filename) {
+
+    void writeDataToMatFile(const cv::Mat& data, const string& filename) {
         cout<<"--------start writing--------"<<endl;
         MATFile *pmatFile;
 
@@ -675,7 +789,14 @@ namespace AQuA{
         }
 
         // Convert your data to a mxArray
-        mxArray* pMxArray = cvDataToMxArray(data);
+        mxArray* pMxArray;
+        if (data.type() == CV_32F){
+            pMxArray = cvDataToMxArray(data);
+        }
+        if (data.type() == CV_8U){
+            pMxArray = cvDataToMxArray(data);
+        }
+
 
         // Write the variable to the mat file
         if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
@@ -691,10 +812,11 @@ namespace AQuA{
             matClose(pmatFile);
         }
         cout<<"--------finish writing--------"<<endl;
+        cout<<endl;
     }
 
 
-    void writeDataToMatFile(vector<vector<cv::Mat>>& data, const string& filename) {
+    void writeDataToMatFile(const vector<vector<cv::Mat>>& data, const string& filename) {
         cout<<"--------start writing--------"<<endl;
         MATFile *pmatFile;
 
@@ -707,6 +829,7 @@ namespace AQuA{
 
         // Convert your data to a mxArray
         mxArray* pMxArray = cvDataToMxArray(data);
+
 
         // Write the variable to the mat file
         if (matPutVariable(pmatFile, "myVar", pMxArray) != 0) {
@@ -722,10 +845,11 @@ namespace AQuA{
             matClose(pmatFile);
         }
         cout<<"--------finish writing--------"<<endl;
+        cout<<endl;
     }
 
 
-    void writeDataToMatFile(vector<cv::Mat>& data, const string& filename) {
+    void writeDataToMatFile(const vector<cv::Mat>& data, const string& filename) {
         cout<<"--------start writing--------"<<endl;
         MATFile *pmatFile;
 

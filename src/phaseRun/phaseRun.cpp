@@ -5,26 +5,26 @@
 #include "phaseRun.h"
 
 namespace AQuA{
-
+    template <typename type>
     cv::Mat myResize(const cv::Mat& src, float scaleRatio_x, float scaleRatio_y){
         float h = ceil(src.rows/scaleRatio_y); //height of dst
         float w = ceil(src.cols/scaleRatio_x); // width of dst
         int unit_h = ceil(src.rows / h); //number of units in row
         int unit_w = ceil(src.cols / w); // number of units in col
-        cv::Mat dst = cv::Mat(h, w, CV_32F);
+        cv::Mat dst = cv::Mat(h, w, src.type());
         for (int i_dst = 0; i_dst < h; ++i_dst) {
             for (int j_dst = 0; j_dst < w; ++j_dst) {
                 float sum = 0;
                 float count = 0;
                 for (int i_src = i_dst*unit_h; (i_src<(i_dst+1)*unit_h) && (i_src<src.rows); ++i_src) {
                     for (int j_src = j_dst*unit_w; (j_src<(j_dst+1)*unit_w) && (j_src<src.cols); ++j_src) {
-                        sum += src.at<float>(i_src,j_src);
+                        sum += src.at<type>(i_src,j_src);
                         ++count;
 //                        cout<<"i_src: "<<i_src<<"  j_src: "<<j_src<<" ";
                     }//for(j_src)
 //                    cout<<endl;
                 }//for(i_src)
-                dst.at<float>(i_dst, j_dst) = sum/count;
+                dst.at<type>(i_dst, j_dst) = static_cast<type>(sum/count);
             }
         }
         return dst;
@@ -365,7 +365,7 @@ namespace AQuA{
             for (int t = 0; t < T; ++t) {
                 curve0.at<float>(t,0) = datVec[t][k_datVec].at<float>(h_datVec,w_datVec);
             }
-            cv::Mat curve = myResize(curve0,t_scl,t_scl);
+            cv::Mat curve = myResize<float>(curve0,t_scl,t_scl);
             cv::multiply(curve,sqrt(t_scl),curve);
             int dur = curIt.size();
             sz.emplace_back(dur);
@@ -683,7 +683,7 @@ namespace AQuA{
             for (int t = 0; t < T; ++t) {
                 for (int k = 0; k < L; ++k) {
 //                    cv::resize(dataOrg[t][k],datDS[t][k],cv::Size(),1/scaleRatio,1/scaleRatio, cv::INTER_AREA);
-                    datDS[t][k] = myResize(dataOrg[t][k],scaleRatio,scaleRatio);
+                    datDS[t][k] = myResize<float>(dataOrg[t][k],scaleRatio,scaleRatio);
                 }//for(k)
             }//for(t)
 
@@ -717,14 +717,14 @@ namespace AQuA{
             vector<cv::Mat> curStdMap(L);
 //            #pragma omp parallel for
             for (int k = 0; k < L; ++k) {
-                var1[k] = myResize(opts.tempVarOrg1[k],scaleRatio,scaleRatio);
+                var1[k] = myResize<float>(opts.tempVarOrg1[k],scaleRatio,scaleRatio);
 
                 cv::Mat temp1;
                 cv::multiply(opts.tempVarOrg1[k], 2, temp1);
                 cv::divide(temp1, opts.correctPars1[k], temp1);
 //                cv::resize(opts.tempVarOrg1[k], var1[k], cv::Size(), 1 / scaleRatio, 1 / scaleRatio, cv::INTER_AREA);
 //                cv::resize(temp1, var2[k], cv::Size(), 1 / scaleRatio, 1 / scaleRatio, cv::INTER_AREA);
-                var2[k] = myResize(temp1, scaleRatio,scaleRatio);
+                var2[k] = myResize<float>(temp1, scaleRatio,scaleRatio);
 
                 cv::Mat temp2;
                 cv::multiply(curVarMap[k], var2[k], temp2);
@@ -766,7 +766,7 @@ namespace AQuA{
 
 
     void seedDetect2_DS_accelerate(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg,
-                                   const vector<vector<int>>& arLst){
+                                   vector<vector<int>>& arLst, vector<vector<cv::Mat>>& Map){
 
         vector<float> Thrs;
         for (float i = opts.maxdF1; i >=opts.thrARScl ; i=i-opts.step) {
@@ -834,14 +834,17 @@ namespace AQuA{
 //                    cv::resize(activeMap[t][k], temp_validMaps, cv::Size(), 1 / scaleRatios[j], 1 / scaleRatios[j], cv::INTER_AREA);
 //                    temp_dF = myResize(dF[t][k], scaleRatios[j], scaleRatios[j]);
 //                    temp_validMaps = myResize(activeMap[t][k],scaleRatios[j],scaleRatios[j]);
-                    dFResize[j][t][k] = myResize(dF[t][k], scaleRatios[j], scaleRatios[j]);
-                    validMaps[j][t][k] = myResize(activeMap[t][k],scaleRatios[j],scaleRatios[j]);
+                    dFResize[j][t][k] = myResize<float>(dF[t][k], scaleRatios[j], scaleRatios[j]);
+                    validMaps[j][t][k] = cv::Mat::zeros(dFResize[j][0][0].rows,dFResize[j][0][0].cols,CV_8U);
+                    validMaps[j][t][k].setTo(1,(myResize<ushort>(activeMap[t][k],scaleRatios[j],scaleRatios[j]))>0);
                 }//for(k)
             }//for(t)
             H0s[j] = ceil(H/scaleRatios[j]);
             W0s[j] = ceil(W/scaleRatios[j]);
         }//for(j)
-
+        writeDataToMatFile(dFResize[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/dFRe0.mat");
+        writeDataToMatFile(validMaps[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/val0.mat");
+//        exit(1);
         //seed map
         vector<vector<cv::Mat>> zscoreMap(T,vector<cv::Mat>(L));
 //        #pragma omp parallel for collapse(2)
@@ -893,7 +896,10 @@ namespace AQuA{
 
                     }//for(k)
                 }//for(t)
-//                writeDataToMatFile(selectMap, "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/sel.mat");
+//                if (ii==3 && ii_ds==0){
+//                    writeDataToMatFile(selectMap, "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/sel_cpp.mat");
+//                    return;
+//                }
                 vector<vector<int>> curRegions = bw2Reg(selectMap);
                 // rough filter -- for acceleration
 //                for (int ii_cur = 0; ii_cur < curRegions.size(); ++ii_cur) {
@@ -932,9 +938,9 @@ namespace AQuA{
                     sort(ihw.begin(), ihw.end());
                     int dur = *max_element(it.begin(),it.end()) - *min_element(it.begin(), it.end()) + 1;
                     int arLabel_hs = ih[0] * scaleRatio;
-                    int arLabel_he = min(static_cast<float>(H),ih[0]*scaleRatio + 1);
+                    int arLabel_he = min(static_cast<float>(H),(ih[0]+1)*scaleRatio - 1);
                     int arLabel_ws = iw[0] * scaleRatio;
-                    int arLabel_we = min(static_cast<float>(W),iw[0]*scaleRatio + 1);
+                    int arLabel_we = min(static_cast<float>(W),(iw[0]+1)*scaleRatio - 1);
                     vector<int> arLabel;
                     for (int i = arLabel_hs; i <= arLabel_he; ++i) {
                         for (int j = arLabel_ws; j <= arLabel_we; ++j) {
@@ -1023,29 +1029,79 @@ namespace AQuA{
                             }
                             curve_pre.at<float>(0,ii_t) = sum_temp / ihw.size();
                         } // get curve
-                        cv::Mat curve = myResize(curve_pre, t_scl, 1);
+                        cv::Mat curve = myResize<float>(curve_pre, t_scl, 1);
                         int it_min = max(1, static_cast<int>(floor(*min_element(it.begin(), it.end()) / t_scl)));
                         int it_max = ceil(*max_element(it.begin(), it.end()) / t_scl);
                         bool hasPeak = curveSignificance3(curve, it_min, it_max, opts.sigThr);
                         //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
-
-                    }
-
-
-
+                        if (hasPeak){
+                            float z_score_min = min(result.z_score1,result.z_score2);
+                            for (int i = 0; i < pixOrg.size(); ++i) {
+                                Point_struct pix_temp = ind2sub(pixOrg[i],H,W,L);
+                                zscoreMap[pix_temp.t][pix_temp.k].at<float>(pix_temp.i,pix_temp.j) =
+                                        max(z_score_min, zscoreMap[pix_temp.t][pix_temp.k].at<float>(pix_temp.i,pix_temp.j));
+                            }
+                        }//if (hasPeak)
+                    } //if (min(res_tMin, res_zMin) > opts.sigThr)
                 }//for(ii_cur) --curRegions --i
             }//for(ii_ds) --scaleRatios --j
         }//for(ii) --Thrs --k
-        
+        vector<vector<cv::Mat>> zscoreMap_selected(T,vector<cv::Mat>(L));
+//        Map(zscoreMap.size(),vector<cv::Mat>(zscoreMap[0].size()));
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                zscoreMap_selected[t][k] = cv::Mat::zeros(H,W,CV_8U);
+                Map[t][k] = cv::Mat::zeros(H,W,CV_16U);
+                cv::Mat mask = (zscoreMap[t][k] >0);
+                zscoreMap_selected[t][k].setTo(1,mask);
+            }
+        }
+        int cnt = 0;
+        vector<vector<int>> sdLst = bw2Reg(zscoreMap_selected);
+        for (int i = 0; i < sdLst.size(); ++i) {
+            vector<int> pix;
+            pix.reserve(sdLst[i].size());
+            for (auto elem:sdLst[i]) {//sd:st[19] !!!!!!!!!
+                pix.push_back(elem);
+            }
+            unordered_set<float> scores;
+            for (int pix_ind = 0; pix_ind < pix.size(); ++pix_ind) {
+                Point_struct pix_temp = ind2sub(pix[pix_ind],H,W,L);
+                scores.insert(zscoreMap[pix_temp.t][pix_temp.k].at<float>(pix_temp.i,pix_temp.j));
+            }
+            if (scores.size()>1){
+                pix.clear();
+                float scores_max = *max_element(scores.begin(),scores.end());
+                for (auto pix_ele:pix) {
+                    Point_struct pix_ele_temp = ind2sub(pix_ele,H,W,L);
+                    if (zscoreMap[pix_ele_temp.t][pix_ele_temp.k].at<float>(pix_ele_temp.i, pix_ele_temp.j) == scores_max){
+                        pix.push_back(pix_ele);
+                    }
+                }
+                cnt++;
+            }// if (scores.size()>1)
+            for(auto pix_ele:pix){
+                Point_struct pix_ele_temp = ind2sub(pix_ele,H,W,L);
+                Map[pix_ele_temp.t][pix_ele_temp.k].at<ushort>(pix_ele_temp.i, pix_ele_temp.j) = i+1;
+            }
 
+        }//for i = 1:numel(sdLst)
 
+        vector<vector<cv::Mat>> arLst_selected(T,vector<cv::Mat>(L));
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                arLst_selected[t][k] = cv::Mat::zeros(H,W,CV_8U);
+                cv::Mat mask = (Map[t][k] > 0) | (activeMap[t][k] >0);
+                arLst_selected[t][k].setTo(1,mask);
+            }
+        }
+        arLst = bw2Reg(arLst_selected);
 
 
     }//seedDetect2_DS_accelerate
 
 
-    void seDetection(const vector<vector<cv::Mat>>& dF, const vector<vector<cv::Mat>>& dataOrg,
-                     const vector<vector<int>>& arLst){
+    void seDetection(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg, vector<vector<int>>& arLst){
         int H = dF[0][0].rows;
         int W = dF[0][0].cols;
         int L = dF[0].size();
@@ -1064,7 +1120,8 @@ namespace AQuA{
          * pixel in seed has different time windows. Consider the potential
          * propagation, we cannot use the average curve for seed detection.
          */
-        seedDetect2_DS_accelerate(dF,dataOrg,arLst);
+        vector<vector<cv::Mat>> Map(T,vector<cv::Mat>(L));
+        seedDetect2_DS_accelerate(dF,dataOrg,arLst, Map);
 
 
 

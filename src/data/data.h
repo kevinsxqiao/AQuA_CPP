@@ -49,6 +49,7 @@ namespace AQuA{
 //    void crop(cv::Mat& image, int bdCrop);
     float medianFunc(float* array, int size);
     vector<vector<cv::Mat>> loadData();
+    vector<vector<cv::Mat>> load4D_8U(const char* fileName, const char* varName);
     vector<vector<cv::Mat>> load4D(const char* fileName, const char* varName);
     cv::Mat load2D(const char* fileName, const char* varName);
     vector<cv::Mat> load3D(const char* fileName, const char* varName);
@@ -65,8 +66,8 @@ namespace AQuA{
     mxArray* cvDataToMxArray(const vector<vector<cv::Mat>>& data);
     mxArray* cvDataToMxArray(const vector<cv::Mat>& data);
     mxArray* cvDataToMxArray(const cv::Mat& data);
-    void writeDataToMatFile(vector<vector<cv::Mat>>& data, const string& filename);
-    void writeDataToMatFile(vector<cv::Mat>& data, const string& filename);
+    void writeDataToMatFile(const vector<vector<cv::Mat>>& data, const string& filename);
+    void writeDataToMatFile(const vector<cv::Mat>& data, const string& filename);
     void writeDataToMatFile(cv::Mat& data, const string& filename);
     int sub2ind(int i, int j, int k, int h, int w);
     int sub2ind(int i, int j, int k,int t, int h, int w, int l);

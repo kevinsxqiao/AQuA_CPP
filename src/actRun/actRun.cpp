@@ -13,7 +13,7 @@ namespace AQuA{
      */
     vector<vector<int>> bwconncomp4D(const vector<vector<cv::Mat>>& BW){
         vector<vector<cv::Mat>> visited(BW.size(),vector<cv::Mat>(BW[0].size()));
-        #pragma omp parallel for collapse(2)
+//        #pragma omp parallel for collapse(2)
         for (int t = 0; t < BW.size(); ++t) {
             for (int k = 0; k < BW[0].size(); ++k) {
                 visited[t][k] = cv::Mat::zeros(BW[0][0].rows, BW[0][0].cols, CV_8U);
