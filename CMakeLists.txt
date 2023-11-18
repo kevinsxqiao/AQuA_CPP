@@ -41,7 +41,7 @@ add_executable(${PROJECT_NAME}
                     src/preProcessRun/preProcessRun.h
                     src/preProcessRun/regCrossCorrelation.h
 
-                    src/draft1.cpp src/draft.h
+                    src/draft3.cpp src/draft.h
 
                     src/phaseRun/phaseRun.cpp src/phaseRun/phaseRun.h
                     src/actRun/actRun.cpp src/actRun/actRun.h )

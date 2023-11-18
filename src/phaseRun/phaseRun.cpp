@@ -93,25 +93,25 @@ namespace AQuA{
         double tempSum2 = 0;
         int cnt1 = 0;
         int cnt2 = 0;
-        for (int inx: ind1) {
+        for (const int& inx: ind1) {
             tempSum1+=muVec[inx];
             ++cnt1;
         }
-        for (int inx: indm1) {
+        for (const int& inx: indm1) {
             tempSum2+=muVec[inx];
             ++cnt2;
         }
         mu = tempSum1/cnt1 - tempSum2/cnt2;
         cv::Mat covMatrix = covMatrixs[n-1].clone();
-        for (int inx: ind0) {
+        for (const int& inx: ind0) {
             covMatrix.row(inx) = 0;
             covMatrix.col(inx) = 0;
         }
-        for (int inx: ind1) {
+        for (const int& inx: ind1) {
             cv::divide(covMatrix.row(inx),static_cast<float>(M),covMatrix.row(inx));
             cv::divide(covMatrix.col(inx),static_cast<float>(M),covMatrix.col(inx));
         }
-        for (int inx: indm1) {
+        for (const int& inx: indm1) {
             cv::divide(covMatrix.row(inx),static_cast<float>(-N),covMatrix.row(inx));
             cv::divide(covMatrix.col(inx),static_cast<float>(-N),covMatrix.col(inx));
         }
@@ -211,10 +211,10 @@ namespace AQuA{
 
             if (!bgL.empty()){
                 float sum_fg=0, sum_bgL=0;
-                for (auto i: fg) {
+                for (const auto& i: fg) {
                     sum_fg+= i;
                 }
-                for (auto i: bgL) {
+                for (const auto& i: bgL) {
                     sum_bgL += i;
                 }
                 float fg_mean = sum_fg / fg.size();
@@ -233,10 +233,10 @@ namespace AQuA{
 
             if (!bgR.empty()){
                 float sum_bgR=0, sum_fg=0;
-                for (auto i: fg) {
+                for (const auto& i: fg) {
                     sum_fg+= i;
                 }
-                for (auto i: bgR) {
+                for (const auto& i: bgR) {
                     sum_bgR += i;
                 }
                 float fg_mean = sum_fg / fg.size();
@@ -361,7 +361,7 @@ namespace AQuA{
             int h_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).i;
             int w_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).j;
             int k_datVec = ind2sub(ihw[ii_ihw],datVec[0][0].rows,datVec[0][0].cols).k;
-            #pragma omp parallel for
+//            #pragma omp parallel for
             for (int t = 0; t < T; ++t) {
                 curve0.at<float>(t,0) = datVec[t][k_datVec].at<float>(h_datVec,w_datVec);
             }
@@ -570,7 +570,7 @@ namespace AQuA{
 
         }// for i = 1:numel(ihw)
         float degreeOfFreedom_sum = 0;
-        for (auto i: degreeOfFreedoms) {
+        for (auto& i: degreeOfFreedoms) {
             degreeOfFreedom_sum += i;
         }
         float degreeOfFreedom_val = 2 * pow(degreeOfFreedom_sum,2) / (3 * degreeOfFreedom_sum - degreeOfFreedoms.size());
@@ -842,8 +842,8 @@ namespace AQuA{
             H0s[j] = ceil(H/scaleRatios[j]);
             W0s[j] = ceil(W/scaleRatios[j]);
         }//for(j)
-        writeDataToMatFile(dFResize[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/dFRe0.mat");
-        writeDataToMatFile(validMaps[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/val0.mat");
+//        writeDataToMatFile(dFResize[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/dFRe0.mat");
+//        writeDataToMatFile(validMaps[0], "C:/Users/Kevin Qiao/Desktop/AQuA_data/test/val0.mat");
 //        exit(1);
         //seed map
         vector<vector<cv::Mat>> zscoreMap(T,vector<cv::Mat>(L));
@@ -1012,6 +1012,7 @@ namespace AQuA{
 
                     //calculate significance
                     float t_scl = max(1.0, round(static_cast<double>(dur)/opts.TPatch));
+                    // z_score slightly different from matlab, maybe sqrt() in ordStat()
                     Score_struct result = getSeedScore_DS4(pix,datResize[ii_ds],H0,W0,L,T,t_scl);
                     float res_tMin = min(result.t_score1, result.t_score2);
                     float res_zMin = min(result.z_score1, result.z_score2);
@@ -1020,7 +1021,7 @@ namespace AQuA{
                         cv::Mat curve_pre = cv::Mat(1, T, CV_32F);
                         for (int ii_t = 0; ii_t < T; ++ii_t) {
                             float sum_temp = 0;
-                            for (auto ii_ihw:ihw) {
+                            for (const auto& ii_ihw:ihw) {
                                 Point_struct point_ihw = ind2sub(ii_ihw, H0, W0);
                                 int point_h = point_ihw.i;
                                 int point_w = point_ihw.j;
@@ -1033,7 +1034,7 @@ namespace AQuA{
                         int it_min = max(1, static_cast<int>(floor(*min_element(it.begin(), it.end()) / t_scl)));
                         int it_max = ceil(*max_element(it.begin(), it.end()) / t_scl);
                         bool hasPeak = curveSignificance3(curve, it_min, it_max, opts.sigThr);
-                        //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+
                         if (hasPeak){
                             float z_score_min = min(result.z_score1,result.z_score2);
                             for (int i = 0; i < pixOrg.size(); ++i) {
@@ -1061,7 +1062,7 @@ namespace AQuA{
         for (int i = 0; i < sdLst.size(); ++i) {
             vector<int> pix;
             pix.reserve(sdLst[i].size());
-            for (auto elem:sdLst[i]) {//sd:st[19] !!!!!!!!!
+            for (const auto& elem:sdLst[i]) {//sd:st[19] different  potential cause is zscoreMap due to z_socre_min
                 pix.push_back(elem);
             }
             unordered_set<float> scores;
@@ -1072,7 +1073,7 @@ namespace AQuA{
             if (scores.size()>1){
                 pix.clear();
                 float scores_max = *max_element(scores.begin(),scores.end());
-                for (auto pix_ele:pix) {
+                for (const auto& pix_ele:pix) {
                     Point_struct pix_ele_temp = ind2sub(pix_ele,H,W,L);
                     if (zscoreMap[pix_ele_temp.t][pix_ele_temp.k].at<float>(pix_ele_temp.i, pix_ele_temp.j) == scores_max){
                         pix.push_back(pix_ele);
@@ -1080,7 +1081,7 @@ namespace AQuA{
                 }
                 cnt++;
             }// if (scores.size()>1)
-            for(auto pix_ele:pix){
+            for(const auto& pix_ele:pix){
                 Point_struct pix_ele_temp = ind2sub(pix_ele,H,W,L);
                 Map[pix_ele_temp.t][pix_ele_temp.k].at<ushort>(pix_ele_temp.i, pix_ele_temp.j) = i+1;
             }
@@ -1097,8 +1098,8 @@ namespace AQuA{
         }
         arLst = bw2Reg(arLst_selected);
 
-
     }//seedDetect2_DS_accelerate
+    //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
 
 
     void seDetection(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg, vector<vector<int>>& arLst){

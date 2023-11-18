@@ -282,7 +282,7 @@ namespace AQuA{
         cout<<"width of image:"<< dims[1] << endl;
         cout<<"length of image:"<< dims[2] << endl;
         cout<<"time frames of image:"<< dims[3] << endl;
-        cout<<"--------data loaded--------"<<endl;
+        cout<<"--------data loaded--------"<<endl<<endl;
 
 
         //release MAT pointer
@@ -351,8 +351,42 @@ namespace AQuA{
                     }//for(i)
                 }//for(k)
             }//for(t)
+        } else if(classID == mxUINT16_CLASS){
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[t][k] = cv::Mat(dims[0],dims[1],CV_16U);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[t][k].at<ushort>(i,j) = static_cast<ushort*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+            }//for(t)
+        } else if(classID == mxUINT8_CLASS){
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[t][k] = cv::Mat(dims[0],dims[1],CV_8U);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[t][k].at<uchar>(i,j) = static_cast<uchar*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+            }//for(t)
+        } else if(classID == mxLOGICAL_CLASS){
+            for (int t = 0; t < dims[3]; ++t) {
+                for (int k = 0; k < dims[2]; ++k) {
+                    frame[t][k] = cv::Mat(dims[0],dims[1],CV_8U);
+                    for (int i = 0; i < dims[0]; ++i) {
+                        for (int j = 0; j < dims[1]; ++j){
+                            frame[t][k].at<uchar>(i,j) = static_cast<uchar*>(pdata)[sub2ind(i,j,k,t,dims[0],dims[1],dims[2])];
+                        }//for(j)
+                    }//for(i)
+                }//for(k)
+            }//for(t)
         } else{
             cout << "Unhandled data type." << endl;
+            exit(-1);
         }
 
 //        for (int i = 0; i < 7; ++i) {
@@ -436,7 +470,7 @@ namespace AQuA{
         cout<<"height of image:"<< dims[0] << endl;
         cout<<"width of image:"<< dims[1] << endl;
         cout<<"length of image:"<< dims[2] << endl;
-        cout<<"--------data loaded--------"<<endl;
+        cout<<"--------data loaded--------"<<endl<<endl;
 
         //release MAT pointer
         if (pMxArray != nullptr) {
