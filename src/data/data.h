@@ -103,6 +103,7 @@ namespace AQuA{
          float spaMergeDist;
          bool needTemp;
          float sigThr;
+         float spaSmo;
          float maxDelay;
          bool needRefine;
          bool needGrow;

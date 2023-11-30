@@ -121,6 +121,73 @@ namespace AQuA{
     }
 
 
+    res_marker markerControlledSplitting_Ac(vector<vector<cv::Mat>>& Map, const vector<vector<double>>& curRegions, vector<vector<cv::Mat>> dF) {
+        res_marker res;
+        int H = dF[0][0].rows;
+        int W = dF[0][0].cols;
+        int L = dF[0].size();
+        int T = dF.size();
+        map<int, vector<double>> sdLst_pre;
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+                if (cv::countNonZero(Map[t][k])==0){
+                    continue;
+                }
+                else{
+                    for (int i = 0; i < H; ++i) {
+                        for (int j = 0; j < W; ++j) {
+                            if (Map[t][k].at<ushort>(i,j)!=0){
+                                int label = Map[t][k].at<ushort>(i,j);
+                                sdLst_pre[label-1].push_back(sub2ind(i,j,k,t,H,W,L));
+                            }
+                        }
+                    }
+                }//else
+            }
+        }
+        vector<vector<double>> sdLst;
+        sdLst.reserve(sdLst_pre.size());
+        for (int i = 0; i < sdLst_pre.size(); ++i) {
+            int size = sdLst_pre[i].size();
+            sdLst.push_back(sdLst_pre[i]);
+            sort(sdLst[i].begin(), sdLst[i].end());
+        }
+        opts.spaSmo = 3;
+        int ksize = 2 * ceil(2 * opts.spaSmo) + 1;
+        vector<vector<cv::Mat>> scoreMap(T, vector<cv::Mat>(L));
+        for (int t = 0; t < T; ++t) {
+            for (int k = 0; k < L; ++k) {
+//                scoreMap[t][k] = cv::Mat::zeros(H,W,CV_32F);
+                cv::Mat temp = cv::Mat::zeros(H,W,CV_32F);
+                cv::GaussianBlur(dF[t][k],temp,cv::Size(ksize,ksize), opts.spaSmo, opts.spaSmo); //difference near margin in the range of kernel size
+                scoreMap[t][k] = -temp;
+            }
+        }
+
+//        if (L==1){
+//            vector<cv::Mat> SE(8);
+//            for (int k = 0; k < 8; ++k) {
+//                SE[k] = cv::Mat::zeros(8,8,CV_8U);
+//            }
+//        }
+
+        vector<vector<cv::Mat>> SE(8, vector<cv::Mat>(8));
+        for (int t = 0; t < 8; ++t) {
+            for (int k = 0; k < 8; ++k) {
+                SE[t][k] = cv::Mat::zeros(8, 8, CV_8U);
+            }
+        }
+        vector<vector<double>> seedsInRegion(curRegions.size());
+        //check whether the whole active region is significant or not
+
+
+
+        //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+
+        return res;
+    }//markerControlledSplitting_Ac
+
+
 
     bool curveSignificance3(cv::Mat curve, int t0, int t1, float sigThr){
         bool isSigLeft = false;
@@ -1099,7 +1166,7 @@ namespace AQuA{
         arLst = bw2Reg(arLst_selected);
 
     }//seedDetect2_DS_accelerate
-    //                !!!!!!!!!!!!!!!!LAST CORRECT!!!!!!!!!!!!!!!!!!!!!
+
 
 
     void seDetection(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg, vector<vector<int>>& arLst){
@@ -1124,6 +1191,13 @@ namespace AQuA{
         vector<vector<cv::Mat>> Map(T,vector<cv::Mat>(L));
         seedDetect2_DS_accelerate(dF,dataOrg,arLst, Map);
 
+        /*
+         * segmentation according to seed
+         */
+        cout<<"Starting watershed grow\n";
+
+
+
 
 
 
@@ -1144,12 +1218,17 @@ namespace AQuA{
 //            vector<vector<cv::Mat>> dF1 = opts.dF1;
 //            vector<vector<cv::Mat>> dataOrg1 = opts.data1_org;
 //            vector<vector<Point_struct>> arLst1 = opts.arLst1;
-            vector<vector<cv::Mat>> dataOrg1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "datOrg1");
-            vector<vector<cv::Mat>> dF1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "dF1");
-            vector<vector<int>> arLst1 = AQuA::loadCell_int("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "arLst1");
-            AQuA::opts.tempVarOrg1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "tempVar");
-            AQuA::opts.correctPars1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "correctPars");
-            seDetection(dF1,dataOrg1,arLst1);
+//            vector<vector<cv::Mat>> dataOrg1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "datOrg1");
+//            vector<vector<cv::Mat>> dF1 = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "dF1");
+//            vector<vector<int>> arLst1 = AQuA::loadCell_int("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/phaseRun.mat", "arLst1");
+//            AQuA::opts.tempVarOrg1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "tempVar");
+//            AQuA::opts.correctPars1 = AQuA::load3D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/tempVar.mat", "correctPars");
+//            seDetection(dF1,dataOrg1,arLst1);
+
+            vector<vector<cv::Mat>> dF = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/pre_marker.mat", "dF");     //float
+            vector<vector<cv::Mat>> Map = AQuA::load4D("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/pre_marker.mat", "Map");  //ushort
+            vector<vector<double>> arLst = AQuA::loadCell_double("C:/Users/Kevin Qiao/Desktop/AQuA_data/test/pre_marker.mat", "arLst");  //double
+            markerControlledSplitting_Ac(Map,arLst,dF);
 
 
 

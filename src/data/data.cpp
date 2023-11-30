@@ -401,6 +401,7 @@ namespace AQuA{
         cout<<"length of image:"<< dims[2] << endl;
         cout<<"time frames of image:"<< dims[3] << endl;
         cout<<"--------data loaded--------"<<endl;
+        cout<<endl;
 
 
         //release MAT pointer
@@ -614,10 +615,10 @@ namespace AQuA{
         MATFile *pmatFile;
         mxArray *pMxArray;
 
-        cout<< "--------loading data--------"<<endl;
+        cout<< "--------loading data--------\n";
         pmatFile = matOpen(fileName, "r");
         if (pmatFile == nullptr) {
-            cout<< "--------error opening file--------"<<endl;
+            cout<< "--------error opening file--------\n";
             exit(-1);
         }
 

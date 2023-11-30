@@ -10,6 +10,11 @@
 #include "../preProcessRun/baselineRemoveAndNoiseEstimation.h"
 
 namespace AQuA{
+    struct res_marker{
+        int evtLst;
+        vector<vector<double>> sdLst;
+        int ccRegions;
+    };
     void phaseRun();
     cv::Mat myResize(const cv::Mat& src, float scaleRatio_x, float scaleRatio_y);
     void seDetection(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg, vector<vector<int>>& arLst);
@@ -18,6 +23,7 @@ namespace AQuA{
     void seedDetect2_DS_accelerate(vector<vector<cv::Mat>> dF, const vector<vector<cv::Mat>>& dataOrg,
                                    vector<vector<int>>& arLst, vector<vector<cv::Mat>>& Map);
     void ordStatSmallSampleWith0s(const vector<float>& fg, const vector<float>& bg, const vector<float>& nanVec, double& mu, double& sigma);
+    res_marker markerControlledSplitting_Ac(vector<vector<cv::Mat>>& Map, const vector<vector<double>>& curRegions, vector<vector<cv::Mat>> dF);
 
 }
 
